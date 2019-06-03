@@ -1,4 +1,4 @@
-Package: aegis.base
+Package: aegis
 Title: Base tools to bootstrap and interoperate with 'em*' and associated projects. 
 Version: 0.1
 Authors@R: c( person("Jae", "Choi", email="choijaeseok@gmail.com", role=c("aut", "cre")) ) 
@@ -8,6 +8,6 @@ Imports: devtools
 Suggests: aegis
 License: MIT
 LazyData: true
-URL: https://bitbucket.org/ecomod/aegis.base/
+URL: https://github.com/jae0/aegis/
 
 

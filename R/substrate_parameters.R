@@ -2,9 +2,6 @@
 
 substrate_parameters = function( p=NULL, project.name=NULL, project.mode="default", ... ) {
 
-  ## these parameters are here in an accessible format such that they can be used by other projects as aegis lookups ..
-  ## consider moving bathymetry, temperature and substrate parameters here top to make things all centralized
-
   # ---------------------
   # deal with additional passed parameters
   if ( is.null(p) ) p=list()
@@ -19,7 +16,7 @@ substrate_parameters = function( p=NULL, project.name=NULL, project.mode="defaul
   # create/update library list
   p$libs = c( p$libs, RLibrary ( "colorspace",  "fields", "geosphere", "lubridate",  "lattice",
     "maps", "mapdata", "maptools", "parallel",  "rgdal", "rgeos",  "sp", "splancs", "GADMTools" ) )
-  p$libs = c( p$libs, project.library ( "aegis.base") )
+  p$libs = c( p$libs, project.library ( "aegis", "aegis.substrate" ) )
 
   p$project.name = ifelse ( !is.null(project.name), project.name, "substrate" )
 
@@ -40,6 +37,7 @@ substrate_parameters = function( p=NULL, project.name=NULL, project.mode="defaul
   }
 
   if (project.mode=="stmv") {
+    p$libs = c( p$libs, project.library ( "stmv" ) )
 
     if (!exists("DATA", p) ) p$DATA = 'substrate.db( p=p, DS="stmv.inputs" )'
     if (!exists("variables", p)) p$variables = list()
@@ -89,6 +87,14 @@ substrate_parameters = function( p=NULL, project.name=NULL, project.mode="defaul
     if (!exists("stmv_dimensionality", p)) p$stmv_dimensionality="space"
 
     p = aegis_parameters( p=p, DS="stmv_spatial_model"  )
+    return(p)
+  }
+
+
+
+  if (project.mode=="carstm") {
+    p$libs = c( p$libs, project.library ( "carstm" ) )
+
     return(p)
   }
 
