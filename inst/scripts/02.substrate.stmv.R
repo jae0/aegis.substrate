@@ -68,7 +68,7 @@ lattice::levelplot( log(o$substrate.grainsize) ~ plon +plat, data=b, aspect="iso
 
 
 # or a cleaner map:
-# p = aegis::aegis_parameters()
+# p = aegis_parameters()
 substrate.figures( p=p, varnames=c( "s.ndata" ), logyvar=FALSE, savetofile="png" )
 substrate.figures( p=p, varnames=c( "substrate.grainsize", "s.nu", "s.range", "s.phi", "s.sdTotal", "s.sdSpatial", "s.sdObs"), logyvar=TRUE, savetofile="png" )
 

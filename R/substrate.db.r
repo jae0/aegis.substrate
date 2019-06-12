@@ -230,7 +230,7 @@
           panel = function(x, y, subscripts, ...) {
             panel.levelplot (x, y, subscripts, aspect="iso", rez=c(1,1), ...)
             sp.lines( isobath.db( p=p, DS="isobath", depths=isodepths, crs=p$internal.crs ), col = "gray80", cex=0.1 )
-            sp.lines( aegis::coastline.db( p=p, crs=p$internal.crs, DS="gshhg coastline highres" ), col = "steelblue", cex=0.1 )
+            sp.lines( aegis.coastline::coastline.db( p=p, crs=p$internal.crs, DS="gshhg coastline highres" ), col = "steelblue", cex=0.1 )
           }
         )
       )
