@@ -49,7 +49,8 @@ p = aegis.substrate::substrate_parameters(
 
 # Override stmv generics :
 p$stmv_fft_filter = "lowpass_matern_tapered" #  act as a low pass filter first before matern .. depth has enough data for this. Otherwise, use:
-p$stmv_range_correlation_fft_taper = 0.5  # in local smoothing convolutions occur of this correlation scale
+p$stmv_fft_taper_fraction = sqrt(0.5)  # in local smoothing convolutions taper to this areal expansion factor sqrt( r=0.5 ) ~ 70% of variance in variogram
+p$stmv_autocorrelation_fft_taper = 0  # benchmark from which to taper
 
 
 # the scale /variogram is larger than 40, so not functional ...

@@ -25,7 +25,7 @@
       }
       proj4.params = "+proj=utm +zone=20 +ellps=GRS80  +datum=NAD83 +units=m" #resolution is 500m X 500m
       substrate = sp::read.asciigrid( rawdata.file, proj4string=CRS( proj4.params ), colname="grainsize" )  ## mm
-      save( substrate, file=filename, compress=T )
+      save( substrate, file=filename, compress=TRUE )
       return(filename)
     }
 
@@ -47,7 +47,8 @@
       proj4.params = "+proj=utm +zone=20 +ellps=GRS80 +datum=NAD83 +units=m"  # original/raw data still in NAD83 geoid
       substrate= planar2lonlat ( substrate, proj4.params )
       substrate= substrate[ ,c("lon", "lat", "grainsize")]
-      save( substrate, file=filename, compress=T   )
+      substrate= lonlat2planar ( substrate, p$internal.crs )
+      save( substrate, file=filename, compress=TRUE   )
       return ( filename )
     }
 
@@ -73,8 +74,8 @@
       S = S[ ,c("plon", "plat", "substrate.grainsize" )]
 
       # discretize to speed up the rest
-      S$plon = floor(S$plon/p$pres_discretization_substrate) * pres_discretization_substrate
-      S$plat = floor(S$plat/p$pres_discretization_substrate) * pres_discretization_substrate
+      S$plon = floor(S$plon/p$pres_discretization_substrate) * p$pres_discretization_substrate
+      S$plat = floor(S$plat/p$pres_discretization_substrate) * p$pres_discretization_substrate
 
       gsrez = 0.001
       oo = paste( S$plon, S$plat, floor(S$substrate.grainsize/gsrez)*gsrez )
