@@ -26,36 +26,64 @@ p = aegis.substrate::substrate_parameters(
   stmv_global_modelengine = "gam",
   stmv_global_modelformula = formula( paste(
     'substrate.grainsize ',
-    ' ~ s( b.sdTotal, k=3, bs="ts") ',
+    ' ~ s( b.sdTotal, k=3, bs="ts") + s( b.localrange, k=3, bs="ts") ',
     ' + s(log(z), k=3, bs="ts") + s(log(dZ), k=3, bs="ts") +s(log(ddZ), k=3, bs="ts") '
   ) ),
   stmv_global_family = gaussian(link="log"),
-  # stmv_Y_transform =list(  # a log-normal works ok but a model of log-transformed data works better .. ie, working upon medians which is really OK
-  #   transf = function(x) {log(x)} ,
-  #   invers = function(x) {exp(x)}
-  # ), # data range is from -1667 to 5467 m: make all positive valued
   stmv_local_modelengine="fft",  # currently the perferred approach
-  stmv_lowpass_phi = 1*2, # p$res *2 = 1 *2:: FFT based method when operating gloablly
-  stmv_lowpass_nu = 0.5, # this is exponential covar
-  stmv_rsquared_threshold = 0.1, # lower threshold
+  stmv_fft_filter = "lowpass_matern_tapered", #  act as a low pass filter first before matern with taper .. depth has enough data for this. Otherwise, use:
+  stmv_fft_taper_method = "modelled",  # vs "empirical"
+  # stmv_fft_taper_fraction = 0.5,  # if empirical: in local smoothing convolutions taper to this areal expansion factor sqrt( r=0.5 ) ~ 70% of variance in variogram
+  stmv_lowpass_nu = 0.1,
+  stmv_lowpass_phi = stmv::matern_distance2phi( distance=0.25, nu=0.1, cor=0.5 ), # default p$res = 0.5;
+  stmv_autocorrelation_fft_taper = 0.5,  # benchmark from which to taper
+  stmv_autocorrelation_localrange = 0.1,  # for output to stats
+  stmv_autocorrelation_interpolation = c(0.25, 0.1, 0.05, 0.01),
+  stmv_variogram_method = "fft",
+  stmv_variogram_nbreaks = 50,
   depth.filter = 0.1, # the depth covariate is input in m, so, choose stats locations with elevation > 0 m as being on land
-  stmv_nmin = 1000, # stmv_nmin/stmv_nmax changes with resolution
-  stmv_nmax = 4000, # numerical time/memory constraint -- anything larger takes too much time .. anything less .. errors
-  stmv_distance_statsgrid = 4, # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
-  stmv_distance_scale = c( 30, 40 ), # km ... approx guess of 95% AC range
-  stmv_distance_prediction_fraction = 4/5, # i.e. 4/5 * 5 = 4 km
-  stmv_clusters = list( scale=rep("localhost", scale_ncpus), interpolate=rep("localhost", interpolate_ncpus) )  # ncpus for each runmode
+  stmv_local_model_distanceweighted = TRUE,
+  stmv_rsquared_threshold = 0.1, # lower threshold == ignore
+  stmv_distance_statsgrid = 5, # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
+  stmv_distance_scale = c( 10, 20, 30, 40 ), # km ... approx guess of 95% AC range
+  stmv_distance_prediction_fraction = 0.95, # i.e. 4/5 * 5 = 4 km
+  stmv_nmin = 200, # stmv_nmin/stmv_nmax changes with resolution
+  stmv_nmax = 500, # numerical time/memory constraint -- anything larger takes too much time .. anything less .. errors
+  stmv_runmode = list(
+    globalmodel = TRUE,
+    scale = rep("localhost", scale_ncpus),
+    interpolate = list(
+        cor_0.5 = rep("localhost", interpolate_ncpus),
+        cor_0.1 = rep("localhost", interpolate_ncpus),
+        cor_0.05 = rep("localhost", max(1, interpolate_ncpus-1)),
+        cor_0.01 = rep("localhost", max(1, interpolate_ncpus-2))
+      ),  # ncpus for each runmode
+    interpolate_force_complete = rep("localhost", max(1, interpolate_ncpus-2)),
+    save_intermediate_results = TRUE,
+    save_completed_data = TRUE # just a dummy variable with the correct name
+  )  # ncpus for each runmode
 )
 
-# Override stmv generics :
-p$stmv_fft_filter = "lowpass_matern_tapered" #  act as a low pass filter first before matern .. depth has enough data for this. Otherwise, use:
-p$stmv_fft_taper_fraction = sqrt(0.5)  # in local smoothing convolutions taper to this areal expansion factor sqrt( r=0.5 ) ~ 70% of variance in variogram
-p$stmv_autocorrelation_fft_taper = 0  # benchmark from which to taper
+
+stmv( p=p )
 
 
-# the scale /variogram is larger than 40, so not functional ...
+# quick look of data
+dev.new(); surface( as.image( Z=DATA$input$substrate.grainsize, x=DATA$input[, c("plon", "plat")], nx=p$nplons, ny=p$nplats, na.rm=TRUE) )
 
-stmv( p=p, runmode=c("globalmodel", "scale", "interpolate" ) ) # no global_model and force a clean restart
+predictions = stmv_db( p=p, DS="stmv.prediction", ret="mean" )
+statistics  = stmv_db( p=p, DS="stmv.stats" )
+locations   = spatial_grid( p )
+
+# comparisons
+dev.new(); surface( as.image( Z=rowMeans(predictions), x=locations, nx=p$nplons, ny=p$nplats, na.rm=TRUE) )
+
+# stats
+(p$statsvars)
+dev.new(); levelplot( predictions[,1] ~ locations[,1] + locations[,2], aspect="iso" )
+dev.new(); levelplot( statistics[,match("nu", p$statsvars)]  ~ locations[,1] + locations[,2], aspect="iso" ) # nu
+dev.new(); levelplot( statistics[,match("sdTot", p$statsvars)]  ~ locations[,1] + locations[,2], aspect="iso" ) #sd total
+dev.new(); levelplot( statistics[,match("localrange", p$statsvars)]  ~ locations[,1] + locations[,2], aspect="iso" ) #localrange
 
 
 # as the interpolation process is so expensive, regrid based off the above run
@@ -71,7 +99,7 @@ lattice::levelplot( log(o$substrate.grainsize) ~ plon +plat, data=b, aspect="iso
 # or a cleaner map:
 # p = aegis_parameters()
 substrate.figures( p=p, varnames=c( "s.ndata" ), logyvar=FALSE, savetofile="png" )
-substrate.figures( p=p, varnames=c( "substrate.grainsize", "s.nu", "s.range", "s.phi", "s.sdTotal", "s.sdSpatial", "s.sdObs"), logyvar=TRUE, savetofile="png" )
+substrate.figures( p=p, varnames=c( "substrate.grainsize", "s.nu", "s.localrange", "s.phi", "s.sdTotal", "s.sdSpatial", "s.sdObs"), logyvar=TRUE, savetofile="png" )
 
 
 # to summarize just the global model
