@@ -15,7 +15,7 @@
     if ( DS=="aggregated_data") {
 
       fn = file.path( p$modeldir, paste( "substrate", "aggregated_data", id, "rdata", sep=".") )
-      if (!redo) ) {
+      if (!redo) {
         print( "Warning: aggregated_data is loading from a saved instance ... add redo=TRUE if data needs to be refresh" )
         if (file.exists(fn)) {
           load( fn)
@@ -64,7 +64,7 @@
 
       fn = file.path( p$modeldir, paste( "substrate", "carstm_modelled", id, "rdata", sep=".") )
       fn_fit = file.path( p$modeldir, paste( "substrate", "carstm_modelled_fit", id, "rdata", sep=".") )
-      if (!redo) ) {
+      if (!redo) {
         print( "Warning: carstm_modelled is loading from a saved instance ... add redo=TRUE if data needs to be refresh" )
         if (file.exists(fn)) {
           load( fn)
