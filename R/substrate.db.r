@@ -74,11 +74,11 @@
       S = S[ ,c("plon", "plat", "substrate.grainsize" )]
 
       # discretize to speed up the rest
-      S$plon = floor(S$plon/p$pres_discretization_substrate) * p$pres_discretization_substrate
-      S$plat = floor(S$plat/p$pres_discretization_substrate) * p$pres_discretization_substrate
+      S$plon = floor(S$plon/p$pres_discretization_substrate + 1) * p$pres_discretization_substrate
+      S$plat = floor(S$plat/p$pres_discretization_substrate + 1) * p$pres_discretization_substrate
 
       gsrez = 0.001
-      oo = paste( S$plon, S$plat, floor(S$substrate.grainsize/gsrez)*gsrez )
+      oo = paste( S$plon, S$plat, floor(S$substrate.grainsize/gsrez +1 )*gsrez )
 
       S = S[!duplicated(oo),]  # drop all duplicated data
       rm(oo); gc()
