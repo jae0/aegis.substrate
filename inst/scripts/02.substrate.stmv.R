@@ -19,6 +19,7 @@ interpolate_ncpus = min( parallel::detectCores(), floor( (ram_local()- interpola
 p = aegis.substrate::substrate_parameters(
   project.mode="stmv",
   data_root = project.datadirectory( "aegis", "substrate" ),
+  DATA = 'substrate.db( p=p, DS="stmv.inputs" )',
   spatial.domain = "canada.east.highres" ,
   spatial.domain.subareas = c( "canada.east", "SSE", "snowcrab", "SSE.mpa" ),
   pres_discretization_substrate = 1 / 20, # 1==p$pres; controls resolution of data prior to modelling (km .. ie 20 linear units smaller than the final discretization pres)
@@ -31,36 +32,36 @@ p = aegis.substrate::substrate_parameters(
   ) ),
   stmv_global_family = gaussian(link="log"),
   stmv_local_modelengine="fft",  # currently the perferred approach
-  stmv_fft_filter = "matern_tapered", #  act as a low pass filter first before matern with taper .. depth has enough data for this. Otherwise, use:
+  stmv_fft_filter = "matern_tapered", #
   stmv_fft_taper_method = "modelled",  # vs "empirical"
   # stmv_fft_taper_fraction = 0.5,  # if empirical: in local smoothing convolutions taper to this areal expansion factor sqrt( r=0.5 ) ~ 70% of variance in variogram
   # stmv_lowpass_nu = 0.1,
   # stmv_lowpass_phi = stmv::matern_distance2phi( distance=0.25, nu=0.1, cor=0.5 ), # default p$res = 0.5;
   stmv_autocorrelation_fft_taper = 0.5,  # benchmark from which to taper
   stmv_autocorrelation_localrange = 0.1,  # for output to stats
-  stmv_autocorrelation_interpolation = c(0.25, 0.1, 0.05, 0.01),
+  stmv_autocorrelation_interpolation = c(0.25, 0.1, 0.01, 0.001),
   stmv_variogram_method = "fft",
   depth.filter = 0.1, # the depth covariate is input in m, so, choose stats locations with elevation > 0 m as being on land
   stmv_local_model_distanceweighted = TRUE,
   stmv_rsquared_threshold = 0.1, # lower threshold == ignore
   stmv_distance_statsgrid = 5, # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
   stmv_distance_scale = c( 10, 20, 30, 40 ), # km ... approx guess of 95% AC range
-  stmv_distance_prediction_fraction = 0.95, # i.e. 4/5 * 5 = 4 km
+  stmv_distance_prediction_fraction = 0.99, # i.e. 4/5 * 5 = 4 km
   stmv_nmin = 200, # stmv_nmin/stmv_nmax changes with resolution
   stmv_nmax = 500, # numerical time/memory constraint -- anything larger takes too much time .. anything less .. errors
   stmv_runmode = list(
     globalmodel = TRUE,
     scale = rep("localhost", scale_ncpus),
     interpolate = list(
-        cor_0.5 = rep("localhost", interpolate_ncpus),
+        cor_0.25 = rep("localhost", interpolate_ncpus),
         cor_0.1 = rep("localhost", interpolate_ncpus),
-        cor_0.05 = rep("localhost", max(1, interpolate_ncpus-1)),
-        cor_0.01 = rep("localhost", max(1, interpolate_ncpus-2))
-      ),  # ncpus for each runmode
+        cor_0.01 = rep("localhost", max(1, interpolate_ncpus-1)),
+        cor_0.001 = rep("localhost", max(1, interpolate_ncpus-2))
+      ),
     interpolate_force_complete = rep("localhost", max(1, interpolate_ncpus-2)),
     save_intermediate_results = TRUE,
     save_completed_data = TRUE # just a dummy variable with the correct name
-  )  # ncpus for each runmode
+  )
 )
 
 

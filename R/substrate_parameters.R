@@ -39,7 +39,6 @@ substrate_parameters = function( p=NULL, project.name=NULL, project.mode="defaul
   if (project.mode=="stmv") {
     p$libs = c( p$libs, project.library ( "stmv" ) )
 
-    if (!exists("DATA", p) ) p$DATA = 'substrate.db( p=p, DS="stmv.inputs" )'
     if (!exists("variables", p)) p$variables = list()
     if (!exists("LOCS", p$variables)) p$variables$LOCS=c("plon", "plat")
     if (!exists("stmv_local_modelengine", p)) p$stmv_local_modelengine="fft"  # currently the perferred approach
