@@ -58,7 +58,7 @@
     if ( DS=="stmv.inputs") {
 
       varstokeep = unique( c( p$variables$Y, p$variables$LOCS, p$variables$COV ) )
-      B = bathymetry.db( p, DS="baseline", varnames=varstokeep )
+      B = bathymetry.db( p=bathymetry_parameters( spatial.domain=p$spatial.domain ), DS="baseline", varnames=varstokeep )
 
       # range checks
       if (exists("z", B))  B$z[ which( B$z < 0.5)]  = 0.5 # meters
