@@ -39,7 +39,7 @@ p = aegis.substrate::substrate_parameters(
   # stmv_lowpass_phi = stmv::matern_distance2phi( distance=0.25, nu=0.1, cor=0.5 ), # default p$res = 0.5;
   stmv_autocorrelation_fft_taper = 0.5,  # benchmark from which to taper
   stmv_autocorrelation_localrange = 0.1,  # for output to stats
-  stmv_autocorrelation_interpolation = c(0.25, 0.1, 0.01, 0.001),
+  stmv_autocorrelation_interpolation = c(0.25, 0.1, 0.01),
   stmv_variogram_method = "fft",
   depth.filter = 0.1, # the depth covariate is input in m, so, choose stats locations with elevation > 0 m as being on land
   stmv_local_model_distanceweighted = TRUE,
@@ -55,8 +55,7 @@ p = aegis.substrate::substrate_parameters(
     interpolate = list(
         cor_0.25 = rep("localhost", interpolate_ncpus),
         cor_0.1 = rep("localhost", interpolate_ncpus),
-        cor_0.01 = rep("localhost", max(1, interpolate_ncpus-1)),
-        cor_0.001 = rep("localhost", max(1, interpolate_ncpus-2))
+        cor_0.01 = rep("localhost", max(1, interpolate_ncpus-1))
       ),
     interpolate_force_complete = rep("localhost", max(1, interpolate_ncpus-2)),
     save_intermediate_results = TRUE,
