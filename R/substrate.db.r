@@ -173,7 +173,9 @@
         L1 = lonlat2planar( L1, proj.type=p0$internal.crs )
         p1$wght = fields::setup.image.smooth(
           nrow=p1$nplons, ncol=p1$nplats, dx=p1$pres, dy=p1$pres,
-          theta=p1$pres, xwidth=4*p1$pres, ywidth=4*p1$pres )
+          theta=p1$pres/3, xwidth=4*p1$pres, ywidth=4*p1$pres )
+        # theta=p1$pres/3 assume at pres most of variance is accounted ... correct if dense pre-intepolated matrices .. if not can be noisy
+
         for (vn in varnames) {
           S[,vn] = spatial_warp( S0[,vn], L0, L1, p0, p1, "fast", L0i, L1i )
         }

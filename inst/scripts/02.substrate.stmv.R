@@ -27,7 +27,7 @@ p = aegis.substrate::substrate_parameters(
   stmv_global_modelengine = "gam",
   stmv_global_modelformula = formula( paste(
     'substrate.grainsize ',
-    ' ~ s( b.sdTotal, k=3, bs="ts") + s( b.localrange, k=3, bs="ts") ',
+    ' ~ s( b.sdSpatial, k=3, bs="ts") + s( b.localrange, k=3, bs="ts") ',
     ' + s(log(z), k=3, bs="ts") + s(log(dZ), k=3, bs="ts") +s(log(ddZ), k=3, bs="ts") '
   ) ),
   stmv_global_family = gaussian(link="log"),
@@ -45,17 +45,17 @@ p = aegis.substrate::substrate_parameters(
   stmv_local_model_distanceweighted = TRUE,
   stmv_rsquared_threshold = 0.1, # lower threshold == ignore
   stmv_distance_statsgrid = 5, # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
-  stmv_distance_scale = c( 10, 20, 30, 40 ), # km ... approx guess of 95% AC range
+  stmv_distance_scale = c( 5, 10, 25, 50, 75 ), # km ... approx guess of 95% AC range
   stmv_distance_prediction_fraction = 0.99, # i.e. 4/5 * 5 = 4 km
   stmv_nmin = 200, # stmv_nmin/stmv_nmax changes with resolution
-  stmv_nmax = 500, # numerical time/memory constraint -- anything larger takes too much time .. anything less .. errors
+  stmv_nmax = 400, # numerical time/memory constraint -- anything larger takes too much time .. anything less .. errors
   stmv_runmode = list(
     globalmodel = TRUE,
     scale = rep("localhost", scale_ncpus),
     interpolate = list(
         cor_0.25 = rep("localhost", interpolate_ncpus),
-        cor_0.1 = rep("localhost", interpolate_ncpus),
-        cor_0.01 = rep("localhost", max(1, interpolate_ncpus-1))
+        cor_0.1 = rep("localhost", interpolate_ncpus-1),
+        cor_0.01 = rep("localhost", max(1, interpolate_ncpus-2))
       ),
     interpolate_force_complete = rep("localhost", max(1, interpolate_ncpus-2)),
     save_intermediate_results = TRUE,
@@ -108,25 +108,27 @@ plot(o)
 AIC(o)  # [1] 813065
 
 # Global model results:
-
 Family: gaussian
 Link function: log
 
 Formula:
-substrate.grainsize ~ s(b.sdTotal, k = 3, bs = "ts") + s(log(z),
-    k = 3, bs = "ts") + s(log(dZ), k = 3, bs = "ts") + s(log(ddZ),
-    k = 3, bs = "ts")
+substrate.grainsize ~ s(b.sdTotal, k = 3, bs = "ts") + s(b.localrange,
+    k = 3, bs = "ts") + s(log(z), k = 3, bs = "ts") + s(log(dZ),
+    k = 3, bs = "ts") + s(log(ddZ), k = 3, bs = "ts")
 
 Parametric coefficients:
             Estimate Std. Error t value Pr(>|t|)
-(Intercept)  -0.8787     0.0175   -50.3   <2e-16
+(Intercept) -0.77717    0.00914     -85   <2e-16
 
 Approximate significance of smooth terms:
-             edf Ref.df      F p-value
-s(b.sdTotal)   2      2 1595.6  <2e-16
-s(log(z))      2      2 4663.4  <2e-16
-s(log(dZ))     2      2   83.8  <2e-16
-s(log(ddZ))    2      2  210.1  <2e-16
+                     edf Ref.df     F p-value
+s(b.sdTotal)    1.97e+00      2   637  <2e-16
+s(b.localrange) 2.00e+00      2  2040  <2e-16
+s(log(z))       2.00e+00      2 17431  <2e-16
+s(log(dZ))      6.42e-08      2     0   0.036
+s(log(ddZ))     2.00e+00      2   625  <2e-16
 
-R-sq.(adj) =  0.157   Deviance explained = 15.4%
-GCV = 5.5405  Scale est. = 5.5402    n = 179311
+R-sq.(adj) =  0.136   Deviance explained = 13.5%
+GCV = 5.7161  Scale est. = 5.7161    n = 714063
+Model Deviance: 4081571
+
