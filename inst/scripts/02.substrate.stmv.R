@@ -46,8 +46,8 @@ p = aegis.substrate::substrate_parameters(
   stmv_rsquared_threshold = 0.1, # lower threshold == ignore
   stmv_distance_statsgrid = 5, # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
   stmv_distance_scale = c( 5, 10, 25, 50, 75 ), # km ... approx guess of 95% AC range
-  stmv_distance_prediction_fraction = 0.99, # i.e. 4/5 * 5 = 4 km
-  stmv_nmin = 200, # stmv_nmin/stmv_nmax changes with resolution
+  stmv_distance_prediction_fraction = 0.95, # i.e. 4/5 * 5 = 4 km
+  stmv_nmin = 80, # stmv_nmin/stmv_nmax changes with resolution
   stmv_nmax = 400, # numerical time/memory constraint -- anything larger takes too much time .. anything less .. errors
   stmv_runmode = list(
     globalmodel = TRUE,
@@ -79,7 +79,7 @@ dev.new(); surface( as.image( Z=rowMeans(predictions), x=locations, nx=p$nplons,
 
 # stats
 (p$statsvars)
-dev.new(); levelplot( predictions[,1] ~ locations[,1] + locations[,2], aspect="iso" )
+dev.new(); levelplot( predictions[] ~ locations[,1] + locations[,2], aspect="iso" )
 dev.new(); levelplot( statistics[,match("nu", p$statsvars)]  ~ locations[,1] + locations[,2], aspect="iso" ) # nu
 dev.new(); levelplot( statistics[,match("sdTot", p$statsvars)]  ~ locations[,1] + locations[,2], aspect="iso" ) #sd total
 dev.new(); levelplot( statistics[,match("localrange", p$statsvars)]  ~ locations[,1] + locations[,2], aspect="iso" ) #localrange
