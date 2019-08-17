@@ -6,12 +6,12 @@
 
 
 # about 1.5 hr
-scale_ram_required_main_process = 1 # GB twostep / fft
+scale_ram_required_main_process = 32 # GB twostep / fft
 scale_ram_required_per_process  = 1 # twostep / fft /fields vario ..  (mostly 0.5 GB, but up to 5 GB)
 scale_ncpus = min( parallel::detectCores(), floor( (ram_local()- scale_ram_required_main_process) / scale_ram_required_per_process ) )
 
 # nn hrs
-interpolate_ram_required_main_process = 3.5 # GB twostep / fft
+interpolate_ram_required_main_process = 32 # GB twostep / fft
 interpolate_ram_required_per_process  = 2  # twostep / fft /fields vario ..
 interpolate_ncpus = min( parallel::detectCores(), floor( (ram_local()- interpolate_ram_required_main_process) / interpolate_ram_required_per_process ) )
 
@@ -39,7 +39,7 @@ p = aegis.substrate::substrate_parameters(
   # stmv_lowpass_phi = stmv::matern_distance2phi( distance=0.25, nu=0.1, cor=0.5 ), # default p$res = 0.5;
   stmv_autocorrelation_fft_taper = 0.5,  # benchmark from which to taper
   stmv_autocorrelation_localrange = 0.1,  # for output to stats
-  stmv_autocorrelation_interpolation = c(0.25, 0.1, 0.01),
+  stmv_autocorrelation_interpolation = c(0.25, 0.1, 0.01, 0.001),
   stmv_variogram_method = "fft",
   depth.filter = 0.1, # the depth covariate is input in m, so, choose stats locations with elevation > 0 m as being on land
   stmv_local_model_distanceweighted = TRUE,
@@ -50,12 +50,14 @@ p = aegis.substrate::substrate_parameters(
   stmv_nmin = 80, # stmv_nmin/stmv_nmax changes with resolution
   stmv_nmax = 400, # numerical time/memory constraint -- anything larger takes too much time .. anything less .. errors
   stmv_runmode = list(
+    restart_load = FALSE,
     globalmodel = TRUE,
     scale = rep("localhost", scale_ncpus),
     interpolate = list(
         cor_0.25 = rep("localhost", interpolate_ncpus),
-        cor_0.1 = rep("localhost", interpolate_ncpus-1),
-        cor_0.01 = rep("localhost", max(1, interpolate_ncpus-2))
+        cor_0.1 = rep("localhost", interpolate_ncpus-2),
+        cor_0.01 = rep("localhost", max(1, interpolate_ncpus-4)),
+        cor_0.001 = rep("localhost", max(1, interpolate_ncpus-5))
       ),
     interpolate_force_complete = rep("localhost", max(1, interpolate_ncpus-2)),
     save_intermediate_results = TRUE,
@@ -72,10 +74,11 @@ dev.new(); surface( as.image( Z=DATA$input$substrate.grainsize, x=DATA$input[, c
 
 predictions = stmv_db( p=p, DS="stmv.prediction", ret="mean" )
 statistics  = stmv_db( p=p, DS="stmv.stats" )
-locations   = spatial_grid( p )
+
+locations = bathymetry.db( spatial.domain=p$spatial.domain, DS="baseline") # these are the prediction locations
 
 # comparisons
-dev.new(); surface( as.image( Z=rowMeans(predictions), x=locations, nx=p$nplons, ny=p$nplats, na.rm=TRUE) )
+dev.new(); surface( as.image( Z=(predictions), x=locations, nx=p$nplons, ny=p$nplats, na.rm=TRUE) )
 
 # stats
 (p$statsvars)
@@ -112,23 +115,32 @@ Family: gaussian
 Link function: log
 
 Formula:
-substrate.grainsize ~ s(b.sdTotal, k = 3, bs = "ts") + s(b.localrange,
+substrate.grainsize ~ s(b.sdSpatial, k = 3, bs = "ts") + s(b.localrange,
     k = 3, bs = "ts") + s(log(z), k = 3, bs = "ts") + s(log(dZ),
     k = 3, bs = "ts") + s(log(ddZ), k = 3, bs = "ts")
 
 Parametric coefficients:
             Estimate Std. Error t value Pr(>|t|)
-(Intercept) -0.77717    0.00914     -85   <2e-16
+(Intercept) -0.75422    0.00838     -90   <2e-16
 
 Approximate significance of smooth terms:
                      edf Ref.df     F p-value
-s(b.sdTotal)    1.97e+00      2   637  <2e-16
-s(b.localrange) 2.00e+00      2  2040  <2e-16
-s(log(z))       2.00e+00      2 17431  <2e-16
-s(log(dZ))      6.42e-08      2     0   0.036
-s(log(ddZ))     2.00e+00      2   625  <2e-16
+s(b.sdSpatial)  9.93e-01      2   788 < 2e-16
+s(b.localrange) 2.00e+00      2  1935 < 2e-16
+s(log(z))       2.00e+00      2 17441 < 2e-16
+s(log(dZ))      3.19e-06      2     0 0.00017
+s(log(ddZ))     1.99e+00      2   678 < 2e-16
 
 R-sq.(adj) =  0.136   Deviance explained = 13.5%
-GCV = 5.7161  Scale est. = 5.7161    n = 714063
-Model Deviance: 4081571
+GCV = 5.7137  Scale est. = 5.7136    n = 714063
+||| Saved parameters to file:
+/home/jae/bio.data/aegis/substrate/modelled/substrate.grainsize/canada.east.highres/p.rdata
+||| Proportion to do: 1
 
+Iteration 1 of 1
+
+
+||| Entering Predicting global effect of covariates at each prediction location: 2019-08-15 22:43:35
+
+||| This can take a while (usually a few minutes but hours if complex) ...
+Model Deviance: 4079829.74039671
