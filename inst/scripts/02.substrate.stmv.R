@@ -78,11 +78,11 @@ statistics  = stmv_db( p=p, DS="stmv.stats" )
 locations = bathymetry.db( spatial.domain=p$spatial.domain, DS="baseline") # these are the prediction locations
 
 # comparisons
-dev.new(); surface( as.image( Z=(predictions), x=locations, nx=p$nplons, ny=p$nplats, na.rm=TRUE) )
+dev.new(); surface( as.image( Z=log(predictions), x=locations, nx=p$nplons, ny=p$nplats, na.rm=TRUE) )
 
 # stats
 (p$statsvars)
-dev.new(); levelplot( predictions[] ~ locations[,1] + locations[,2], aspect="iso" )
+dev.new(); levelplot( log(predictions[]) ~ locations[,1] + locations[,2], aspect="iso" )
 dev.new(); levelplot( statistics[,match("nu", p$statsvars)]  ~ locations[,1] + locations[,2], aspect="iso" ) # nu
 dev.new(); levelplot( statistics[,match("sdTot", p$statsvars)]  ~ locations[,1] + locations[,2], aspect="iso" ) #sd total
 dev.new(); levelplot( statistics[,match("localrange", p$statsvars)]  ~ locations[,1] + locations[,2], aspect="iso" ) #localrange
@@ -93,7 +93,7 @@ substrate.db( p=p, DS="complete.redo" )
 
 
 # quick map
-b = bathymetry.db(p=p, DS="baseline")
+b = bathymetry.db(spatial.domain=p$spatial.domain, DS="baseline")
 o = substrate.db( p=p, DS="complete" )
 lattice::levelplot( log(o$substrate.grainsize) ~ plon +plat, data=b, aspect="iso")
 
