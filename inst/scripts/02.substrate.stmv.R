@@ -100,8 +100,8 @@ lattice::levelplot( log(o$substrate.grainsize) ~ plon +plat, data=b, aspect="iso
 
 # or a cleaner map:
 # p = aegis_parameters()
-substrate.figures( p=p, varnames=c( "s.ndata" ), logyvar=FALSE, savetofile="png" )
-substrate.figures( p=p, varnames=c( "substrate.grainsize", "s.nu", "s.localrange", "s.phi", "s.sdTotal", "s.sdSpatial", "s.sdObs"), logyvar=TRUE, savetofile="png" )
+substrate.figures( p=p, varnames=c( "s.ndata", "s.sdTotal", "s.sdSpatial", "s.sdObs" ), logyvar=FALSE, savetofile="png" )
+substrate.figures( p=p, varnames=c( "substrate.grainsize", "s.localrange", "s.nu", "s.phi"), logyvar=TRUE, savetofile="png" )
 
 
 # to summarize just the global model
