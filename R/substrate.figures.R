@@ -6,7 +6,7 @@ substrate.figures = function( p=NULL, varnames="substrate.grainsize", datarange=
   #  if ( !exists("datadir", p) )   p$datadir  = file.path( p$data_root, "data" )
   #  if ( !exists("modeldir", p) )  p$modeldir = file.path( p$data_root, "modelled" )
 
-  z = bathymetry.db(spatial.domain=p$spatial.domain, DS="baseline")
+  z = bathymetry.db(p=p, DS="baseline")
   b = substrate.db( p=p, DS="complete" )
 #   lattice::levelplot( log(o$substrate.grainsize) ~ plon +plat, data=b, aspect="iso")
 

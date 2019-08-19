@@ -58,7 +58,7 @@
     if ( DS=="stmv.inputs") {
 
       varstokeep = unique( c( p$variables$Y, p$variables$LOCS, p$variables$COV ) )
-      B = bathymetry.db( p=bathymetry_parameters( spatial.domain=p$spatial.domain ), DS="baseline", varnames=varstokeep )
+      B = bathymetry.db( p=p, DS="baseline", varnames=varstokeep )
 
       # range checks
       if (exists("z", B))  B$z[ which( B$z < 0.5)]  = 0.5 # meters
@@ -141,7 +141,7 @@
 
 
       if (0) {
-        B = bathymetry.db(spatial.domain=p$spatial.domain, DS="baseline")
+        B = bathymetry.db(p=p, DS="baseline")
         levelplot( (S[,1]) ~ plon + plat, B, aspect="iso", labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
         levelplot( log(S[,1]) ~ plon + plat, B, aspect="iso", labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
       }
@@ -155,7 +155,7 @@
 
       p0 = p  # the originating parameters
       S0 = S
-      L0 = bathymetry.db( spatial.domain=p$spatial.domain, DS="baseline" )
+      L0 = bathymetry.db( p=p, DS="baseline" )
       L0i = array_map( "xy->2", L0, gridparams=p0$gridparams )
 
       varnames = setdiff( names(S0), c("plon","plat", "lon", "lat") )
