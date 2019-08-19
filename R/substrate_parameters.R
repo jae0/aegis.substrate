@@ -16,7 +16,7 @@ substrate_parameters = function( p=NULL, project.name=NULL, project.mode="defaul
   # create/update library list
   p$libs = c( p$libs, RLibrary ( "colorspace",  "fields", "geosphere", "lubridate",  "lattice",
     "maps", "mapdata", "maptools", "parallel",  "rgdal", "rgeos",  "sp", "splancs", "GADMTools" ) )
-  p$libs = c( p$libs, project.library ( "aegis", "aegis.bathymetry", "aegis.costline", "aegis.polygons", "aegis.substrate" ) )
+  p$libs = c( p$libs, project.library ( "aegis", "aegis.bathymetry", "aegis.coastline", "aegis.polygons", "aegis.substrate" ) )
 
   p$project.name = ifelse ( !is.null(project.name), project.name, "substrate" )
 
