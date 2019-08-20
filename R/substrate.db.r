@@ -118,6 +118,10 @@
       fn = file.path( p$modeldir, paste( "substrate", "complete", p$spatial.domain, "rdata", sep=".") )
 
       if ( DS %in% c("complete") ) {
+
+        defaultdir = project.datadirectory( "aegis", "substrate", "modelled" )
+        if (!file.exists(fn)) fn = file.path( defaultdir, paste( "substrate", "complete", p$spatial.domain, "rdata", sep=".") )
+
         S = NULL
         if ( file.exists ( fn) ) load( fn)
         Snames = names(S)

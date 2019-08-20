@@ -50,15 +50,15 @@ p = aegis.substrate::substrate_parameters(
   stmv_nmin = 80, # stmv_nmin/stmv_nmax changes with resolution
   stmv_nmax = 400, # numerical time/memory constraint -- anything larger takes too much time .. anything less .. errors
   stmv_runmode = list(
-    restart_load = TRUE,
-    # globalmodel = TRUE,
+    globalmodel = TRUE,
     scale = rep("localhost", scale_ncpus),
     interpolate = list(
-        cor_0.25 = rep("localhost", interpolate_ncpus),
-        cor_0.1 = rep("localhost", interpolate_ncpus-2),
-        cor_0.01 = rep("localhost", max(1, interpolate_ncpus-4)),
-        cor_0.001 = rep("localhost", max(1, interpolate_ncpus-5))
-      ),
+      cor_0.25 = rep("localhost", interpolate_ncpus),
+      cor_0.1 = rep("localhost", interpolate_ncpus-2),
+      cor_0.01 = rep("localhost", max(1, interpolate_ncpus-4)),
+      cor_0.001 = rep("localhost", max(1, interpolate_ncpus-5))
+    ),
+    restart_load = TRUE,
     interpolate_force_complete = rep("localhost", max(1, interpolate_ncpus-2)),
     save_intermediate_results = TRUE,
     save_completed_data = TRUE # just a dummy variable with the correct name
