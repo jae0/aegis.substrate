@@ -1,7 +1,6 @@
 
 substrate.figures = function( p=NULL, varnames="substrate.grainsize", datarange=NULL, logyvar=FALSE, isodepths = c( 100, 300, 500 ), savetofile="png", width=1365, height=1024, pointsize=12, res=96, quality=80 ) {
 
-
   #  if ( !exists("data_root", p) ) p$data_root = project.datadirectory( "aegis", p$project.name )
   #  if ( !exists("datadir", p) )   p$datadir  = file.path( p$data_root, "data" )
   #  if ( !exists("modeldir", p) )  p$modeldir = file.path( p$data_root, "modelled" )
