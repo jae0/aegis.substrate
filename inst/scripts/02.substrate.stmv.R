@@ -32,22 +32,20 @@ p = aegis.substrate::substrate_parameters(
   ) ),
   stmv_global_family = gaussian(link="log"),
   stmv_local_modelengine="fft",  # currently the perferred approach
-  stmv_fft_filter = "matern_tapered", #
-  stmv_fft_taper_method = "modelled",  # vs "empirical"
-  # stmv_fft_taper_fraction = 0.5,  # if empirical: in local smoothing convolutions taper to this areal expansion factor sqrt( r=0.5 ) ~ 70% of variance in variogram
+  stmv_fft_filter = "matern_tapered_modelled", #
   # stmv_lowpass_nu = 0.1,
   # stmv_lowpass_phi = stmv::matern_distance2phi( distance=0.25, nu=0.1, cor=0.5 ), # default p$res = 0.5;
   stmv_autocorrelation_fft_taper = 0.5,  # benchmark from which to taper
   stmv_autocorrelation_localrange = 0.1,  # for output to stats
-  stmv_autocorrelation_interpolation = c(0.25, 0.1, 0.01, 0.001),
+  stmv_autocorrelation_interpolation = c(0.25, 0.1, 0.05, 0.01 )
   stmv_variogram_method = "fft",
   depth.filter = 0.1, # the depth covariate is input in m, so, choose stats locations with elevation > 0 m as being on land
   stmv_local_model_distanceweighted = TRUE,
   stmv_rsquared_threshold = 0.1, # lower threshold == ignore
   stmv_distance_statsgrid = 5, # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
   stmv_distance_scale = c( 5, 10, 25, 50, 75 ), # km ... approx guess of 95% AC range
-  stmv_distance_prediction_fraction = 0.95, # i.e. 4/5 * 5 = 4 km
-  stmv_nmin = 80, # stmv_nmin/stmv_nmax changes with resolution
+  stmv_distance_prediction_max = 5 * 1.25 , # upper limit in distnace to predict upon (just over the grid size of statsgrid) .. in timeseries can become very slow so try to be small
+  stmv_nmin = 100, # stmv_nmin/stmv_nmax changes with resolution
   stmv_nmax = 400, # numerical time/memory constraint -- anything larger takes too much time .. anything less .. errors
   stmv_runmode = list(
     globalmodel = TRUE,
@@ -55,8 +53,8 @@ p = aegis.substrate::substrate_parameters(
     interpolate = list(
       cor_0.25 = rep("localhost", interpolate_ncpus),
       cor_0.1 = rep("localhost", interpolate_ncpus-2),
-      cor_0.01 = rep("localhost", max(1, interpolate_ncpus-4)),
-      cor_0.001 = rep("localhost", max(1, interpolate_ncpus-5))
+      cor_0.05 = rep("localhost", max(1, interpolate_ncpus-3)),
+      cor_0.01 = rep("localhost", max(1, interpolate_ncpus-3))
     ),
     restart_load = TRUE,
     interpolate_force_complete = rep("localhost", max(1, interpolate_ncpus-2)),
@@ -75,7 +73,7 @@ dev.new(); surface( as.image( Z=DATA$input$substrate.grainsize, x=DATA$input[, c
 predictions = stmv_db( p=p, DS="stmv.prediction", ret="mean" )
 statistics  = stmv_db( p=p, DS="stmv.stats" )
 
-locations = bathymetry.db( spatial.domain=p$spatial.domain, DS="baseline") # these are the prediction locations
+locations = bathymetry.db( p=p, DS="baseline") # these are the prediction locations
 
 # comparisons
 dev.new(); surface( as.image( Z=log(predictions), x=locations, nx=p$nplons, ny=p$nplats, na.rm=TRUE) )
