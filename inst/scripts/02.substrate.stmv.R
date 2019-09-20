@@ -22,7 +22,7 @@ p = aegis.substrate::substrate_parameters(
   DATA = 'substrate.db( p=p, DS="stmv.inputs" )',
   spatial.domain = "canada.east.highres" ,
   spatial.domain.subareas = c( "canada.east", "SSE", "snowcrab", "SSE.mpa" ),
-  pres_discretization_substrate = 1 / 20, # 1==p$pres; controls resolution of data prior to modelling (km .. ie 20 linear units smaller than the final discretization pres)
+  inputdata_spatial_discretization_planar_km = 1 / 20, # 1==p$pres; controls resolution of data prior to modelling (km .. ie 20 linear units smaller than the final discretization pres)
   stmv_dimensionality="space",
   stmv_global_modelengine = "gam",
   stmv_global_modelformula = formula( paste(
@@ -39,12 +39,12 @@ p = aegis.substrate::substrate_parameters(
   stmv_autocorrelation_localrange = 0.1,  # for output to stats
   stmv_autocorrelation_interpolation = c(0.25, 0.1, 0.05, 0.01 )
   stmv_variogram_method = "fft",
-  depth.filter = 0.1, # the depth covariate is input in m, so, choose stats locations with elevation > 0 m as being on land
+  stmv_filter_depth_m = 0.1, # the depth covariate is input in m, so, choose stats locations with elevation > 0 m as being on land
   stmv_local_model_distanceweighted = TRUE,
   stmv_rsquared_threshold = 0.1, # lower threshold == ignore
   stmv_distance_statsgrid = 5, # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
   stmv_distance_scale = c( 5, 10, 25, 50, 75 ), # km ... approx guess of 95% AC range
-  stmv_distance_prediction_max = 5 * 1.25 , # upper limit in distnace to predict upon (just over the grid size of statsgrid) .. in timeseries can become very slow so try to be small
+  stmv_distance_prediction_fraction = 0.95 , # upper limit in distnace to predict upon (just over the grid size of statsgrid) .. in timeseries can become very slow so try to be small
   stmv_nmin = 100, # stmv_nmin/stmv_nmax changes with resolution
   stmv_nmax = 400, # numerical time/memory constraint -- anything larger takes too much time .. anything less .. errors
   stmv_runmode = list(

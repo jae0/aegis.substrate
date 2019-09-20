@@ -74,8 +74,8 @@
       S = S[ ,c("plon", "plat", "substrate.grainsize" )]
 
       # discretize to speed up the rest
-      S$plon = round(S$plon/p$pres_discretization_substrate + 1) * p$pres_discretization_substrate
-      S$plat = round(S$plat/p$pres_discretization_substrate + 1) * p$pres_discretization_substrate
+      S$plon = round(S$plon/p$inputdata_spatial_discretization_planar_km + 1) * p$inputdata_spatial_discretization_planar_km
+      S$plat = round(S$plat/p$inputdata_spatial_discretization_planar_km + 1) * p$inputdata_spatial_discretization_planar_km
 
       gsrez = 0.001
       oo = paste( S$plon, S$plat, round(S$substrate.grainsize/gsrez +1 )*gsrez )

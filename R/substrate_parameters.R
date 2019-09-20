@@ -93,6 +93,9 @@ substrate_parameters = function( p=NULL, project.name=NULL, project.mode="defaul
 
   if (project.mode=="carstm") {
     p$libs = c( p$libs, project.library ( "carstm" ) )
+    if (!exists("variables", p)) p$variables = list()
+    if (!exists("LOCS", p$variables)) p$variables$LOCS = c("plon", "plat")
+    if (!exists("Y", p$variables)) p$variables$Y = "substrate.grainsize" # name to give variable in extraction and model
 
     return(p)
   }
