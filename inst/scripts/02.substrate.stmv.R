@@ -17,11 +17,11 @@ interpolate_ncpus = min( parallel::detectCores(), floor( (ram_local()- interpola
 
 
 p = aegis.substrate::substrate_parameters(
-  project.mode="stmv",
+  project_class="stmv",
   data_root = project.datadirectory( "aegis", "substrate" ),
-  DATA = 'substrate.db( p=p, DS="stmv.inputs" )',
-  spatial.domain = "canada.east.highres" ,
-  spatial.domain.subareas = c( "canada.east", "SSE", "snowcrab", "SSE.mpa" ),
+  DATA = 'substrate.db( p=p, DS="stmv_inputs" )',
+  spatial_domain = "canada.east.highres" ,
+  spatial_domain_subareas = c( "canada.east", "SSE", "snowcrab", "SSE.mpa" ),
   inputdata_spatial_discretization_planar_km = 1 / 20, # 1==p$pres; controls resolution of data prior to modelling (km .. ie 20 linear units smaller than the final discretization pres)
   stmv_dimensionality="space",
   stmv_global_modelengine = "gam",
@@ -37,14 +37,13 @@ p = aegis.substrate::substrate_parameters(
   # stmv_lowpass_phi = stmv::matern_distance2phi( distance=0.25, nu=0.1, cor=0.5 ), # default p$res = 0.5;
   stmv_autocorrelation_fft_taper = 0.5,  # benchmark from which to taper
   stmv_autocorrelation_localrange = 0.1,  # for output to stats
-  stmv_autocorrelation_interpolation = c(0.25, 0.1, 0.05, 0.01 )
+  stmv_autocorrelation_basis_interpolation = c(0.25, 0.1, 0.05, 0.01 )
   stmv_variogram_method = "fft",
   stmv_filter_depth_m = 0.1, # the depth covariate is input in m, so, choose stats locations with elevation > 0 m as being on land
   stmv_local_model_distanceweighted = TRUE,
   stmv_rsquared_threshold = 0.1, # lower threshold == ignore
   stmv_distance_statsgrid = 5, # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
   stmv_distance_scale = c( 5, 10, 25, 50, 75 ), # km ... approx guess of 95% AC range
-  stmv_distance_prediction_fraction = 0.95 , # upper limit in distnace to predict upon (just over the grid size of statsgrid) .. in timeseries can become very slow so try to be small
   stmv_nmin = 100, # stmv_nmin/stmv_nmax changes with resolution
   stmv_nmax = 400, # numerical time/memory constraint -- anything larger takes too much time .. anything less .. errors
   stmv_runmode = list(
@@ -91,7 +90,7 @@ substrate.db( p=p, DS="complete.redo" )
 
 
 # quick map
-b = bathymetry.db(spatial.domain=p$spatial.domain, DS="baseline")
+b = bathymetry.db(spatial_domain=p$spatial_domain, DS="baseline")
 o = substrate.db( p=p, DS="complete" )
 lattice::levelplot( log(o$substrate.grainsize) ~ plon +plat, data=b, aspect="iso")
 

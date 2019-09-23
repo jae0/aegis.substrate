@@ -1,5 +1,5 @@
 
 # todo
 p = aegis.substrate::substrate_parameters(
-  project.mode="carstm"
+  project_class="carstm"
 )

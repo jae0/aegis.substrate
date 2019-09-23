@@ -2,7 +2,7 @@
 
   substrate.db = function( p=substrate_parameters(), DS=NULL, varnames=NULL ) {
 
-  #  if ( !exists("data_root", p) ) p$data_root = project.datadirectory( "aegis", p$project.name )
+  #  if ( !exists("data_root", p) ) p$data_root = project.datadirectory( "aegis", p$project_name )
   #  if ( !exists("datadir", p) )   p$datadir  = file.path( p$data_root, "data" )
   #  if ( !exists("modeldir", p) )  p$modeldir = file.path( p$data_root, "modelled" )
 
@@ -47,7 +47,7 @@
       proj4.params = "+proj=utm +zone=20 +ellps=GRS80 +datum=NAD83 +units=m"  # original/raw data still in NAD83 geoid
       substrate= planar2lonlat ( substrate, proj4.params )
       substrate= substrate[ ,c("lon", "lat", "grainsize")]
-      substrate= lonlat2planar ( substrate, p$internal.crs )
+      substrate= lonlat2planar ( substrate, p$aegis_proj4string_planar_km )
       save( substrate, file=filename, compress=TRUE   )
       return ( filename )
     }
@@ -55,7 +55,7 @@
 
     # ---------------------------------------
 
-    if ( DS=="stmv.inputs") {
+    if ( DS=="stmv_inputs") {
 
       varstokeep = unique( c( p$variables$Y, p$variables$LOCS, p$variables$COV ) )
       B = bathymetry.db( p=p, DS="baseline", varnames=varstokeep )
@@ -69,7 +69,7 @@
       bid = stmv::array_map( "xy->1", B[,c("plon", "plat")], gridparams=p$gridparams )
 
       S = substrate.db( p=p, DS="lonlat.highres" )
-      S = lonlat2planar( S,  proj.type=p$internal.crs )  # utm20, WGS84 (snowcrab geoid)
+      S = lonlat2planar( S,  proj.type=p$aegis_proj4string_planar_km )  # utm20, WGS84 (snowcrab geoid)
       S$substrate.grainsize = S$grainsize
       S = S[ ,c("plon", "plat", "substrate.grainsize" )]
 
@@ -115,12 +115,12 @@
      #// substrate.db( DS="complete" .. ) returns the final form of the substrate data after
      #// regridding and selection to area of interest as specificied by girds.new=c("SSE", etc)
 
-      fn = file.path( p$modeldir, paste( "substrate", "complete", p$spatial.domain, "rdata", sep=".") )
+      fn = file.path( p$modeldir, paste( "substrate", "complete", p$spatial_domain, "rdata", sep=".") )
 
       if ( DS %in% c("complete") ) {
 
         defaultdir = project.datadirectory( "aegis", "substrate", "modelled" )
-        if (!file.exists(fn)) fn = file.path( defaultdir, paste( "substrate", "complete", p$spatial.domain, "rdata", sep=".") )
+        if (!file.exists(fn)) fn = file.path( defaultdir, paste( "substrate", "complete", p$spatial_domain, "rdata", sep=".") )
 
         S = NULL
         if ( file.exists ( fn) ) load( fn)
@@ -164,17 +164,17 @@
 
       varnames = setdiff( names(S0), c("plon","plat", "lon", "lat") )
       #using fields
-      grids = setdiff( unique( p0$spatial.domain.subareas ), p0$spatial.domain )
+      grids = setdiff( unique( p0$spatial_domain_subareas ), p0$spatial_domain )
       for (gr in grids ) {
         print(gr)
-        p1 = spatial_parameters( spatial.domain=gr ) #target projection
+        p1 = spatial_parameters( spatial_domain=gr ) #target projection
         L1 = bathymetry.db( p=p1, DS="baseline" )
         L1i = array_map( "xy->2", L1[, c("plon", "plat")], gridparams=p1$gridparams )
-        L1 = planar2lonlat( L1, proj.type=p1$internal.crs )
+        L1 = planar2lonlat( L1, proj.type=p1$aegis_proj4string_planar_km )
         S = L1
         L1$plon_1 = L1$plon # store original coords
         L1$plat_1 = L1$plat
-        L1 = lonlat2planar( L1, proj.type=p0$internal.crs )
+        L1 = lonlat2planar( L1, proj.type=p0$aegis_proj4string_planar_km )
         p1$wght = fields::setup.image.smooth(
           nrow=p1$nplons, ncol=p1$nplats, dx=p1$pres, dy=p1$pres,
           theta=p1$pres/3, xwidth=4*p1$pres, ywidth=4*p1$pres )
@@ -192,7 +192,7 @@
         ii = which( S$substrate.grainsize > exp(5) )
         if (length(ii) > 0 ) S$substrate.grainsize[ ii ] = exp(5)
 
-        fn = file.path( p$modeldir, paste( "substrate", "complete", p1$spatial.domain, "rdata", sep=".") )
+        fn = file.path( p$modeldir, paste( "substrate", "complete", p1$spatial_domain, "rdata", sep=".") )
         save (S, file=fn, compress=TRUE)
       }
 
@@ -222,7 +222,7 @@
         b[,varnames] = log(b[,varnames])
       }
 
-      # oc = landmask( db="worldHires", regions=c("Canada", "US"), return.value="not.land", tag="predictions",internal.crs=p$internal.crs )
+      # oc = landmask( db="worldHires", regions=c("Canada", "US"), return.value="not.land", tag="predictions", crs=p$aegis_proj4string_planar_km )
       # if (length(oc) > 0) {
       #   b = b[oc,]
       # }
@@ -236,8 +236,8 @@
           contour=FALSE, labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE),
           panel = function(x, y, subscripts, ...) {
             panel.levelplot (x, y, subscripts, aspect="iso", rez=c(1,1), ...)
-            sp.lines( isobath.db( p=p, DS="isobath", depths=isodepths, crs=p$internal.crs ), col = "gray80", cex=0.1 )
-            sp.lines( aegis.coastline::coastline.db( p=p, crs=p$internal.crs, DS="gshhg coastline highres" ), col = "steelblue", cex=0.1 )
+            sp.lines( isobath.db( p=p, DS="isobath", depths=isodepths, crs=p$aegis_proj4string_planar_km ), col = "gray80", cex=0.1 )
+            sp.lines( aegis.coastline::coastline.db( p=p, crs=p$aegis_proj4string_planar_km, DS="gshhg coastline highres" ), col = "steelblue", cex=0.1 )
           }
         )
       )

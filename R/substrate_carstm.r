@@ -5,14 +5,14 @@
     #\\ i.e., negative valued for above sea level and positive valued for below sea level
     if ( is.null(p)) p = substrate_parameters(...)
 
-    if ( !exists("project.name", p)) p$project.name = "substrate"
-    if ( !exists("data_root", p) ) p$data_root = project.datadirectory( "aegis", p$project.name )
+    if ( !exists("project_name", p)) p$project_name = "substrate"
+    if ( !exists("data_root", p) ) p$data_root = project.datadirectory( "aegis", p$project_name )
     if ( !exists("datadir", p) )   p$datadir  = file.path( p$data_root, "data" )
     if ( !exists("modeldir", p) )  p$modeldir = file.path( p$data_root, "modelled" )
 
 
 
-  if (is.null(id)) id = paste( p$spatial.domain, p$areal_units_overlay, p$areal_units_resolution_km, p$areal_units_strata_type, sep="_" )
+  if (is.null(id)) id = paste( p$spatial_domain, p$areal_units_overlay, p$areal_units_resolution_km, p$areal_units_strata_type, sep="_" )
 
 
   # -----------------
@@ -27,10 +27,10 @@
     }
 
     sppoly = areal_units(
+      spatial_domain=p$spatial_domain,
       areal_units_strata_type=p$areal_units_strata_type,
       areal_units_resolution_km=p$areal_units_resolution_km,
-      spatial.domain=p$spatial.domain,
-      proj4string_planar_km=p$proj4string_planar_km,
+      areal_units_proj4string_planar_km=p$areal_units_proj4string_planar_km,
       areal_units_overlay= ifelse(!exists("areal_units_overlay", p) || !is.finite(p$areal_units_overlay) || !p$areal_units_overlay, "none", p$areal_units_overlay),
       areal_units_constraint=ifelse(!exists("areal_units_constraint", p) || !is.finite(p$areal_units_constraint) || !p$areal_units_constraint, "none", p$areal_units_constraint),
       redo=TRUE
