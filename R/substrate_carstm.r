@@ -1,15 +1,14 @@
 
-  substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL, redo=FALSE, ... ) {
+substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL, redo=FALSE, ... ) {
 
-    #\\ Note inverted convention: depths are positive valued
-    #\\ i.e., negative valued for above sea level and positive valued for below sea level
-    if ( is.null(p)) p = substrate_parameters(...)
+  #\\ Note inverted convention: depths are positive valued
+  #\\ i.e., negative valued for above sea level and positive valued for below sea level
+  if ( is.null(p)) p = substrate_parameters(...)
 
-    if ( !exists("project_name", p)) p$project_name = "substrate"
-    if ( !exists("data_root", p) ) p$data_root = project.datadirectory( "aegis", p$project_name )
-    if ( !exists("datadir", p) )   p$datadir  = file.path( p$data_root, "data" )
-    if ( !exists("modeldir", p) )  p$modeldir = file.path( p$data_root, "modelled" )
-
+  if ( !exists("project_name", p)) p$project_name = "substrate"
+  if ( !exists("data_root", p) ) p$data_root = project.datadirectory( "aegis", p$project_name )
+  if ( !exists("datadir", p) )   p$datadir  = file.path( p$data_root, "data" )
+  if ( !exists("modeldir", p) )  p$modeldir = file.path( p$data_root, "modelled" )
 
 
   if (is.null(id)) id = paste( p$spatial_domain, p$areal_units_overlay, p$areal_units_resolution_km, p$areal_units_strata_type, sep="_" )
@@ -17,68 +16,39 @@
 
   # -----------------
 
-  if (DS=="areal_units") {
-
-    fn = file.path( p$modeldir, paste( "areal_units", id, "rdata", sep=".") )
-    sppoly = NULL
-    if (!redo) {
-      if (file.exists(fn)) load(fn)
-      return(sppoly)
-    }
-
-    sppoly = areal_units(
-      spatial_domain=p$spatial_domain,
-      areal_units_strata_type=p$areal_units_strata_type,
-      areal_units_resolution_km=p$areal_units_resolution_km,
-      areal_units_proj4string_planar_km=p$areal_units_proj4string_planar_km,
-      areal_units_overlay= ifelse(!exists("areal_units_overlay", p) || !is.finite(p$areal_units_overlay) || !p$areal_units_overlay, "none", p$areal_units_overlay),
-      areal_units_constraint=ifelse(!exists("areal_units_constraint", p) || !is.finite(p$areal_units_constraint) || !p$areal_units_constraint, "none", p$areal_units_constraint),
-      redo=TRUE
-    )
-
-    W.nb = poly2nb(sppoly, row.names=sppoly$StrataID, queen=TRUE)  # slow .. ~1hr?
-    W.remove = which(card(W.nb) == 0)
-
-    if ( length(W.remove) > 0 ) {
-      # remove isolated locations and recreate sppoly .. alternatively add links to W.nb
-      W.keep = which(card(W.nb) > 0)
-      W.nb = nb_remove( W.nb, W.remove )
-      sppoly = sppoly[W.keep,]
-      row.names(sppoly) = as.character(sppoly$StrataID)
-      sppoly = sp::spChFIDs( sppoly, row.names(sppoly) )  #fix id's
-      sppoly$StrataID = factor( as.character(sppoly$StrataID) )
-      sppoly$strata = as.numeric( sppoly$StrataID )
-      sppoly = sppoly[order(sppoly$strata),]
-    }
-
-    attr(sppoly, "nb") = W.nb  # adding neighbourhood as an attribute to sppoly
-    save(sppoly, file=fn, compress=TRUE)
-    return( sppoly )
-  }
-
-
-  # ------------
-
   if ( DS=="carstm_inputs") {
 
-
-    fn = file.path( p$modeldir, paste( "bathymetry", "carstm_inputs", id, "rdata", sep=".") )
+    fn = file.path( p$modeldir, paste( "substrate", "carstm_inputs", id, "rdata", sep=".") )
     if (!redo)  {
       if (file.exists(fn)) {
         load( fn)
-        return( B )
+        return( S )
       }
     }
     crs_lonlat = sp::CRS("+proj=longlat +datum=WGS84")
-    B = substrate.db ( p=p, DS="z.lonlat.rawdata" )  # 16 GB in RAM just to store!
-    B = B[ which( B$lon > p$corners$lon[1] & B$lon < p$corners$lon[2]  & B$lat > p$corners$lat[1] & B$lat < p$corners$lat[2] ), ]
+    S = substrate.db( p=p, DS="lonlat.highres" )
+    S = lonlat2planar( S,  proj.type=p$aegis_proj4string_planar_km )  # utm20, WGS84 (snowcrab geoid)
+    S$substrate.grainsize = S$grainsize
 
-    sppoly = bathymetry_carstm( p=p, DS="areal_units" )  # will redo if not found
+    S = S[ which( S$lon > p$corners$lon[1] & S$lon < p$corners$lon[2]  & S$lat > p$corners$lat[1] & S$lat < p$corners$lat[2] ), ]
+
+    M = bathymetry_carstm( p=p, DS="aggregated_data" )  # will redo if not found .. not used here but used for data matching/lookup in other aegis projects that use bathymetry
+
+    locsmap = match(
+      stmv::array_map( "xy->1", S[, c("plon","plat")], gridparams=p$gridparams ),
+      stmv::array_map( "xy->1", M(, c("plon","plat")], gridparams=p$gridparams ) )
+
+    S$z = M$z[locsmap]
+
+    S$z[!is.finite(S$z)] = median(S$z, na.rm=TRUE )  # missing data .. quick fix .. do something better
+
+
+    sppoly = areal_units( p=p )  # will redo if not found
     sppoly = sppoly["StrataID"]
-    B$StrataID = over( SpatialPoints( B[, c("lon", "lat")], crs_lonlat ), spTransform(sppoly, crs_lonlat ) )$StrataID # match each datum to an area
-    B = B[ which(is.finite(B$StrataID)),]
-    save( B, file=fn, compress=TRUE )
-    return( B )
+    S$StrataID = over( SpatialPoints( S[, c("lon", "lat")], crs_lonlat ), spTransform(sppoly, crs_lonlat ) )$StrataID # match each datum to an area
+    S = S[ which(is.finite(S$StrataID)),]
+    save( S, file=fn, compress=TRUE )
+    return( S )
   }
 
   # -----------------------
@@ -86,7 +56,7 @@
   if ( DS=="aggregated_data") {
     #\\ not used (yet)
 
-    fn = file.path( p$modeldir, paste( "bathymetry", "aggregated_data", id, "rdata", sep=".") )
+    fn = file.path( p$modeldir, paste( "substrate", "aggregated_data", id, "rdata", sep=".") )
     if (!redo)  {
       print( "Warning: aggregated_data is loading from a saved instance ... add redo=TRUE if data needs to be refresh" )
       if (file.exists(fn)) {
@@ -98,27 +68,28 @@
 
     print( "Warning: aggregated_data is being recreated ... " )
     print( "Warning: this needs a lot of RAM .. ~XX GB depending upon resolution of discretization .. a few hours " )
-    B = bathymetry.db ( p=p, DS="z.lonlat.rawdata" )  # 16 GB in RAM just to store!
+
+    S = substrate.db ( p=p, DS="z.lonlat.rawdata" )  # 16 GB in RAM just to store!
     crs_lonlat = sp::CRS("+proj=longlat +datum=WGS84")
 
-    sppoly = bathymetry_carstm( p=p, DS="areal_units"  )  # will redo if not found
+    sppoly = areal_units( p=p )  # will redo if not found
     sppoly = sppoly["StrataID"]
-    B$StrataID = over( SpatialPoints( B[, c("lon", "lat")], crs_lonlat ), spTransform(sppoly, crs_lonlat ) )$StrataID # match each datum to an area
+    S$StrataID = over( SpatialPoints( S[, c("lon", "lat")], crs_lonlat ), spTransform(sppoly, crs_lonlat ) )$StrataID # match each datum to an area
 
-    B$lon = NULL
-    B$lat = NULL
-    B = B[ which(is.finite(B$StrataID))]
+    S$lon = NULL
+    S$lat = NULL
+    S = S[ which(is.finite(S$StrataID))]
 
     gc()
     bb = as.data.frame( t( simplify2array(
-      tapply( X=B$z, INDEX=list(paste( B$StrataID) ),
+      tapply( X=S$z, INDEX=list(paste( S$StrataID) ),
         FUN = function(w) { c(
           mean(w, na.rm=TRUE),
           sd(w, na.rm=TRUE),
           length( which(is.finite(w)) )
         ) }, simplify=TRUE )
     )))
-    B = NULL
+    S = NULL
     colnames(bb) = c("z.mean", "z.sd", "z.n")
     bb$StrataID = rownames(bb)
     sppoly$z = NA
@@ -140,8 +111,8 @@
 
   if ( DS %in% c("carstm_modelled", "carstm_modelled_fit") ) {
 
-    fn = file.path( p$modeldir, paste( "bathymetry", "carstm_modelled", id, p$carstm_modelengine, p$carstm_family, "rdata", sep=".") )
-    fn_fit = file.path( p$modeldir, paste( "bathymetry", "carstm_modelled_fit", id, p$carstm_modelengine, "rdata", sep=".") )
+    fn = file.path( p$modeldir, paste( "substrate", "carstm_modelled", id, p$carstm_modelengine, p$carstm_family, "rdata", sep=".") )
+    fn_fit = file.path( p$modeldir, paste( "substrate", "carstm_modelled_fit", id, p$carstm_modelengine, "rdata", sep=".") )
 
     if (!redo)  {
       print( "Warning: carstm_modelled is loading from a saved instance ... add redo=TRUE if data needs to be refresh" )
@@ -163,13 +134,17 @@
     print( "Warning: carstm_modelled is being recreated ... " )
     print( "Warning: this needs a lot of RAM .. ~XX GB depending upon resolution of discretization .. a few hours " )
 
-    M = bathymetry_carstm( p=p, DS="carstm_inputs" )
+    M = substrate_carstm( p=p, DS="carstm_inputs" )
     M$StrataID  = as.character(M$StrataID)
     M$tag = "observations"
     M$Y = M$z
 
+    ddepths = c(2.5, 5, 10, 20, 40, 80, 160, 320, 640 )
+
+    M$zi = as.numeric( as.character( cut( M$z, breaks=ddepths, labels=diff(ddepths)/2 + ddepths[-length(ddepths)], include.lowest=TRUE ) ))
+
     # prediction surface
-    sppoly = bathymetry_carstm( p=p, DS="areal_units" )  # will redo if not found
+    sppoly = areal_units( p=p )  # will redo if not found
     sppoly = sppoly["StrataID"]
 
     # do this immediately to reduce storage for sppoly (before adding other variables)
