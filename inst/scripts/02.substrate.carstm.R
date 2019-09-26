@@ -30,14 +30,27 @@ p = aegis.substrate::substrate_parameters(
   areal_units_strata_type = "lattice", # "aegis_lattice" to use ageis fields instead of carstm fields ... note variables are not the same
   areal_units_overlay = subproject, # additional polygon layers for subsequent analysis such as management area: "snowcrab" or "groundfish"  # for now ..
   areal_units_constraint="none", # set[, c("lon", "lat")],  # to limit to sppoly to only those with data that fall into them
-  carstm_modelengine = "inla",  # gam is also supported for now
-  carstm_family = "lognormal",
-  carstm_formula = formula( paste(
-    'substrate.grainsize ~ 1 ',
-    '  + f(zi, model="rw2", scale.model=TRUE, diagonal=1e-6, hyper=H$rw2)',
-    '  + f(strata, model="bym2", graph=sppoly@nb, scale.model=TRUE, constr=TRUE, hyper=H$bym2)',
-    '  + f(iid_error, model="iid", hyper=H$iid)'
-  ) ,
+  carstm_modelengine = "inla.default",  # gam is also supported for now
+  carstm_modelcall = '
+    inla(
+      formula = substrate.grainsize ~ 1
+        + f(zi, model="rw2", scale.model=TRUE, diagonal=1e-6, hyper=H$rw2)
+        + f(strata, model="bym2", graph=sppoly@nb, scale.model=TRUE, constr=TRUE, hyper=H$bym2)
+        + f(iid_error, model="iid", hyper=H$iid),
+      family = "lognormal", # "zeroinflatedpoisson0",
+      data= M,
+      control.compute=list(dic=TRUE, config=TRUE),
+      control.results=list(return.marginals.random=TRUE, return.marginals.predictor=TRUE ),
+      control.predictor=list(compute=FALSE, link=1 ),
+      control.fixed=H$fixed,  # priors for fixed effects, generic is ok
+      control.inla=list(int.strategy="eb") ,# to get empirical Bayes results much faster.
+      # control.inla=list( strategy="laplace", cutoff=1e-6, correct=TRUE, correct.verbose=FALSE ),
+      # num.threads=4,
+      # blas.num.threads=4,
+      verbose=TRUE
+    ) ',
+  # carstm_modelcall = 'glm( formula = substrate.grainsize ~ 1 + StrataID + log(z),  family = gaussian(link="log"), data= M[ which(M$tag=="observations"), ] ) ',  # for modelengine='glm'
+  # carstm_modelcall = 'gam( formula = substrate.grainsize ~ 1 + StrataID + s(log(z)),  family = gaussian(link="log"), data= M[ which(M$tag=="observations"), ] ) ',  # for modelengine='gam'
   libs = RLibrary ( "sp", "spdep", "rgeos", "spatialreg", "INLA", "raster", "aegis",  "aegis.polygons", "aegis.bathymetry", "aegis.substrate", "carstm" )
 )
 
@@ -66,7 +79,7 @@ sppoly = substrate_carstm( p=p, DS="carstm_modelled", redo=TRUE ) # extract pred
 
 if (0) {
   sppoly = substrate_carstm( p=p, DS="carstm_modelled" ) # to load currently saved sppoly
-  fit =  substrate_carstm( p=p, DS="carstm_modelled" )  # extract currently saved model fit
+  fit =  substrate_carstm( p=p, DS="carstm_modelled_fit" )  # extract currently saved model fit
 }
 
 vn = "z.predicted"

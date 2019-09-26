@@ -1,4 +1,5 @@
 
+
 substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL, redo=FALSE, ... ) {
 
   #\\ Note inverted convention: depths are positive valued
@@ -14,7 +15,66 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL,
   if (is.null(id)) id = paste( p$spatial_domain, p$areal_units_overlay, p$areal_units_resolution_km, p$areal_units_strata_type, sep="_" )
 
 
-  # -----------------
+
+  # -----------------------
+
+  if ( DS=="aggregated_data") {
+
+    fn = file.path( p$modeldir, paste( "bathymetry", "aggregated_data", id, "rdata", sep=".") )
+    if (!redo)  {
+      print( "Warning: aggregated_data is loading from a saved instance ... add redo=TRUE if data needs to be refresh" )
+      if (file.exists(fn)) {
+        load( fn)
+        return( M )
+      }
+      print( "Warning: aggregated_data load from saved instance failed ... " )
+    }
+
+    print( "Warning: aggregated_data is being recreated ... " )
+    print( "Warning: this needs a lot of RAM .. ~XX GB depending upon resolution of discretization .. a few hours " )
+
+    M = substrate.db( p=p, DS="lonlat.highres" )
+    M$substrate.grainsize = M$grainsize
+
+    if (!exists("inputdata_spatial_discretization_planar_km", p) )  p$inputdata_spatial_discretization_planar_km = 1
+
+    # thin data a bit ... remove potential duplicates and robustify
+    M = lonlat2planar( M, proj.type=p$aegis_proj4string_planar_km )
+    M$plon = round(M$plon / p$inputdata_spatial_discretization_planar_km + 1 ) * p$inputdata_spatial_discretization_planar_km
+    M$plat = round(M$plat / p$inputdata_spatial_discretization_planar_km + 1 ) * p$inputdata_spatial_discretization_planar_km
+    M$plonplat = paste( M$plon, M$plat)
+    M$plon = NULL
+    M$plat = NULL
+    gc()
+
+    bb = as.data.frame( t( simplify2array(
+      tapply( X=M$z, INDEX=list(paste( M$plonplat) ),
+        FUN = function(w) { c(
+          mean(w, na.rm=TRUE),
+          sd(w, na.rm=TRUE),
+          length( which(is.finite(w)) )
+        ) }, simplify=TRUE )
+    )))
+    M = NULL
+    colnames(bb) = c("substrate.grainsize.mean", "substrate.grainsize.sd", "substrate.grainsize.n")
+    plonplat = matrix( as.numeric( unlist(strsplit( rownames(bb), " ", fixed=TRUE))), ncol=2, byrow=TRUE)
+
+    bb$plon = plonplat[,1]
+    bb$plat = plonplat[,2]
+    plonplat = NULL
+
+    M = bb[ which( is.finite( bb$z.mean )) ,]
+    bb =NULL
+    gc()
+    M = planar2lonlat( M, p$aegis_proj4string_planar_km)
+    save(M, file=fn, compress=TRUE)
+
+    return( M )
+  }
+
+
+  # ----------------------
+
 
   if ( DS=="carstm_inputs") {
 
@@ -25,88 +85,100 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL,
         return( S )
       }
     }
-    crs_lonlat = sp::CRS("+proj=longlat +datum=WGS84")
-    S = substrate.db( p=p, DS="lonlat.highres" )
-    S = lonlat2planar( S,  proj.type=p$aegis_proj4string_planar_km )  # utm20, WGS84 (snowcrab geoid)
-    S$substrate.grainsize = S$grainsize
 
-    S = S[ which( S$lon > p$corners$lon[1] & S$lon < p$corners$lon[2]  & S$lat > p$corners$lat[1] & S$lat < p$corners$lat[2] ), ]
-
-    M = bathymetry_carstm( p=p, DS="aggregated_data" )  # will redo if not found .. not used here but used for data matching/lookup in other aegis projects that use bathymetry
-
-    locsmap = match(
-      stmv::array_map( "xy->1", S[, c("plon","plat")], gridparams=p$gridparams ),
-      stmv::array_map( "xy->1", M(, c("plon","plat")], gridparams=p$gridparams ) )
-
-    S$z = M$z[locsmap]
-
-    S$z[!is.finite(S$z)] = median(S$z, na.rm=TRUE )  # missing data .. quick fix .. do something better
-
-
+    # prediction surface
     sppoly = areal_units( p=p )  # will redo if not found
     sppoly = sppoly["StrataID"]
-    S$StrataID = over( SpatialPoints( S[, c("lon", "lat")], crs_lonlat ), spTransform(sppoly, crs_lonlat ) )$StrataID # match each datum to an area
-    S = S[ which(is.finite(S$StrataID)),]
-    save( S, file=fn, compress=TRUE )
-    return( S )
+
+    crs_lonlat = sp::CRS(projection_proj4string("lonlat_wgs84"))
+
+    # do this immediately to reduce storage for sppoly (before adding other variables)
+
+    M = substrate.carstm ( p=p, DS="aggregated_data" )  # 16 GB in RAM just to store!
+
+    # reduce size
+    M = M[ which( M$lon > p$corners$lon[1] & M$lon < p$corners$lon[2]  & M$lat > p$corners$lat[1] & M$lat < p$corners$lat[2] ), ]
+    # levelplot(z.mean~plon+plat, data=M, aspect="iso")
+
+    M$StrataID = over( SpatialPoints( M[, c("lon", "lat")], crs_lonlat ), spTransform(sppoly, crs_lonlat ) )$StrataID # match each datum to an area
+    M$lon = NULL
+    M$lat = NULL
+    M$plon = NULL
+    M$plat = NULL
+    M = M[ which(is.finite(M$StrataID)),]
+    M$StrataID = as.character( M$StrataID )  # match each datum to an area
+    M$tag = "observations"
+    M$substrate.grainsize[!is.finite(M$substrate.grainsize)] = median(M$substrate.grainsize, na.rm=TRUE )  # missing data .. quick fix .. do something better
+
+
+    B = bathymetry.carstm ( p=p, DS="aggregated_data" )  # unmodeled!
+    # reduce size
+    B = B[ which( B$lon > p$corners$lon[1] & B$lon < p$corners$lon[2]  & B$lat > p$corners$lat[1] & B$lat < p$corners$lat[2] ), ]
+    locsmap = match(
+      stmv::array_map( "xy->1", M[, c("plon","plat")], gridparams=p$gridparams ),
+      stmv::array_map( "xy->1", B(, c("plon","plat")], gridparams=p$gridparams ) )
+    M$z.mean = B$z.mean[locsmap]
+    M$z.sd = B$z.sd[locsmap]
+    M$z.mean[!is.finite(M$z.mean)] = median(M$z.mean, na.rm=TRUE )  # missing data .. quick fix .. do something better
+    B = NULL
+
+
+    sppoly_df = as.data.frame(sppoly)
+    sppoly_df$z = NA
+    sppoly_df$StrataID = as.character( sppoly_df$StrataID )
+    sppoly_df$tag ="predictions"
+
+    vn = c("substrate.grainsize.mean", "z.mean", "tag", "StrataID")
+
+    M = rbind( M[, vn], sppoly_df[, vn] )
+    sppoly_df = NULL
+
+    M$StrataID  = factor( as.character(M$StrataID), levels=levels( sppoly$StrataID ) ) # revert to factors
+    sppoly = NULL
+    M$strata  = as.numeric( M$StrataID)
+    M$iid_error = 1:nrow(M) # for inla indexing for set level variation
+
+
+    # prediction surface
+    sppoly = areal_units( p=p )  # will redo if not found
+    sppoly = sppoly["StrataID"]
+
+    M = substrate_carstm( p=p, DS="carstm_inputs" )
+    # M$StrataID  = as.character(M$StrataID)
+    # M$tag = "observations"
+    # M$Y = M$z
+
+    ddepths = c(2.5, 5, 10, 20, 40, 80, 160, 320, 640 )  # depth cut points
+    M$zi = as.numeric( as.character( cut( M$z, breaks=ddepths, labels=diff(ddepths)/2 + ddepths[-length(ddepths)], include.lowest=TRUE ) ))
+
+    # do this immediately to reduce storage for sppoly (before adding other variables)
+    M$StrataID = as.character( over( SpatialPoints( M[, c("lon", "lat")], crs_lonlat ), spTransform(sppoly, crs_lonlat ) )$StrataID) # match each datum to an area
+    M$lon = NULL
+    M$lat = NULL
+
+    M$tag = "observations"
+
+    sppoly = as.data.frame(sppoly)
+    sppoly$z = NA
+    sppoly$StrataID = as.character( sppoly$StrataID )
+    sppoly$tag ="predictions"
+
+    sppoly_depths = bathymetry.carstm( p=p, DS="" )
+
+    M = rbind( M, sppoly[, names(M)] )
+
+    M$StrataID  = factor( as.character(M$StrataID), levels=levels( sppoly$StrataID ) ) # revert to factors
+    M$strata  = as.numeric( M$StrataID)
+    M$iid_error = 1:nrow(M) # for inla indexing for set level variation
+
+    gc()
+
+    save( M, file=fn, compress=TRUE )
+    return( M )
   }
 
   # -----------------------
 
-  if ( DS=="aggregated_data") {
-    #\\ not used (yet)
-
-    fn = file.path( p$modeldir, paste( "substrate", "aggregated_data", id, "rdata", sep=".") )
-    if (!redo)  {
-      print( "Warning: aggregated_data is loading from a saved instance ... add redo=TRUE if data needs to be refresh" )
-      if (file.exists(fn)) {
-        load( fn)
-        return( sppoly )
-      }
-      print( "Warning: aggregated_data load from saved instance failed ... " )
-    }
-
-    print( "Warning: aggregated_data is being recreated ... " )
-    print( "Warning: this needs a lot of RAM .. ~XX GB depending upon resolution of discretization .. a few hours " )
-
-    S = substrate.db ( p=p, DS="z.lonlat.rawdata" )  # 16 GB in RAM just to store!
-    crs_lonlat = sp::CRS("+proj=longlat +datum=WGS84")
-
-    sppoly = areal_units( p=p )  # will redo if not found
-    sppoly = sppoly["StrataID"]
-    S$StrataID = over( SpatialPoints( S[, c("lon", "lat")], crs_lonlat ), spTransform(sppoly, crs_lonlat ) )$StrataID # match each datum to an area
-
-    S$lon = NULL
-    S$lat = NULL
-    S = S[ which(is.finite(S$StrataID))]
-
-    gc()
-    bb = as.data.frame( t( simplify2array(
-      tapply( X=S$z, INDEX=list(paste( S$StrataID) ),
-        FUN = function(w) { c(
-          mean(w, na.rm=TRUE),
-          sd(w, na.rm=TRUE),
-          length( which(is.finite(w)) )
-        ) }, simplify=TRUE )
-    )))
-    S = NULL
-    colnames(bb) = c("z.mean", "z.sd", "z.n")
-    bb$StrataID = rownames(bb)
-    sppoly$z = NA
-    sppoly$z.sd = NA
-    sppoly$z.n = NA
-    j = match( bb$StrataID, sppoly$StrataID )
-    if (length(j) > 0)  {
-      sppoly$z[j] = bb$z.mean
-      sppoly$z.sd[j] = bb$z.sd
-      sppoly$z.n[j] = bb$z.n
-    }
-    save( sppoly, file=fn, compress=TRUE )
-    return( sppoly )
-  }
-
-
-  # ------------
 
 
   if ( DS %in% c("carstm_modelled", "carstm_modelled_fit") ) {
@@ -134,59 +206,26 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL,
     print( "Warning: carstm_modelled is being recreated ... " )
     print( "Warning: this needs a lot of RAM .. ~XX GB depending upon resolution of discretization .. a few hours " )
 
-    M = substrate_carstm( p=p, DS="carstm_inputs" )
-    M$StrataID  = as.character(M$StrataID)
-    M$tag = "observations"
-    M$Y = M$z
 
-    ddepths = c(2.5, 5, 10, 20, 40, 80, 160, 320, 640 )
-
-    M$zi = as.numeric( as.character( cut( M$z, breaks=ddepths, labels=diff(ddepths)/2 + ddepths[-length(ddepths)], include.lowest=TRUE ) ))
 
     # prediction surface
     sppoly = areal_units( p=p )  # will redo if not found
-    sppoly = sppoly["StrataID"]
+#    sppoly = sppoly["StrataID"]
 
-    # do this immediately to reduce storage for sppoly (before adding other variables)
-    M$StrataID = as.character( over( SpatialPoints( M[, c("lon", "lat")], crs_lonlat ), spTransform(sppoly, crs_lonlat ) )$StrataID) # match each datum to an area
-    M$lon = NULL
-    M$lat = NULL
+    M = substrate_carstm( p=p, DS="carstm_inputs" )  # will redo if not found
+    fit  = NULL
 
+    if ( grepl("glm", p$carstm_modelengine) ) {
 
-    M$z = M$z + p$constant_offset # make all positive
-    M$tag = "observations"
+      assign("fit", eval(parse(text=paste( "try(", p$carstm_modelcall, ")" ) ) ))
+      if (is.null(fit)) error("model fit error")
+      if ("try-error" %in% class(fit) ) error("model fit error")
+      save( fit, file=fn_fit, compress=TRUE )
 
-    sppoly = as.data.frame(sppoly)
-    sppoly$z = NA
-    sppoly$StrataID = as.character( sppoly$StrataID )
-    sppoly$tag ="predictions"
-
-    M = rbind( M, sppoly[, names(M)] )
-
-    M$StrataID  = factor( as.character(M$StrataID), levels=levels( sppoly$StrataID ) ) # revert to factors
-    M$strata  = as.numeric( M$StrataID)
-    M$iid_error = 1:nrow(M) # for inla indexing for set level variation
-
-    gc()
-
-    if (p$carstm_modelengine %in% c( "glm", "gam" ) ) {
-
-      # simple glm/gam
-      fit = glm(
-        formula = Y ~ 1 + StrataID,
-        family = gaussian(link="log"), # "zeroinflatedpoisson0",
-        data= M[ which(M$tag=="observations"), ]
-      )
-
-      s = summary(fit)
-      AIC(fit)  # 77326
-
+      # s = summary(fit)
+      # AIC(fit)  # 104487274
       # reformat predictions into matrix form
-      ii = which(
-        M$tag=="predictions" &
-        M$StrataID %in% M[ which(M$tag=="observations"), "StrataID"]
-      )
-
+      ii = which( M$tag=="predictions" & M$StrataID %in% M[ which(M$tag=="observations"), "StrataID"] )
       preds = predict( fit, newdata=M[ii,], type="link", na.action=na.omit, se.fit=TRUE )  # no/km2
 
       # out = reformat_to_matrix(
@@ -195,54 +234,40 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL,
       #   matchto   = list( StrataID=sppoly$StrataID  )
       # )
       # iy = match( as.character(sppoly$StrataID), aps$StrataID )
-
-      sppoly@data[,"z.predicted"] = exp( preds$fit[ii]) - p$constant_offset
-      sppoly@data[,"z.predicted"] = exp( preds$fit.se[ii])
-      sppoly@data$z.predicted_lb = exp( preds$fit[ii] - preds$fit.se[ii] ) - p$constant_offset
-      sppoly@data$z.predicted_ub = exp( preds$fit[ii] - preds$fit.se[ii] ) - p$constant_offset
-
-      # out[ out>1e10] = NA
-      # convert numbers/km to biomass/strata (kg)..
-      # RES$glm = colSums( {out * sppoly$sa_strata_km2}, na.rm=TRUE ) / 10^6  # 10^6 kg -> kt # kg/km * km
-      # RES$glm_cfanorth = colSums( {out * sppoly$cfanorth_surfacearea}, na.rm=TRUE ) / 10^6  # 10^6 kg -> kt # kg/km * km
-      # RES$glm_cfasouth = colSums( {out * sppoly$cfasouth_surfacearea}, na.rm=TRUE ) / 10^6  # 10^6 kg -> kt # kg/km * km
-      # RES$glm_cfa4x = colSums( {out * sppoly$cfa4x_surfacearea}, na.rm=TRUE ) / 10^6  # 10^6 kg -> kt # kg/km * km
-
-      # plot( glm ~ yr, data=RES, lty=1, lwd=2.5, col="blue", type="b")
-      # plot( glm_cfanorth ~ yr, data=RES, lty=1, lwd=2.5, col="green", type="b")
-      # plot( glm_cfasouth ~ yr, data=RES, lty=1, lwd=2.5, col="green", type="b")
-      # plot( glm_cfa4x ~ yr, data=RES, lty=1, lwd=2.5, col="green", type="b")
-
-      if (map) {
-        vn = "z.predicted"
-        brks = interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile")
-        dev.new()
-        spplot( sppoly, vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coastLayout, col="transparent" )
+        sppoly@data[,"z.predicted"] = exp( preds$fit) - p$constant_offset
+        sppoly@data[,"z.predicted_se"] = exp( preds$se.fit)
+        sppoly@data[,"z.predicted_lb"] = exp( preds$fit - preds$se.fit ) - p$constant_offset
+        sppoly@data[,"z.predicted_ub"] = exp( preds$fit + preds$se.fit ) - p$constant_offset
+        save( spplot, file=fn, compress=TRUE )
       }
-      return( sppoly )
 
+      if ( grepl("gam", p$carstm_modelengine) ) {
+        assign("fit", eval(parse(text=paste( "try(", p$carstm_modelcall, ")" ) ) ))
+        if (is.null(fit)) error("model fit error")
+        if ("try-error" %in% class(fit) ) error("model fit error")
+        save( fit, file=fn_fit, compress=TRUE )
 
+        s = summary(fit)
+        AIC(fit)  # 104487274
+        # reformat predictions into matrix form
+        ii = which( M$tag=="predictions" & M$StrataID %in% M[ which(M$tag=="observations"), "StrataID"] )
+        preds = predict( fit, newdata=M[ii,], type="link", na.action=na.omit, se.fit=TRUE )  # no/km2
+        sppoly@data[,"z.predicted"] = exp( preds$fit) - p$constant_offset
+        sppoly@data[,"z.predicted_se"] = exp( preds$se.fit)
+        sppoly@data[,"z.predicted_lb"] = exp( preds$fit - preds$se.fit ) - p$constant_offset
+        sppoly@data[,"z.predicted_ub"] = exp( preds$fit + preds$se.fit ) - p$constant_offset
+        save( spplot, file=fn, compress=TRUE )
     }
 
-    if (p$carstm_modelengine == "inla") {
+
+    if ( grepl("inla", p$carstm_modelengine) ) {
 
       H = carstm_hyperparameters( sd(log(M$z), na.rm=TRUE), alpha=0.5, median( log(M$z), na.rm=TRUE) )
-
-      fit = inla(
-        formula = p$carstm_formula,
-        family = p$carstm_family,
-        data= M,
-        control.compute=list(dic=TRUE, config=TRUE),
-        control.results=list(return.marginals.random=TRUE, return.marginals.predictor=TRUE ),
-        control.predictor=list(compute=FALSE, link=1 ),
-        # control.fixed=H$fixed,  # priors for fixed effects, generic is ok
-        # control.inla=list(int.strategy="eb") ,# to get empirical Bayes results much faster.
-        # control.inla=list( strategy="laplace", cutoff=1e-6, correct=TRUE, correct.verbose=FALSE ),
-        num.threads=2,
-        blas.num.threads=2,
-        verbose=TRUE
-      )
+      assign("fit", eval(parse(text=paste( "try(", p$carstm_modelcall, ")" ) ) ))
+      if (is.null(fit)) error("model fit error")
+      if ("try-error" %in% class(fit) ) error("model fit error")
       save( fit, file=fn_fit, compress=TRUE )
+
       s = summary(fit)
       s$dic$dic  # 31225
       s$dic$p.eff # 5200
@@ -259,14 +284,16 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL,
       sppoly@data$z.random_strata_spatial = exp( fit$summary.random$strata[ jj+max(jj), "mean" ])
       sppoly@data$z.random_sample_iid = exp( fit$summary.random$iid_error[ ii[jj], "mean" ])
       save( spplot, file=fn, compress=TRUE )
-      if (map) {
-        vn = "z.predicted"
-        brks = interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile")
-        dev.new()
-        spplot( sppoly, vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coastLayout, col="transparent" )
-      }
-      return( sppoly )
     }
+
+
+    if (map) {
+      vn = "z.predicted"
+      brks = interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile")
+      dev.new();  spplot( sppoly, vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coastLayout, col="transparent" )
+    }
+
+    return( sppoly )
 
   }
 
