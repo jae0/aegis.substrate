@@ -116,10 +116,11 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL,
     B = B[ which( B$lon > p$corners$lon[1] & B$lon < p$corners$lon[2]  & B$lat > p$corners$lat[1] & B$lat < p$corners$lat[2] ), ]
     locsmap = match(
       stmv::array_map( "xy->1", M[, c("plon","plat")], gridparams=p$gridparams ),
-      stmv::array_map( "xy->1", B(, c("plon","plat")], gridparams=p$gridparams ) )
+      stmv::array_map( "xy->1", B[, c("plon","plat")], gridparams=p$gridparams ) )
     M$z.mean = B$z.mean[locsmap]
     M$z.sd = B$z.sd[locsmap]
-    M$z.mean[!is.finite(M$z.mean)] = median(M$z.mean, na.rm=TRUE )  # missing data .. quick fix .. do something better
+    M = M[ which(is.finite(M$z.mean)), ]
+
     B = NULL
 
 
@@ -143,7 +144,6 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL,
     sppoly = areal_units( p=p )  # will redo if not found
     sppoly = sppoly["StrataID"]
 
-    M = substrate_carstm( p=p, DS="carstm_inputs" )
     # M$StrataID  = as.character(M$StrataID)
     # M$tag = "observations"
     # M$Y = M$z
@@ -238,7 +238,7 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL,
         sppoly@data[,"z.predicted_se"] = exp( preds$se.fit)
         sppoly@data[,"z.predicted_lb"] = exp( preds$fit - preds$se.fit ) - p$constant_offset
         sppoly@data[,"z.predicted_ub"] = exp( preds$fit + preds$se.fit ) - p$constant_offset
-        save( spplot, file=fn, compress=TRUE )
+        save( sppoly, file=fn, compress=TRUE )
       }
 
       if ( grepl("gam", p$carstm_modelengine) ) {
@@ -256,7 +256,7 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL,
         sppoly@data[,"z.predicted_se"] = exp( preds$se.fit)
         sppoly@data[,"z.predicted_lb"] = exp( preds$fit - preds$se.fit ) - p$constant_offset
         sppoly@data[,"z.predicted_ub"] = exp( preds$fit + preds$se.fit ) - p$constant_offset
-        save( spplot, file=fn, compress=TRUE )
+        save( sppoly, file=fn, compress=TRUE )
     }
 
 
@@ -283,14 +283,14 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL,
       sppoly@data$z.random_strata_nonspatial = exp( fit$summary.random$strata[ jj, "mean" ])
       sppoly@data$z.random_strata_spatial = exp( fit$summary.random$strata[ jj+max(jj), "mean" ])
       sppoly@data$z.random_sample_iid = exp( fit$summary.random$iid_error[ ii[jj], "mean" ])
-      save( spplot, file=fn, compress=TRUE )
+      save( sppoly, file=fn, compress=TRUE )
     }
 
 
     if (map) {
       vn = "z.predicted"
       brks = interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile")
-      dev.new();  spplot( sppoly, vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coastLayout, col="transparent" )
+      dev.new();  sppoly( sppoly, vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coastLayout, col="transparent" )
     }
 
     return( sppoly )

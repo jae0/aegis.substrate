@@ -3,14 +3,19 @@
 reset_input_data = FALSE
 if (0) reset_input_data = TRUE # choose this if we are redoing input data "views"
 
-# subproject defines spatial bounds and lattive areal_units_overlays
+# areal_units_overlay defines spatial bounds and lattive areal_units_overlays
 spatial_domain = "snowcrab"
-subproject = "snowcrab"
+areal_units_overlay = "snowcrab"
+areal_units_resolution_km = 20
+# areal_units_resolution_km = 10  # 16 hrs to model; 1o min to discretize?
 
 if (0) {
   # alternatively:
   spatial_domain="SSE"
-  subproject = "groundfish"
+  areal_units_overlay = "groundfish"
+  # areal_units_resolution_km = 10
+  areal_units_resolution_km = 25
+  # areal_units_resolution_km = 30
 }
 
 
@@ -21,14 +26,14 @@ if (0) {
 # and some plotting parameters (bounding box, projection, bathymetry layout, coastline)
 p = aegis.substrate::substrate_parameters(
   project_class = "carstm", # defines which parameter set to load
-  id = paste("substrate", subproject, sep="_"),
+  id = paste("substrate", areal_units_overlay, sep="_"),
   inputdata_spatial_discretization_planar_km = 0.5,  # km controls resolution of data prior to modelling to reduce data set and speed up modelling
   spatial_domain = spatial_domain,  # defines spatial area
-  areal_units_resolution_km = 10, # km dim of lattice
+  areal_units_resolution_km = areal_units_resolution_km, # km dim of lattice
   areal_units_proj4string_planar_km = projection_proj4string("utm20"),  # coord system to use for areal estimation and gridding for carstm
   # areal_units_proj4string_planar_km = "+proj=omerc +lat_0=44.0 +lonc=-63.0 +gamma=0.0 +k=1 +alpha=325 +x_0=0 +y_0=0 +ellps=WGS84 +units=km",  # oblique mercator, centred on Scotian Shelf rotated by 325 degrees
   areal_units_strata_type = "lattice", # "aegis_lattice" to use ageis fields instead of carstm fields ... note variables are not the same
-  areal_units_overlay = subproject, # additional polygon layers for subsequent analysis such as management area: "snowcrab" or "groundfish"  # for now ..
+  areal_units_overlay = areal_units_overlay, # additional polygon layers for subsequent analysis such as management area: "snowcrab" or "groundfish"  # for now ..
   areal_units_constraint="none", # set[, c("lon", "lat")],  # to limit to sppoly to only those with data that fall into them
   carstm_modelengine = "inla.default",  # gam is also supported for now
   carstm_modelcall = '
