@@ -12,6 +12,16 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL,
   if ( !exists("modeldir", p) )  p$modeldir = file.path( p$data_root, "modelled" )
 
 
+
+  if (!exists("areal_units_strata_type", p )) p$areal_units_strata_type = "lattice" #
+  if (!exists("areal_units_constraint", p )) p$areal_units_constraint = "none" #
+  if (!exists("areal_units_overlay", p )) p$areal_units_overlay = "none" #
+  if (!exists("areal_units_resolution_km", p )) stop( "areal_units_resolution_km should be defined ... " ) # km
+  if (!exists("areal_units_proj4string_planar_km", p )) stop( "areal_units_proj4string_planar_km should be defined ... " ) # km
+  if (!exists("timeperiod", p) )  p$timeperiod="default"
+
+
+
   if (is.null(id)) id = paste( p$spatial_domain, p$areal_units_overlay, p$areal_units_resolution_km, p$areal_units_strata_type, sep="_" )
 
 
@@ -42,13 +52,10 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL,
     M = lonlat2planar( M, proj.type=p$aegis_proj4string_planar_km )
     M$plon = round(M$plon / p$inputdata_spatial_discretization_planar_km + 1 ) * p$inputdata_spatial_discretization_planar_km
     M$plat = round(M$plat / p$inputdata_spatial_discretization_planar_km + 1 ) * p$inputdata_spatial_discretization_planar_km
-    M$plonplat = paste( M$plon, M$plat)
-    M$plon = NULL
-    M$plat = NULL
     gc()
 
     bb = as.data.frame( t( simplify2array(
-      tapply( X=M$z, INDEX=list(paste( M$plonplat) ),
+      tapply( X=M$z, INDEX=list(paste( paste( M$plon, M$plat) ) ),
         FUN = function(w) { c(
           mean(w, na.rm=TRUE),
           sd(w, na.rm=TRUE),
@@ -290,7 +297,7 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL,
     if (map) {
       vn = "z.predicted"
       brks = interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile")
-      dev.new();  sppoly( sppoly, vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coastLayout, col="transparent" )
+      dev.new();  spplot( sppoly, vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coastLayout, col="transparent" )
     }
 
     return( sppoly )
