@@ -7,29 +7,13 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL,
   if ( is.null(p)) p = substrate_parameters(...)
 
   if ( !exists("project_name", p)) p$project_name = "substrate"
-  if ( !exists("data_root", p) ) p$data_root = project.datadirectory( "aegis", p$project_name )
-  if ( !exists("datadir", p) )   p$datadir  = file.path( p$data_root, "data" )
-  if ( !exists("modeldir", p) )  p$modeldir = file.path( p$data_root, "modelled" )
 
-
-
-  if (!exists("areal_units_strata_type", p )) p$areal_units_strata_type = "lattice" #
-  if (!exists("areal_units_constraint", p )) p$areal_units_constraint = "none" #
-  if (!exists("areal_units_overlay", p )) p$areal_units_overlay = "none" #
-  if (!exists("areal_units_resolution_km", p )) stop( "areal_units_resolution_km should be defined ... " ) # km
-  if (!exists("areal_units_proj4string_planar_km", p )) stop( "areal_units_proj4string_planar_km should be defined ... " ) # km
-  if (!exists("timeperiod", p) )  p$timeperiod="default"
-
-  if (!exists("inputdata_spatial_discretization_planar_km", p) )  p$inputdata_spatial_discretization_planar_km = 1
-
-
+  p = aegis_parameters( p=p, DS="carstm" )
 
   if (is.null(id)) id = paste( p$spatial_domain, paste0(p$areal_units_overlay, collapse="_"), p$areal_units_resolution_km, p$areal_units_strata_type, p$areal_units_constraint, p$timeperiod, sep="_" )
 
 
-
   # -----------------------
-
   if ( DS=="aggregated_data") {
 
     fn = file.path( p$modeldir, paste( "substrate", "aggregated_data", id, "rdata", sep=".") )
@@ -145,10 +129,7 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL,
     M$strata  = as.numeric( M$StrataID)
     M$iid_error = 1:nrow(M) # for inla indexing for set level variation
 
-    ddepths = c(1.25, 2.5, 5, 10, 20, 40, 80, 160, 320, 640, 1280 )  # depth cut points
-    M$zi = as.numeric( as.character( cut( M$z, breaks=ddepths, labels=diff(ddepths)/2 + ddepths[-length(ddepths)], include.lowest=TRUE ) ))
-
-    gc()
+    M$zi = discretize_data( M$z, p$discretization$z )
 
     save( M, file=fn, compress=TRUE )
     return( M )
@@ -160,7 +141,7 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL,
 
   if ( DS %in% c("carstm_modelled", "carstm_modelled_fit") ) {
 
-    fn = file.path( p$modeldir, paste( "substrate", "carstm_modelled", id, p$carstm_modelengine, p$carstm_family, "rdata", sep=".") )
+    fn = file.path( p$modeldir, paste( "substrate", "carstm_modelled", id, p$carstm_modelengine, "rdata", sep=".") )
     fn_fit = file.path( p$modeldir, paste( "substrate", "carstm_modelled_fit", id, p$carstm_modelengine, "rdata", sep=".") )
 
     if (!redo)  {
@@ -209,10 +190,10 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL,
       #   matchto   = list( StrataID=sppoly$StrataID  )
       # )
       # iy = match( as.character(sppoly$StrataID), aps$StrataID )
-        sppoly@data[,"substrate.grainsize.predicted"] = exp( preds$fit) - p$constant_offset
+        sppoly@data[,"substrate.grainsize.predicted"] = exp( preds$fit)
         sppoly@data[,"substrate.grainsize.predicted_se"] = exp( preds$se.fit)
-        sppoly@data[,"substrate.grainsize.predicted_lb"] = exp( preds$fit - preds$se.fit ) - p$constant_offset
-        sppoly@data[,"substrate.grainsize.predicted_ub"] = exp( preds$fit + preds$se.fit ) - p$constant_offset
+        sppoly@data[,"substrate.grainsize.predicted_lb"] = exp( preds$fit - preds$se.fit )
+        sppoly@data[,"substrate.grainsize.predicted_ub"] = exp( preds$fit + preds$se.fit )
         save( sppoly, file=fn, compress=TRUE )
       }
 
@@ -227,10 +208,10 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL,
         # reformat predictions into matrix form
         ii = which( M$tag=="predictions" & M$StrataID %in% M[ which(M$tag=="observations"), "StrataID"] )
         preds = predict( fit, newdata=M[ii,], type="link", na.action=na.omit, se.fit=TRUE )  # no/km2
-        sppoly@data[,"substrate.grainsize.predicted"] = exp( preds$fit) - p$constant_offset
+        sppoly@data[,"substrate.grainsize.predicted"] = exp( preds$fit)
         sppoly@data[,"substrate.grainsize.predicted_se"] = exp( preds$se.fit)
-        sppoly@data[,"substrate.grainsize.predicted_lb"] = exp( preds$fit - preds$se.fit ) - p$constant_offset
-        sppoly@data[,"substrate.grainsize.predicted_ub"] = exp( preds$fit + preds$se.fit ) - p$constant_offset
+        sppoly@data[,"substrate.grainsize.predicted_lb"] = exp( preds$fit - preds$se.fit )
+        sppoly@data[,"substrate.grainsize.predicted_ub"] = exp( preds$fit + preds$se.fit )
         save( sppoly, file=fn, compress=TRUE )
     }
 
@@ -252,9 +233,9 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL,
       # reformat predictions into matrix form
       ii = which(M$tag=="predictions")
       jj = match(M$StrataID[ii], sppoly$StrataID)
-      sppoly@data$substrate.grainsize.predicted = exp( fit$summary.fitted.values[ ii[jj], "mean" ]) - p$constant_offset
-      sppoly@data$substrate.grainsize.predicted_lb = exp( fit$summary.fitted.values[ ii[jj], "0.025quant" ]) - p$constant_offset
-      sppoly@data$substrate.grainsize.predicted_ub = exp( fit$summary.fitted.values[ ii[jj], "0.975quant" ]) - p$constant_offset
+      sppoly@data$substrate.grainsize.predicted = exp( fit$summary.fitted.values[ ii[jj], "mean" ])
+      sppoly@data$substrate.grainsize.predicted_lb = exp( fit$summary.fitted.values[ ii[jj], "0.025quant" ])
+      sppoly@data$substrate.grainsize.predicted_ub = exp( fit$summary.fitted.values[ ii[jj], "0.975quant" ])
       sppoly@data$substrate.grainsize.random_strata_nonspatial = exp( fit$summary.random$strata[ jj, "mean" ])
       sppoly@data$substrate.grainsize.random_strata_spatial = exp( fit$summary.random$strata[ jj+max(jj), "mean" ])
       sppoly@data$substrate.grainsize.random_sample_iid = exp( fit$summary.random$iid_error[ ii[jj], "mean" ])

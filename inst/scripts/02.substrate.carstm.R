@@ -64,7 +64,7 @@ if (0) {
   p$mypalette = RColorBrewer::brewer.pal(9, "YlOrRd")
   p = c(p, aegis.coastline::coastline_layout( p=p  ) )  # set up default map projection
 
-  vn = "z.predicted"
+  vn = "substrate.grainsize.predicted"
   dev.new();
   spplot( sppoly, vn, main=vn,
     col.regions=p$mypalette,
@@ -73,7 +73,7 @@ if (0) {
     col="transparent"
   )
 
-  vn = "z.random_strata_nonspatial"
+  vn = "substrate.grainsize.random_strata_nonspatial"
   dev.new();
   spplot( sppoly, vn, main=vn,
     col.regions=p$mypalette,
@@ -82,7 +82,7 @@ if (0) {
     col="transparent"
   )
 
-  vn = "z.random_strata_spatial"
+  vn = "substrate.grainsize.random_strata_spatial"
   dev.new();
   spplot( sppoly, vn, main=vn,
     col.regions=p$mypalette,
