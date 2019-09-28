@@ -93,10 +93,10 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL,
 
     # prediction surface
     if (is.null(sppoly)) sppoly = areal_units( p=p )  # will redo if not found
-    sppoly = sppoly["StrataID"]
 
     # do this immediately to reduce storage for sppoly (before adding other variables)
     M = substrate_carstm ( p=p, DS="aggregated_data" )  # 16 GB in RAM just to store!
+    names(M)[which(names(M)=="substrate.grainsize.mean" )] = "substrate.grainsize"
 
     # reduce size
     M = M[ which( M$lon > p$corners$lon[1] & M$lon < p$corners$lon[2]  & M$lat > p$corners$lat[1] & M$lat < p$corners$lat[2] ), ]
@@ -110,64 +110,43 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL,
     M$plon = NULL
     M$plat = NULL
     M = M[ which(is.finite(M$StrataID)),]
-    M$StrataID = as.character( M$StrataID )  # match each datum to an area
     M$tag = "observations"
 
-    B = bathymetry_carstm ( p=bathymetry_parameters( spatial_domain=p$spatial_domain ), DS="carstm_inputs" )  # unmodeled!
-    # reduce size
-    B = B[ which( B$lon > p$corners$lon[1] & B$lon < p$corners$lon[2]  & B$lat > p$corners$lat[1] & B$lat < p$corners$lat[2] ), ]
-    locsmap = match(
-      stmv::array_map( "xy->1", M[, c("plon","plat")], gridparams=p$gridparams ),
-      stmv::array_map( "xy->1", B[, c("plon","plat")], gridparams=p$gridparams ) )
-    M$z.mean = B$z.mean[locsmap]
-    M$z.sd = B$z.sd[locsmap]
-    M = M[ which(is.finite(M$z.mean)), ]
+    pb = p
+    pb$modeldir = NULL  # resetting forces default bathymetry model dir to be used
+    pb$project_name = NULL
+    pb$data_root = NULL
+    pb$datadir  = NULL
 
-    B = NULL
+    BI = bathymetry_carstm ( p=pb, DS="carstm_inputs" )  # unmodeled!
+    jj = match( as.character( M$StrataID), as.character( BI$StrataID) )
+    M$z = BI$z[jj]
+    jj =NULL
 
+    M = M[ which(is.finite(M$z)), ]
+
+    BI = NULL
 
     sppoly_df = as.data.frame(sppoly)
-    sppoly_df$z = NA
+    BM = bathymetry_carstm ( p=pb, DS="carstm_modelled" )  # unmodeled!
+    kk = match( as.character(  sppoly_df$StrataID), as.character( BM$StrataID ) )
+    sppoly_df$z = BM$z.predicted[kk]
+    BM = NULL
+    sppoly_df$substrate.grainsize = NA
     sppoly_df$StrataID = as.character( sppoly_df$StrataID )
     sppoly_df$tag ="predictions"
 
-    vn = c("substrate.grainsize.mean", "z.mean", "tag", "StrataID")
+    vn = c("substrate.grainsize", "z", "tag", "StrataID")
 
     M = rbind( M[, vn], sppoly_df[, vn] )
     sppoly_df = NULL
 
     M$StrataID  = factor( as.character(M$StrataID), levels=levels( sppoly$StrataID ) ) # revert to factors
-    sppoly = NULL
     M$strata  = as.numeric( M$StrataID)
     M$iid_error = 1:nrow(M) # for inla indexing for set level variation
 
-
-    # M$StrataID  = as.character(M$StrataID)
-    # M$tag = "observations"
-    # M$Y = M$z
-
-    ddepths = c(2.5, 5, 10, 20, 40, 80, 160, 320, 640 )  # depth cut points
+    ddepths = c(1.25, 2.5, 5, 10, 20, 40, 80, 160, 320, 640, 1280 )  # depth cut points
     M$zi = as.numeric( as.character( cut( M$z, breaks=ddepths, labels=diff(ddepths)/2 + ddepths[-length(ddepths)], include.lowest=TRUE ) ))
-
-    # do this immediately to reduce storage for sppoly (before adding other variables)
-    M$StrataID = as.character( over( SpatialPoints( M[, c("lon", "lat")], crs_lonlat ), spTransform(sppoly, crs_lonlat ) )$StrataID) # match each datum to an area
-    M$lon = NULL
-    M$lat = NULL
-
-    M$tag = "observations"
-
-    sppoly = as.data.frame(sppoly)
-    sppoly$z = NA
-    sppoly$StrataID = as.character( sppoly$StrataID )
-    sppoly$tag ="predictions"
-
-    sppoly_depths = bathymetry_carstm( p=p, DS="" )
-
-    M = rbind( M, sppoly[, names(M)] )
-
-    M$StrataID  = factor( as.character(M$StrataID), levels=levels( sppoly$StrataID ) ) # revert to factors
-    M$strata  = as.numeric( M$StrataID)
-    M$iid_error = 1:nrow(M) # for inla indexing for set level variation
 
     gc()
 
@@ -205,10 +184,8 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL,
     print( "Warning: this needs a lot of RAM .. ~XX GB depending upon resolution of discretization .. a few hours " )
 
 
-
     # prediction surface
     if (is.null(sppoly)) sppoly = areal_units( p=p )  # will redo if not found
-    sppoly = sppoly["StrataID"]
 
     M = substrate_carstm( p=p, DS="carstm_inputs" )  # will redo if not found
     fit  = NULL
