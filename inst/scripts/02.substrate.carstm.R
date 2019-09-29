@@ -1,5 +1,6 @@
 
 project = "snowcrab"
+project = "SSE"
 
 # construct basic parameter list defining the main characteristics of the study
 # and some plotting parameters (bounding box, projection, bathymetry layout, coastline)
@@ -46,7 +47,7 @@ p = aegis.substrate::substrate_parameters(
 sppoly = substrate_carstm( p=p, DS="carstm_modelled", redo=TRUE )
 
 if (0) {
-   # sppoly = areal_units( p=p, redo=TRUE )  # this has already been done in aegis.polygons::01 polygons.R .. should nto have to redo
+    sppoly = areal_units( p=p, redo=TRUE )  # this has already been done in aegis.polygons::01 polygons.R .. should nto have to redo
     M = substrate_carstm( p=p, DS="aggregated_data", redo=TRUE )  # will redo if not found .. not used here but used for data matching/lookup in other aegis projects that use bathymetry
     M = substrate_carstm( p=p, DS="carstm_inputs", redo=TRUE )  # will redo if not found
 
