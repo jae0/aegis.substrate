@@ -1,6 +1,6 @@
 
 
-substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL, redo=FALSE, ... ) {
+substrate_carstm = function( p=NULL, DS="aggregated_data", sppoly=NULL, redo=FALSE, ... ) {
 
   #\\ Note inverted convention: depths are positive valued
   #\\ i.e., negative valued for above sea level and positive valued for below sea level
@@ -10,13 +10,12 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL,
 
   p = aegis_parameters( p=p, DS="carstm" )
 
-  if (is.null(id)) id = paste( p$spatial_domain, paste0(p$areal_units_overlay, collapse="_"), p$areal_units_resolution_km, p$areal_units_strata_type, p$areal_units_constraint, p$timeperiod, sep="_" )
 
 
   # -----------------------
   if ( DS=="aggregated_data") {
 
-    fn = file.path( p$modeldir, paste( "substrate", "aggregated_data", id, "rdata", sep=".") )
+    fn = file.path( p$modeldir, paste( "substrate", "aggregated_data", p$auid, "rdata", sep=".") )
     if (!redo)  {
       print( "Warning: aggregated_data is loading from a saved instance ... add redo=TRUE if data needs to be refresh" )
       if (file.exists(fn)) {
@@ -67,7 +66,7 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL,
 
   if ( DS=="carstm_inputs") {
 
-    fn = file.path( p$modeldir, paste( "substrate", "carstm_inputs", id, "rdata", sep=".") )
+    fn = file.path( p$modeldir, paste( "substrate", "carstm_inputs", p$auid, "rdata", sep=".") )
     if (!redo)  {
       if (file.exists(fn)) {
         load( fn)
@@ -141,8 +140,8 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", id=NULL, sppoly=NULL,
 
   if ( DS %in% c("carstm_modelled", "carstm_modelled_fit") ) {
 
-    fn = file.path( p$modeldir, paste( "substrate", "carstm_modelled", id, p$carstm_modelengine, "rdata", sep=".") )
-    fn_fit = file.path( p$modeldir, paste( "substrate", "carstm_modelled_fit", id, p$carstm_modelengine, "rdata", sep=".") )
+    fn = file.path( p$modeldir, paste( "substrate", "carstm_modelled", p$auid, p$carstm_modelengine, "rdata", sep=".") )
+    fn_fit = file.path( p$modeldir, paste( "substrate", "carstm_modelled_fit", p$auid, p$carstm_modelengine, "rdata", sep=".") )
 
     if (!redo)  {
       print( "Warning: carstm_modelled is loading from a saved instance ... add redo=TRUE if data needs to be refresh" )
