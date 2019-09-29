@@ -7,9 +7,11 @@ p = aegis.substrate::substrate_parameters(
   project_class = "carstm", # defines which parameter set to load
   id = paste("substrate", project, sep="_"),  # label to tag the results
   inputdata_spatial_discretization_planar_km = 1,  # km controls resolution of data prior to modelling to reduce data set and speed up modelling
-  spatial_domain = "snowcrab",  # defines spatial area, currenty: "snowcrab" or "SSE"
+  # spatial_domain = "snowcrab",  # defines spatial area, currenty: "snowcrab" or "SSE"
+  spatial_domain = "SSE",  # defines spatial area, currenty: "snowcrab" or "SSE"
   areal_units_strata_type = "lattice", # "aegis_lattice" to use ageis fields instead of carstm fields ... note variables are not the same
-  areal_units_overlay = "snowcrab_managementareas", # currently: "snowcrab_managementareas",  "groundfish_strata" .. additional polygon layers for subsequent analysis for now ..
+  #areal_units_overlay = "snowcrab_managementareas", # currently: "snowcrab_managementareas",  "groundfish_strata" .. additional polygon layers for subsequent analysis for now ..
+  areal_units_overlay = "groundfish_strata", #.. additional polygon layers for subsequent analysis for now ..
   # areal_units_resolution_km = 10, # km dim of lattice ~ 16 hrs
   # areal_units_resolution_km = 20, # km dim of lattice ~ 1 hr
   areal_units_resolution_km = 25, # km dim of lattice ~ 1 hr
