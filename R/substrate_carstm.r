@@ -1,14 +1,17 @@
 
 
-substrate_carstm = function( p=NULL, DS="aggregated_data", sppoly=NULL, redo=FALSE, ... ) {
+substrate_carstm = function( p=NULL, DS="aggregated_data", sppoly=NULL, redo=FALSE, map_results=FALSE, ... ) {
 
   #\\ Note inverted convention: depths are positive valued
   #\\ i.e., negative valued for above sea level and positive valued for below sea level
-  if ( is.null(p)) p = substrate_parameters(...)
 
-  if ( !exists("project_name", p)) p$project_name = "substrate"
-
-  p = aegis_parameters( p=p, DS="carstm" )
+  # ---------------------
+  # deal with additional passed parameters
+  if ( is.null(p) ) p=list()
+  p_add = list(...)
+  if (length(p_add) > 0 ) p = c(p, p_add)
+  i = which(duplicated(names(p), fromLast = TRUE ))
+  if ( length(i) > 0 ) p = p[-i] # give any passed parameters a higher priority, overwriting pre-existing variable
 
 
 
@@ -242,7 +245,7 @@ substrate_carstm = function( p=NULL, DS="aggregated_data", sppoly=NULL, redo=FAL
     }
 
 
-    if (map) {
+    if (map_results) {
       vn = "substrate.grainsize.predicted"
       brks = interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile")
       dev.new();  spplot( sppoly, vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coastLayout, col="transparent" )

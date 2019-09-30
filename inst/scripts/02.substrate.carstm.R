@@ -1,7 +1,4 @@
 
-project = "snowcrab"
-project = "SSE"
-
 # construct basic parameter list defining the main characteristics of the study
 # and some plotting parameters (bounding box, projection, bathymetry layout, coastline)
 p = aegis.substrate::substrate_parameters(

@@ -97,6 +97,9 @@ substrate_parameters = function( p=NULL, project_name=NULL, project_class="defau
     # if (!exists("LOCS", p$variables)) p$variables$LOCS = c("plon", "plat")
     # if (!exists("Y", p$variables)) p$variables$Y = "substrate.grainsize" # name to give variable in extraction and model
 
+    if ( !exists("project_name", p)) p$project_name = "substrate"
+    p = aegis_parameters( p=p, DS="carstm" )
+
     return(p)
   }
 
