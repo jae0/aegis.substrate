@@ -53,7 +53,7 @@ substrate_carstm = function( p=NULL, DS=NULL, sppoly=NULL, redo=FALSE, map_resul
     pb$project_name = NULL
     pb$data_root = NULL
     pb$datadir  = NULL
-
+    pb = bathymetry_parameters(p=pb, DS="carstm")
     BI = bathymetry_carstm ( p=pb, DS="carstm_inputs" )  # unmodeled!
     jj = match( as.character( M$StrataID), as.character( BI$StrataID) )
     M$z = BI$z[jj]

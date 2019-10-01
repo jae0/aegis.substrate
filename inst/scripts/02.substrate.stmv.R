@@ -23,7 +23,7 @@ p = aegis.substrate::substrate_parameters(
   spatial_domain = "canada.east.highres" ,
   spatial_domain_subareas = c( "canada.east", "SSE", "snowcrab", "SSE.mpa" ),
   inputdata_spatial_discretization_planar_km = 1 / 20, # 1==p$pres; controls resolution of data prior to modelling (km .. ie 20 linear units smaller than the final discretization pres)
-  stmv_dimensionality="space",
+  aegis_dimensionality="space",
   stmv_global_modelengine = "gam",
   stmv_global_modelformula = formula( paste(
     'substrate.grainsize ',
