@@ -78,10 +78,6 @@ substrate_carstm = function( p=NULL, DS=NULL, sppoly=NULL, redo=FALSE, map_resul
     sppoly_df = NULL
 
     M$StrataID  = factor( as.character(M$StrataID), levels=levels( sppoly$StrataID ) ) # revert to factors
-    M$strata  = as.numeric( M$StrataID)
-    M$iid_error = 1:nrow(M) # for inla indexing for set level variation
-
-    M$zi = discretize_data( M$z, p$discretization$z )
 
     save( M, file=fn, compress=TRUE )
     return( M )
@@ -171,6 +167,11 @@ substrate_carstm = function( p=NULL, DS=NULL, sppoly=NULL, redo=FALSE, map_resul
     if ( grepl("inla", p$carstm_modelengine) ) {
 
       H = carstm_hyperparameters( sd(log(M$substrate.grainsize), na.rm=TRUE), alpha=0.5, median( log(M$substrate.grainsize), na.rm=TRUE) )
+
+      M$zi = discretize_data( M$z, p$discretization$z )
+      M$strata  = as.numeric( M$StrataID)
+      M$iid_error = 1:nrow(M) # for inla indexing for set level variation
+
       assign("fit", eval(parse(text=paste( "try(", p$carstm_modelcall, ")" ) ) ))
       if (is.null(fit)) error("model fit error")
       if ("try-error" %in% class(fit) ) error("model fit error")
