@@ -1,6 +1,6 @@
 
 
-  substrate.db = function( p=substrate_parameters(), DS=NULL, varnames=NULL ) {
+  substrate.db = function( p=substrate_parameters(), DS=NULL, varnames=NULL, redo=FALSE ) {
 
   #  if ( !exists("data_root", p) ) p$data_root = project.datadirectory( "aegis", p$project_name )
   #  if ( !exists("datadir", p) )   p$datadir  = file.path( p$data_root, "data" )
@@ -51,6 +51,52 @@
       save( substrate, file=filename, compress=TRUE   )
       return ( filename )
     }
+
+
+    # -----------------------
+
+    if ( DS=="aggregated_data") {
+
+      fn = file.path( p$datadir, paste( "substrate", "aggregated_data", p$inputdata_spatial_discretization_planar_km, "rdata", sep=".") )
+      if (!redo)  {
+        if (file.exists(fn)) {
+          load( fn)
+          return( M )
+        }
+      }
+
+      M = substrate.db( p=p, DS="lonlat.highres" )
+      M$substrate.grainsize = M$grainsize
+
+      M$plon = round(M$plon / p$inputdata_spatial_discretization_planar_km + 1 ) * p$inputdata_spatial_discretization_planar_km
+      M$plat = round(M$plat / p$inputdata_spatial_discretization_planar_km + 1 ) * p$inputdata_spatial_discretization_planar_km
+
+      bb = as.data.frame( t( simplify2array(
+        tapply( X=M$substrate.grainsize, INDEX=list(paste(  M$plon, M$plat ) ),
+          FUN = function(w) { c(
+            mean(w, na.rm=TRUE),
+            sd(w, na.rm=TRUE),
+            length( which(is.finite(w)) )
+          ) }, simplify=TRUE )
+      )))
+      M = NULL
+      colnames(bb) = c("substrate.grainsize.mean", "substrate.grainsize.sd", "substrate.grainsize.n")
+      plonplat = matrix( as.numeric( unlist(strsplit( rownames(bb), " ", fixed=TRUE))), ncol=2, byrow=TRUE)
+
+      bb$plon = plonplat[,1]
+      bb$plat = plonplat[,2]
+      plonplat = NULL
+
+      M = bb[ which( is.finite( bb$substrate.grainsize.mean )) ,]
+      bb =NULL
+      gc()
+      M = planar2lonlat( M, p$aegis_proj4string_planar_km)
+      save(M, file=fn, compress=TRUE)
+
+      return( M )
+    }
+
+
 
 
     # ---------------------------------------
