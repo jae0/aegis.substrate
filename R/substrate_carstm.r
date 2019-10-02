@@ -19,13 +19,17 @@ substrate_carstm = function( p=NULL, DS=NULL, sppoly=NULL, redo=FALSE, map_resul
 
   if ( DS=="carstm_inputs") {
 
-    fn = file.path( p$modeldir, paste( "substrate", "carstm_inputs", p$auid, "rdata", sep=".") )
+    fn = file.path( p$modeldir, paste( "substrate", "carstm_inputs", p$auid,
+      p$inputdata_spatial_discretization_planar_km,
+      "rdata", sep=".") )
+
     if (!redo)  {
       if (file.exists(fn)) {
         load( fn)
         return( S )
       }
     }
+    warning( "Generating carstm_inputs ... ")
 
     # prediction surface
     if (is.null(sppoly)) sppoly = areal_units( p=p )  # will redo if not found
@@ -89,11 +93,12 @@ substrate_carstm = function( p=NULL, DS=NULL, sppoly=NULL, redo=FALSE, map_resul
 
   if ( DS %in% c("carstm_modelled", "carstm_modelled_fit") ) {
 
-    fn = file.path( p$modeldir, paste( "substrate", "carstm_modelled", p$auid, p$carstm_modelengine, "rdata", sep=".") )
-    fn_fit = file.path( p$modeldir, paste( "substrate", "carstm_modelled_fit", p$auid, p$carstm_modelengine, "rdata", sep=".") )
+    auids = paste(  p$auid, p$inputdata_spatial_discretization_planar_km, sep="_" )
+
+    fn = file.path( p$modeldir, paste("substrate", "carstm_modelled", p$carstm_modelengine, auids, "rdata", sep="." ) )
+    fn_fit = file.path( p$modeldir, paste( "substrate", "carstm_modelled_fit", p$carstm_modelengine, auids,  "rdata", sep=".") )
 
     if (!redo)  {
-      print( "Warning: carstm_modelled is loading from a saved instance ... add redo=TRUE if data needs to be refresh" )
       if (DS=="carstm_modelled") {
         if (file.exists(fn)) {
           load( fn)
@@ -106,12 +111,7 @@ substrate_carstm = function( p=NULL, DS=NULL, sppoly=NULL, redo=FALSE, map_resul
           return( fit )
         }
       }
-      print( "Warning: carstm_modelled load from saved instance failed ... " )
     }
-
-    print( "Warning: carstm_modelled is being recreated ... " )
-    print( "Warning: this needs a lot of RAM .. ~XX GB depending upon resolution of discretization .. a few hours " )
-
 
     # prediction surface
     if (is.null(sppoly)) sppoly = areal_units( p=p )  # will redo if not found
