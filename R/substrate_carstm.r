@@ -1,6 +1,6 @@
 
 
-substrate_carstm = function( p=NULL, DS=NULL, sppoly=NULL, redo=FALSE, map_results=FALSE, ... ) {
+substrate_carstm = function( p=NULL, DS=NULL, redo=FALSE, map_results=FALSE, ... ) {
 
   #\\ Note inverted convention: depths are positive valued
   #\\ i.e., negative valued for above sea level and positive valued for below sea level
@@ -32,7 +32,7 @@ substrate_carstm = function( p=NULL, DS=NULL, sppoly=NULL, redo=FALSE, map_resul
     warning( "Generating carstm_inputs ... ")
 
     # prediction surface
-    if (is.null(sppoly)) sppoly = areal_units( p=p )  # will redo if not found
+    sppoly = areal_units( p=p )  # will redo if not found
 
     # do this immediately to reduce storage for sppoly (before adding other variables)
     M = substrate.db ( p=p, DS="aggregated_data" )  # 16 GB in RAM just to store!
@@ -52,12 +52,13 @@ substrate_carstm = function( p=NULL, DS=NULL, sppoly=NULL, redo=FALSE, map_resul
     M = M[ which(is.finite(M$StrataID)),]
     M$tag = "observations"
 
-    pb = p
-    pb$modeldir = NULL  # resetting forces default bathymetry model dir to be used
-    pb$project_name = NULL
-    pb$data_root = NULL
-    pb$datadir  = NULL
-    pb = bathymetry_parameters(p=pb, DS="carstm")
+    pb = aegis.bathymetry::bathymetry_parameters(
+      project_class = "carstm", # defines which parameter class / set to load
+      spatial_domain = p$spatial_domain,  # defines spatial area, currenty: "snowcrab" or "SSE"
+      areal_units_overlay = p$areal_units_overlay, # currently: "snowcrab_managementareas",  "groundfish_strata" .. additional polygon layers for subsequent analysis for now ..
+      areal_units_resolution_km = p$areal_units_resolution_km, # km dim of lattice ~ 1 hr
+      areal_units_proj4string_planar_km = p$areal_units_proj4string_planar_km,  # coord system to use for areal estimation and gridding for carstm
+    )
     BI = bathymetry_carstm ( p=pb, DS="carstm_inputs" )  # unmodeled!
     jj = match( as.character( M$StrataID), as.character( BI$StrataID) )
     M$z = BI$z[jj]
@@ -114,7 +115,7 @@ substrate_carstm = function( p=NULL, DS=NULL, sppoly=NULL, redo=FALSE, map_resul
     }
 
     # prediction surface
-    if (is.null(sppoly)) sppoly = areal_units( p=p )  # will redo if not found
+    sppoly = areal_units( p=p )  # will redo if not found
 
     M = substrate_carstm( p=p, DS="carstm_inputs" )  # will redo if not found
     fit  = NULL

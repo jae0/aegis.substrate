@@ -6,7 +6,7 @@ p = aegis.substrate::substrate_parameters(
   inputdata_spatial_discretization_planar_km = 1,  # km controls resolution of data prior to modelling to reduce data set and speed up modelling
   # spatial_domain = "snowcrab",  # defines spatial area, currenty: "snowcrab" or "SSE"
   spatial_domain = "SSE",  # defines spatial area, currenty: "snowcrab" or "SSE"
-  areal_units_strata_type = "lattice", # "aegis_lattice" to use ageis fields instead of carstm fields ... note variables are not the same
+  areal_units_strata_type = "lattice", # "stmv_fields" to use ageis fields instead of carstm fields ... note variables are not the same
   #areal_units_overlay = "snowcrab_managementareas", # currently: "snowcrab_managementareas",  "groundfish_strata" .. additional polygon layers for subsequent analysis for now ..
   areal_units_overlay = "groundfish_strata", #.. additional polygon layers for subsequent analysis for now ..
   # areal_units_resolution_km = 10, # km dim of lattice ~ 16 hrs
@@ -27,10 +27,10 @@ p = aegis.substrate::substrate_parameters(
       control.results=list(return.marginals.random=TRUE, return.marginals.predictor=TRUE ),
       control.predictor=list(compute=FALSE, link=1 ),
       control.fixed=H$fixed,  # priors for fixed effects, generic is ok
-      control.inla=list(int.strategy="eb") ,# to get empirical Bayes results much faster.
+      # control.inla=list(int.strategy="eb") ,# to get empirical Bayes results much faster.
       # control.inla=list( strategy="laplace", cutoff=1e-6, correct=TRUE, correct.verbose=FALSE ),
       num.threads=4,
-      blas.num.threads=4,
+      blas.num.threads=2,
       verbose=TRUE
     ) ',
   # carstm_modelcall = 'glm( formula = substrate.grainsize ~ 1 + StrataID + log(z),  family = gaussian(link="log"), data= M[ which(M$tag=="observations"), ] ) ',  # for modelengine='glm'
