@@ -67,7 +67,7 @@ substrate_carstm = function( p=NULL, DS=NULL, redo=FALSE, ... ) {
     BI = NULL
 
     sppoly_df = as.data.frame(sppoly)
-    BM = bathymetry_carstm ( p=pb, DS="carstm_modelled" )  # unmodeled!
+    BM = bathymetry_carstm ( p=pb, DS="carstm_modelled" )  # modeled!
     kk = match( as.character(  sppoly_df$StrataID), as.character( BM$StrataID ) )
     sppoly_df$z = BM$z.predicted[kk]
     BM = NULL
@@ -125,65 +125,40 @@ substrate_carstm = function( p=NULL, DS=NULL, redo=FALSE, ... ) {
       if (is.null(fit)) error("model fit error")
       if ("try-error" %in% class(fit) ) error("model fit error")
       save( fit, file=fn_fit, compress=TRUE )
-
-      # s = summary(fit)
-      # AIC(fit)  # 104487274
-      # reformat predictions into matrix form
       ii = which( M$tag=="predictions" & M$StrataID %in% M[ which(M$tag=="observations"), "StrataID"] )
+      jj = match( M$StrataID[ii], res$StrataID)
       preds = predict( fit, newdata=M[ii,], type="link", na.action=na.omit, se.fit=TRUE )  # no/km2
-
-      # out = reformat_to_array(
-      #   input = preds$fit,
-      #   matchfrom = list( StrataID=M$StrataID[ii] ),
-      #   matchto   = list( StrataID=res$StrataID  )
-      # )
-      # iy = match( as.character(res$StrataID), aps$StrataID )
-        res[,"substrate.grainsize.predicted"] = exp( preds$fit)
-        res[,"substrate.grainsize.predicted_se"] = exp( preds$se.fit)
-        res[,"substrate.grainsize.predicted_lb"] = exp( preds$fit - preds$se.fit )
-        res[,"substrate.grainsize.predicted_ub"] = exp( preds$fit + preds$se.fit )
-        save( res, file=fn, compress=TRUE )
-      }
-
-      if ( grepl("gam", p$carstm_modelengine) ) {
-        assign("fit", eval(parse(text=paste( "try(", p$carstm_modelcall, ")" ) ) ))
-        if (is.null(fit)) error("model fit error")
-        if ("try-error" %in% class(fit) ) error("model fit error")
-        save( fit, file=fn_fit, compress=TRUE )
-
-        s = summary(fit)
-        AIC(fit)  # 104487274
-        # reformat predictions into matrix form
-        ii = which( M$tag=="predictions" & M$StrataID %in% M[ which(M$tag=="observations"), "StrataID"] )
-        preds = predict( fit, newdata=M[ii,], type="link", na.action=na.omit, se.fit=TRUE )  # no/km2
-        res[,"substrate.grainsize.predicted"] = exp( preds$fit)
-        res[,"substrate.grainsize.predicted_se"] = exp( preds$se.fit)
-        res[,"substrate.grainsize.predicted_lb"] = exp( preds$fit - preds$se.fit )
-        res[,"substrate.grainsize.predicted_ub"] = exp( preds$fit + preds$se.fit )
-        save( res, file=fn, compress=TRUE )
+      res[,"substrate.grainsize.predicted"] = exp( preds$fit[jj])
+      res[,"substrate.grainsize.predicted_se"] = exp( preds$se.fit[jj])
+      res[,"substrate.grainsize.predicted_lb"] = exp( preds$fit[jj] - preds$se.fit[jj] )
+      res[,"substrate.grainsize.predicted_ub"] = exp( preds$fit[jj] + preds$se.fit[jj] )
+      save( res, file=fn, compress=TRUE )
     }
 
-
-    if ( grepl("inla", p$carstm_modelengine) ) {
-
-      H = carstm_hyperparameters( sd(log(M$substrate.grainsize), na.rm=TRUE), alpha=0.5, median( log(M$substrate.grainsize), na.rm=TRUE) )
-
-      M$zi = discretize_data( M$z, p$discretization$z )
-      M$strata  = as.numeric( M$StrataID)
-      M$iid_error = 1:nrow(M) # for inla indexing for set level variation
-
+    if ( grepl("gam", p$carstm_modelengine) ) {
       assign("fit", eval(parse(text=paste( "try(", p$carstm_modelcall, ")" ) ) ))
       if (is.null(fit)) error("model fit error")
       if ("try-error" %in% class(fit) ) error("model fit error")
       save( fit, file=fn_fit, compress=TRUE )
+      ii = which( M$tag=="predictions" & M$StrataID %in% M[ which(M$tag=="observations"), "StrataID"] )
+      jj = match( M$StrataID[ii], res$StrataID)
+      preds = predict( fit, newdata=M[ii,], type="link", na.action=na.omit, se.fit=TRUE )  # no/km2
+      res[,"substrate.grainsize.predicted"] = exp( preds$fit[jj] )
+      res[,"substrate.grainsize.predicted_se"] = exp( preds$se.fit[jj])
+      res[,"substrate.grainsize.predicted_lb"] = exp( preds$fit[jj] - preds$se.fit[jj] )
+      res[,"substrate.grainsize.predicted_ub"] = exp( preds$fit[jj] + preds$se.fit[jj] )
+      save( res, file=fn, compress=TRUE )
+    }
 
-      s = summary(fit)
-      s$dic$dic  # 31225
-      s$dic$p.eff # 5200
-
-      plot(fit, plot.prior=TRUE, plot.hyperparameters=TRUE, plot.fixed.effects=FALSE )
-
-      # reformat predictions into matrix form
+    if ( grepl("inla", p$carstm_modelengine) ) {
+      H = carstm_hyperparameters( sd(log(M$substrate.grainsize), na.rm=TRUE), alpha=0.5, median( log(M$substrate.grainsize), na.rm=TRUE) )
+      M$zi = discretize_data( M$z, p$discretization$z )
+      M$strata  = as.numeric( M$StrataID)
+      M$iid_error = 1:nrow(M) # for inla indexing for set level variation
+      assign("fit", eval(parse(text=paste( "try(", p$carstm_modelcall, ")" ) ) ))
+      if (is.null(fit)) error("model fit error")
+      if ("try-error" %in% class(fit) ) error("model fit error")
+      save( fit, file=fn_fit, compress=TRUE )
       ii = which(M$tag=="predictions")
       jj = match(M$StrataID[ii], res$StrataID)
       res$substrate.grainsize.predicted = exp( fit$summary.fitted.values[ ii[jj], "mean" ])
@@ -194,7 +169,6 @@ substrate_carstm = function( p=NULL, DS=NULL, redo=FALSE, ... ) {
       res$substrate.grainsize.random_sample_iid = exp( fit$summary.random$iid_error[ ii[jj], "mean" ])
       save( res, file=fn, compress=TRUE )
     }
-
     return( res )
   }
 

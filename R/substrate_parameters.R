@@ -14,9 +14,9 @@ substrate_parameters = function( p=NULL, project_name=NULL, project_class="defau
   # ---------------------
 
   # create/update library list
-  p$libs = c( p$libs, RLibrary ( "colorspace",  "fields", "geosphere", "lubridate",  "lattice",
-    "maps", "mapdata", "maptools", "parallel",  "rgdal", "rgeos",  "sp", "splancs", "GADMTools" ) )
-  p$libs = c( p$libs, project.library ( "aegis", "aegis.bathymetry", "aegis.coastline", "aegis.polygons", "aegis.substrate" ) )
+  p$libs = unique( c( p$libs, RLibrary ( "colorspace",  "fields", "geosphere", "lubridate",  "lattice",
+    "maps", "mapdata", "maptools", "parallel",  "rgdal", "rgeos",  "sp", "splancs", "GADMTools" ) ) )
+  p$libs = unique( c( p$libs, project.library ( "aegis", "aegis.bathymetry", "aegis.coastline", "aegis.polygons", "aegis.substrate" ) ) )
 
   p$project_name = ifelse ( !is.null(project_name), project_name, "substrate" )
 
@@ -37,7 +37,7 @@ substrate_parameters = function( p=NULL, project_name=NULL, project_class="defau
   }
 
   if (project_class=="stmv") {
-    p$libs = c( p$libs, project.library ( "stmv" ) )
+    p$libs = unique( c( p$libs, project.library ( "stmv" ) ) )
 
     if (!exists("variables", p)) p$variables = list()
     if (!exists("LOCS", p$variables)) p$variables$LOCS=c("plon", "plat")
@@ -95,14 +95,12 @@ substrate_parameters = function( p=NULL, project_name=NULL, project_class="defau
 
   if (project_class=="carstm") {
 
-    p$libs = c( p$libs, project.library ( "spatialreg", "INLA", "raster", "mgcv",  "carstm" ) )
+    p$libs = unique( c( p$libs, project.library ( "spatialreg", "INLA", "raster", "mgcv",  "carstm" ) ) )
 
     if ( !exists("project_name", p)) p$project_name = "substrate"
 
     p = aegis_parameters( p=p, DS="carstm" )
 
-    # if ( !exists("spatial_domain", p)) p$spatial_domain = "snowcrab"  # defines spatial area, currenty: "snowcrab" or "SSE"
-    if ( !exists("spatial_domain", p)) p$spatial_domain = "SSE"  # defines spatial area, currenty: "snowcrab" or "SSE"
     if ( !exists("areal_units_strata_type", p)) p$areal_units_strata_type = "lattice" # "stmv_lattice" to use ageis fields instead of carstm fields ... note variables are not the same
 
     if ( p$spatial_domain == "SSE" ) {
@@ -124,8 +122,7 @@ substrate_parameters = function( p=NULL, project_name=NULL, project_class="defau
 
     if ( !exists("carstm_modelcall", p)) {
       if ( grepl("inla", p$carstm_modelengine) ) {
-        p$libs = c( p$libs, RLibrary ( "INLA" ) )
-        p$carstm_modelcall = '
+        p$carstm_modelcall = paste('
           inla(
             formula = substrate.grainsize ~ 1
               + f(zi, model="rw2", scale.model=TRUE, diagonal=1e-6, hyper=H$rw2)
@@ -142,14 +139,13 @@ substrate_parameters = function( p=NULL, project_name=NULL, project_class="defau
             num.threads=4,
             blas.num.threads=4,
             verbose=TRUE
-          ) '
+          ) ' )
       }
       if ( grepl("glm", p$carstm_modelengine) ) {
         p$carstm_modelcall = 'glm( formula = z ~ 1 + StrataID,  family = gaussian(link="log"), data= M[ which(M$tag=="observations"), ], family=gaussian(link="log")  ) '  # for modelengine='glm'
       }
       if ( grepl("gam", p$carstm_modelengine) ) {
-        p$libs = c( p$libs, RLibrary ( "mgcv" ) )
-        p$carstm_modelcall = 'gam( formula = z ~ 1 + StrataID,  family = gaussian(link="log"), data= M[ which(M$tag=="observations"), ], family=gaussian(link="log")  ) '  # for modelengine='gam'
+       p$carstm_modelcall = 'gam( formula = z ~ 1 + StrataID,  family = gaussian(link="log"), data= M[ which(M$tag=="observations"), ], family=gaussian(link="log")  ) '  # for modelengine='gam'
       }
     }
     return(p)
