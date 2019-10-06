@@ -16,48 +16,26 @@ if (0) {
   sppoly = areal_units( p=p, redo=TRUE )  # this has already been done in aegis.polygons::01 polygons.R .. should nto have to redo
   M = substrate.db( p=p, DS="aggregated_data", redo=TRUE )  # will redo if not found .. not used here but used for data matching/lookup in other aegis projects that use bathymetry
   M = substrate_carstm( p=p, DS="carstm_inputs", redo=TRUE )  # will redo if not found
-  sppoly = substrate_carstm( p=p, DS="carstm_modelled", redo=TRUE )
 
+  res = substrate_carstm( p=p, DS="carstm_modelled", redo=TRUE )
 
-  sppoly = substrate_carstm( p=p, DS="carstm_modelled" ) # to load currently saved sppoly
+  res = substrate_carstm( p=p, DS="carstm_modelled" ) # to load currently saved results
   fit =  substrate_carstm( p=p, DS="carstm_modelled_fit" )  # extract currently saved model fit
   plot(fit)
+  plot(fit, plot.prior=TRUE, plot.hyperparameters=TRUE, plot.fixed.effects=FALSE )
   s = summary(fit)
   s$dic$dic
   s$dic$p.eff
 
 
+  s = summary(fit)
+  s$dic$dic
+  s$dic$p.eff
+
   # maps of some of the results
-  p$boundingbox = list( xlim=p$corners$lon, ylim=p$corners$lat) # bounding box for plots using spplot
-  p$mypalette = RColorBrewer::brewer.pal(9, "YlOrRd")
-  p = c(p, aegis.coastline::coastline_layout( p=p  ) )  # set up default map projection
-
-  vn = "substrate.grainsize.predicted"
-  dev.new();
-  spplot( sppoly, vn, main=vn,
-    col.regions=p$mypalette,
-    at=interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile"),
-    sp.layout=p$coastLayout,
-    col="transparent"
-  )
-
-  vn = "substrate.grainsize.random_strata_nonspatial"
-  dev.new();
-  spplot( sppoly, vn, main=vn,
-    col.regions=p$mypalette,
-    at=interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile"),
-    sp.layout=p$coastLayout,
-    col="transparent"
-  )
-
-  vn = "substrate.grainsize.random_strata_spatial"
-  dev.new();
-  spplot( sppoly, vn, main=vn,
-    col.regions=p$mypalette,
-    at=interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile"),
-    sp.layout=p$coastLayout,
-    col="transparent"
-  )
+  carstm_plot( p=p, res=res, vn="substrate.grainsize.predicted" )
+  carstm_plot( p=p, res=res, vn="substrate.grainsize.random_strata_nonspatial" )
+  carstm_plot( p=p, res=res, vn="substrate.grainsize.random_strata_spatial" )
 
 }
 

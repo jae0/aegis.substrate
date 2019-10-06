@@ -90,12 +90,12 @@ substrate_parameters = function( p=NULL, project_name=NULL, project_class="defau
   }
 
 
+  # ----------------------------------
+
 
   if (project_class=="carstm") {
-    p$libs = c( p$libs, project.library ( "carstm" ) )
-    # if (!exists("variables", p)) p$variables = list()
-    # if (!exists("LOCS", p$variables)) p$variables$LOCS = c("plon", "plat")
-    # if (!exists("Y", p$variables)) p$variables$Y = "substrate.grainsize" # name to give variable in extraction and model
+
+    p$libs = c( p$libs, project.library ( "spatialreg", "INLA", "raster", "mgcv",  "carstm" ) )
 
     if ( !exists("project_name", p)) p$project_name = "substrate"
 
@@ -124,13 +124,14 @@ substrate_parameters = function( p=NULL, project_name=NULL, project_class="defau
 
     if ( !exists("carstm_modelcall", p)) {
       if ( grepl("inla", p$carstm_modelengine) ) {
+        p$libs = c( p$libs, RLibrary ( "INLA" ) )
         p$carstm_modelcall = '
           inla(
             formula = substrate.grainsize ~ 1
               + f(zi, model="rw2", scale.model=TRUE, diagonal=1e-6, hyper=H$rw2)
               + f(strata, model="bym2", graph=sppoly@nb, scale.model=TRUE, constr=TRUE, hyper=H$bym2)
               + f(iid_error, model="iid", hyper=H$iid),
-            family = "lognormal", # "zeroinflatedpoisson0",
+            family = "lognormal",
             data= M,
             control.compute=list(dic=TRUE, config=TRUE),
             control.results=list(return.marginals.random=TRUE, return.marginals.predictor=TRUE ),
@@ -139,15 +140,16 @@ substrate_parameters = function( p=NULL, project_name=NULL, project_class="defau
             # control.inla=list(int.strategy="eb") ,# to get empirical Bayes results much faster.
             # control.inla=list( strategy="laplace", cutoff=1e-6, correct=TRUE, correct.verbose=FALSE ),
             num.threads=4,
-            blas.num.threads=2,
+            blas.num.threads=4,
             verbose=TRUE
           ) '
       }
       if ( grepl("glm", p$carstm_modelengine) ) {
-        p$carstm_modelcall = 'glm( formula = z ~ 1 + StrataID,  family = gaussian(link="log"), data= M[ which(M$tag=="observations"), ]   ) '  # for modelengine='glm'
+        p$carstm_modelcall = 'glm( formula = z ~ 1 + StrataID,  family = gaussian(link="log"), data= M[ which(M$tag=="observations"), ], family=gaussian(link="log")  ) '  # for modelengine='glm'
       }
       if ( grepl("gam", p$carstm_modelengine) ) {
-        p$carstm_modelcall = 'gam( formula = z ~ 1 + StrataID,  family = gaussian(link="log"), data= M[ which(M$tag=="observations"), ] ) '  # for modelengine='gam'
+        p$libs = c( p$libs, RLibrary ( "mgcv" ) )
+        p$carstm_modelcall = 'gam( formula = z ~ 1 + StrataID,  family = gaussian(link="log"), data= M[ which(M$tag=="observations"), ], family=gaussian(link="log")  ) '  # for modelengine='gam'
       }
     }
     return(p)

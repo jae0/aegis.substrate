@@ -1,6 +1,6 @@
 
 
-substrate_carstm = function( p=NULL, DS=NULL, redo=FALSE, map_results=FALSE, ... ) {
+substrate_carstm = function( p=NULL, DS=NULL, redo=FALSE, ... ) {
 
   #\\ Note inverted convention: depths are positive valued
   #\\ i.e., negative valued for above sea level and positive valued for below sea level
@@ -12,8 +12,6 @@ substrate_carstm = function( p=NULL, DS=NULL, redo=FALSE, map_results=FALSE, ...
   if (length(p_add) > 0 ) p = c(p, p_add)
   i = which(duplicated(names(p), fromLast = TRUE ))
   if ( length(i) > 0 ) p = p[-i] # give any passed parameters a higher priority, overwriting pre-existing variable
-
-
 
 
 
@@ -29,7 +27,7 @@ substrate_carstm = function( p=NULL, DS=NULL, redo=FALSE, map_results=FALSE, ...
         return( S )
       }
     }
-    warning( "Generating carstm_inputs ... ")
+    message( "Generating carstm_inputs ... ")
 
     # prediction surface
     sppoly = areal_units( p=p )  # will redo if not found
@@ -103,7 +101,7 @@ substrate_carstm = function( p=NULL, DS=NULL, redo=FALSE, map_results=FALSE, ...
       if (DS=="carstm_modelled") {
         if (file.exists(fn)) {
           load( fn)
-          return( sppoly )
+          return( res )
         }
       }
       if (DS=="carstm_modelled_fit") {
@@ -116,6 +114,7 @@ substrate_carstm = function( p=NULL, DS=NULL, redo=FALSE, map_results=FALSE, ...
 
     # prediction surface
     sppoly = areal_units( p=p )  # will redo if not found
+    res = sppoly@data["StrataID"]  # init results data frame
 
     M = substrate_carstm( p=p, DS="carstm_inputs" )  # will redo if not found
     fit  = NULL
@@ -133,17 +132,17 @@ substrate_carstm = function( p=NULL, DS=NULL, redo=FALSE, map_results=FALSE, ...
       ii = which( M$tag=="predictions" & M$StrataID %in% M[ which(M$tag=="observations"), "StrataID"] )
       preds = predict( fit, newdata=M[ii,], type="link", na.action=na.omit, se.fit=TRUE )  # no/km2
 
-      # out = reformat_to_matrix(
+      # out = reformat_to_array(
       #   input = preds$fit,
       #   matchfrom = list( StrataID=M$StrataID[ii] ),
-      #   matchto   = list( StrataID=sppoly$StrataID  )
+      #   matchto   = list( StrataID=res$StrataID  )
       # )
-      # iy = match( as.character(sppoly$StrataID), aps$StrataID )
-        sppoly@data[,"substrate.grainsize.predicted"] = exp( preds$fit)
-        sppoly@data[,"substrate.grainsize.predicted_se"] = exp( preds$se.fit)
-        sppoly@data[,"substrate.grainsize.predicted_lb"] = exp( preds$fit - preds$se.fit )
-        sppoly@data[,"substrate.grainsize.predicted_ub"] = exp( preds$fit + preds$se.fit )
-        save( sppoly, file=fn, compress=TRUE )
+      # iy = match( as.character(res$StrataID), aps$StrataID )
+        res[,"substrate.grainsize.predicted"] = exp( preds$fit)
+        res[,"substrate.grainsize.predicted_se"] = exp( preds$se.fit)
+        res[,"substrate.grainsize.predicted_lb"] = exp( preds$fit - preds$se.fit )
+        res[,"substrate.grainsize.predicted_ub"] = exp( preds$fit + preds$se.fit )
+        save( res, file=fn, compress=TRUE )
       }
 
       if ( grepl("gam", p$carstm_modelengine) ) {
@@ -157,11 +156,11 @@ substrate_carstm = function( p=NULL, DS=NULL, redo=FALSE, map_results=FALSE, ...
         # reformat predictions into matrix form
         ii = which( M$tag=="predictions" & M$StrataID %in% M[ which(M$tag=="observations"), "StrataID"] )
         preds = predict( fit, newdata=M[ii,], type="link", na.action=na.omit, se.fit=TRUE )  # no/km2
-        sppoly@data[,"substrate.grainsize.predicted"] = exp( preds$fit)
-        sppoly@data[,"substrate.grainsize.predicted_se"] = exp( preds$se.fit)
-        sppoly@data[,"substrate.grainsize.predicted_lb"] = exp( preds$fit - preds$se.fit )
-        sppoly@data[,"substrate.grainsize.predicted_ub"] = exp( preds$fit + preds$se.fit )
-        save( sppoly, file=fn, compress=TRUE )
+        res[,"substrate.grainsize.predicted"] = exp( preds$fit)
+        res[,"substrate.grainsize.predicted_se"] = exp( preds$se.fit)
+        res[,"substrate.grainsize.predicted_lb"] = exp( preds$fit - preds$se.fit )
+        res[,"substrate.grainsize.predicted_ub"] = exp( preds$fit + preds$se.fit )
+        save( res, file=fn, compress=TRUE )
     }
 
 
@@ -186,25 +185,17 @@ substrate_carstm = function( p=NULL, DS=NULL, redo=FALSE, map_results=FALSE, ...
 
       # reformat predictions into matrix form
       ii = which(M$tag=="predictions")
-      jj = match(M$StrataID[ii], sppoly$StrataID)
-      sppoly@data$substrate.grainsize.predicted = exp( fit$summary.fitted.values[ ii[jj], "mean" ])
-      sppoly@data$substrate.grainsize.predicted_lb = exp( fit$summary.fitted.values[ ii[jj], "0.025quant" ])
-      sppoly@data$substrate.grainsize.predicted_ub = exp( fit$summary.fitted.values[ ii[jj], "0.975quant" ])
-      sppoly@data$substrate.grainsize.random_strata_nonspatial = exp( fit$summary.random$strata[ jj, "mean" ])
-      sppoly@data$substrate.grainsize.random_strata_spatial = exp( fit$summary.random$strata[ jj+max(jj), "mean" ])
-      sppoly@data$substrate.grainsize.random_sample_iid = exp( fit$summary.random$iid_error[ ii[jj], "mean" ])
-      save( sppoly, file=fn, compress=TRUE )
+      jj = match(M$StrataID[ii], res$StrataID)
+      res$substrate.grainsize.predicted = exp( fit$summary.fitted.values[ ii[jj], "mean" ])
+      res$substrate.grainsize.predicted_lb = exp( fit$summary.fitted.values[ ii[jj], "0.025quant" ])
+      res$substrate.grainsize.predicted_ub = exp( fit$summary.fitted.values[ ii[jj], "0.975quant" ])
+      res$substrate.grainsize.random_strata_nonspatial = exp( fit$summary.random$strata[ jj, "mean" ])
+      res$substrate.grainsize.random_strata_spatial = exp( fit$summary.random$strata[ jj+max(jj), "mean" ])
+      res$substrate.grainsize.random_sample_iid = exp( fit$summary.random$iid_error[ ii[jj], "mean" ])
+      save( res, file=fn, compress=TRUE )
     }
 
-
-    if (map_results) {
-      vn = "substrate.grainsize.predicted"
-      brks = interval_break(X= sppoly[[vn]], n=length(p$mypalette), style="quantile")
-      dev.new();  spplot( sppoly, vn, col.regions=p$mypalette, main=vn, at=brks, sp.layout=p$coastLayout, col="transparent" )
-    }
-
-    return( sppoly )
-
+    return( res )
   }
 
 }
