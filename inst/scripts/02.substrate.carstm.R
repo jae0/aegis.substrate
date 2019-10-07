@@ -4,8 +4,7 @@
   p = aegis.substrate::substrate_parameters(
     project_class = "carstm", # defines which parameter set to load
     inputdata_spatial_discretization_planar_km = 1,  # km controls resolution of data prior to modelling to reduce data set and speed up modelling
-    spatial_domain = "snowcrab",  # defines spatial area, currenty: "snowcrab" or "SSE"
-    # spatial_domain = "SSE",  # defines spatial area, currenty: "snowcrab" or "SSE"
+    spatial_domain = "SSE",  # defines spatial area, currenty: "snowcrab" or "SSE"
     areal_units_resolution_km = 25, # km dim of lattice ~ 1 hr
     areal_units_proj4string_planar_km = projection_proj4string("utm20")  # coord system to use for areal estimation and gridding for carstm
   )
