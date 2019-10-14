@@ -34,7 +34,7 @@ substrate_carstm = function( p=NULL, DS=NULL, redo=FALSE, ... ) {
 
     # do this immediately to reduce storage for sppoly (before adding other variables)
     M = substrate.db ( p=p, DS="aggregated_data" )  # 16 GB in RAM just to store!
-    names(M)[which(names(M)=="substrate.grainsize.mean" )] = "substrate.grainsize"
+    names(M)[which(names(M)=="substrate.grainsize.mean" )] = p$variabletomodel
 
     # reduce size
     M = M[ which( M$lon > p$corners$lon[1] & M$lon < p$corners$lon[2]  & M$lat > p$corners$lat[1] & M$lat < p$corners$lat[2] ), ]
@@ -66,11 +66,11 @@ substrate_carstm = function( p=NULL, DS=NULL, redo=FALSE, ... ) {
     kk = match( as.character(  sppoly_df$StrataID), as.character( BM$StrataID ) )
     sppoly_df$z = BM$z.predicted[kk]
     BM = NULL
-    sppoly_df$substrate.grainsize = NA
+    sppoly_df[p$variabletomodel] = NA
     sppoly_df$StrataID = as.character( sppoly_df$StrataID )
     sppoly_df$tag ="predictions"
 
-    vn = c("substrate.grainsize", "z", "tag", "StrataID")
+    vn = c(p$variabletomodel, "z", "tag", "StrataID")
 
     M = rbind( M[, vn], sppoly_df[, vn] )
     sppoly_df = NULL
@@ -126,10 +126,11 @@ substrate_carstm = function( p=NULL, DS=NULL, redo=FALSE, ... ) {
       ii = which( M$tag=="predictions" & M$strata %in% M[ which(M$tag=="observations"), "strata"] )
       jj = match( M$strata[ii], res$strata)
       preds = predict( fit, newdata=M[ii,], type="link", na.action=na.omit, se.fit=TRUE )  # no/km2
-      res[,"substrate.grainsize.predicted"] = exp( preds$fit[jj])
-      res[,"substrate.grainsize.predicted_se"] = exp( preds$se.fit[jj])
-      res[,"substrate.grainsize.predicted_lb"] = exp( preds$fit[jj] - preds$se.fit[jj] )
-      res[,"substrate.grainsize.predicted_ub"] = exp( preds$fit[jj] + preds$se.fit[jj] )
+
+      res[,paste(p$variabletomodel,"predicted", sep=".")] = exp( preds$fit[jj])
+      res[,paste(p$variabletomodel,"predicted_se", sep=".")] = exp( preds$se.fit[jj])
+      res[,paste(p$variabletomodel,"predicted_lb", sep=".")] = exp( preds$fit[jj] - preds$se.fit[jj] )
+      res[,paste(p$variabletomodel,"predicted_ub", sep=".")] = exp( preds$fit[jj] + preds$se.fit[jj] )
       save( res, file=fn, compress=TRUE )
     }
 
@@ -141,15 +142,15 @@ substrate_carstm = function( p=NULL, DS=NULL, redo=FALSE, ... ) {
       ii = which( M$tag=="predictions" & M$strata %in% M[ which(M$tag=="observations"), "strata"] )
       jj = match( M$strata[ii], res$strata)
       preds = predict( fit, newdata=M[ii,], type="link", na.action=na.omit, se.fit=TRUE )  # no/km2
-      res[,"substrate.grainsize.predicted"] = exp( preds$fit[jj] )
-      res[,"substrate.grainsize.predicted_se"] = exp( preds$se.fit[jj])
-      res[,"substrate.grainsize.predicted_lb"] = exp( preds$fit[jj] - preds$se.fit[jj] )
-      res[,"substrate.grainsize.predicted_ub"] = exp( preds$fit[jj] + preds$se.fit[jj] )
+      res[,paste(p$variabletomodel,"predicted", sep=".")] = exp( preds$fit[jj] )
+      res[,paste(p$variabletomodel,"predicted_se", sep=".")] = exp( preds$se.fit[jj])
+      res[,paste(p$variabletomodel,"predicted_lb", sep=".")] = exp( preds$fit[jj] - preds$se.fit[jj] )
+      res[,paste(p$variabletomodel,"predicted_ub", sep=".")] = exp( preds$fit[jj] + preds$se.fit[jj] )
       save( res, file=fn, compress=TRUE )
     }
 
     if ( grepl("inla", p$carstm_modelengine) ) {
-      H = carstm_hyperparameters( sd(log(M$substrate.grainsize), na.rm=TRUE), alpha=0.5, median( log(M$substrate.grainsize), na.rm=TRUE) )
+      H = carstm_hyperparameters( sd(log(M[,p$variabletomodel]), na.rm=TRUE), alpha=0.5, median( log(M[,p$variabletomodel]), na.rm=TRUE) )
       M$zi = discretize_data( M$z, p$discretization$z )
       M$iid_error = 1:nrow(M) # for inla indexing for set level variation
       assign("fit", eval(parse(text=paste( "try(", p$carstm_modelcall, ")" ) ) ))
@@ -158,14 +159,14 @@ substrate_carstm = function( p=NULL, DS=NULL, redo=FALSE, ... ) {
       save( fit, file=fn_fit, compress=TRUE )
       ii = which(M$tag=="predictions")
       jj = match(M$strata[ii], res$strata)
-      res$substrate.grainsize.predicted = exp( fit$summary.fitted.values[ ii[jj], "mean" ])
-      res$substrate.grainsize.predicted_lb = exp( fit$summary.fitted.values[ ii[jj], "0.025quant" ])
-      res$substrate.grainsize.predicted_ub = exp( fit$summary.fitted.values[ ii[jj], "0.975quant" ])
+      res[paste( p$variabletomodel, "predicted", sep=".")] = exp( fit$summary.fitted.values[ ii[jj], "mean" ])
+      res[paste( p$variabletomodel, "predicted_lb", sep=".")] = exp( fit$summary.fitted.values[ ii[jj], "0.025quant" ])
+      res[paste( p$variabletomodel, "predicted_ub", sep=".")] = exp( fit$summary.fitted.values[ ii[jj], "0.975quant" ])
 
       # simple spatial so just do the following here
-      res$substrate.grainsize.random_strata_nonspatial = exp( fit$summary.random$strata[ jj, "mean" ])
-      res$substrate.grainsize.random_strata_spatial = exp( fit$summary.random$strata[ jj+max(jj), "mean" ])
-      res$substrate.grainsize.random_sample_iid = exp( fit$summary.random$iid_error[ ii[jj], "mean" ])
+      res[paste( p$variabletomodel, "random_strata_nonspatial", sep=".")] = exp( fit$summary.random$strata[ jj, "mean" ])
+      res[paste( p$variabletomodel, "random_strata_spatial", sep=".")] = exp( fit$summary.random$strata[ jj+max(jj), "mean" ])
+      res[paste( p$variabletomodel, "random_sample_iid", sep=".")] = exp( fit$summary.random$iid_error[ ii[jj], "mean" ])
       save( res, file=fn, compress=TRUE )
     }
     return( res )

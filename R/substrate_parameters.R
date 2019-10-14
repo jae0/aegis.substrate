@@ -115,7 +115,7 @@ substrate_parameters = function( p=NULL, project_name=NULL, project_class="defau
 
   if (project_class=="carstm") {
 
-    p$libs = unique( c( p$libs, project.library ( "spatialreg", "INLA", "raster", "mgcv",  "carstm" ) ) )
+    p$libs = unique( c( p$libs, project.library ( "carstm" ) ) )
 
     if ( !exists("project_name", p)) p$project_name = "substrate"
 
@@ -142,9 +142,10 @@ substrate_parameters = function( p=NULL, project_name=NULL, project_class="defau
 
     if ( !exists("carstm_modelcall", p)) {
       if ( grepl("inla", p$carstm_modelengine) ) {
+        p$libs = unique( c( p$libs, project.library ("INLA" ) ) )
         p$carstm_modelcall = paste('
           inla(
-            formula = substrate.grainsize ~ 1
+            formula =', p$variabletomodel, ' ~ 1
               + f(zi, model="rw2", scale.model=TRUE, diagonal=1e-6, hyper=H$rw2)
               + f(strata, model="bym2", graph=sppoly@nb, scale.model=TRUE, constr=TRUE, hyper=H$bym2)
               + f(iid_error, model="iid", hyper=H$iid),
@@ -162,10 +163,11 @@ substrate_parameters = function( p=NULL, project_name=NULL, project_class="defau
           ) ' )
       }
       if ( grepl("glm", p$carstm_modelengine) ) {
-        p$carstm_modelcall = 'glm( formula = z ~ 1 + StrataID,  family = gaussian(link="log"), data= M[ which(M$tag=="observations"), ], family=gaussian(link="log")  ) '  # for modelengine='glm'
+        p$carstm_modelcall = paste('glm( formula =', p$variabletomodel, '~ 1 + StrataID,  family = gaussian(link="log"), data= M[ which(M$tag=="observations"), ], family=gaussian(link="log")  )  ' )  # for modelengine='glm'
       }
       if ( grepl("gam", p$carstm_modelengine) ) {
-       p$carstm_modelcall = 'gam( formula = z ~ 1 + StrataID,  family = gaussian(link="log"), data= M[ which(M$tag=="observations"), ], family=gaussian(link="log")  ) '  # for modelengine='gam'
+        p$libs = unique( c( p$libs, project.library ( "mgcv" ) ) )
+        p$carstm_modelcall = paste('gam( formula =', p$variabletomodel, '~ 1 + StrataID,  family = gaussian(link="log"), data= M[ which(M$tag=="observations"), ], family=gaussian(link="log")  ) ' ) # for modelengine='gam'
       }
     }
     return(p)
