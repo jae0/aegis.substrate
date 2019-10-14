@@ -109,9 +109,12 @@ substrate_carstm = function( p=NULL, DS=NULL, redo=FALSE, ... ) {
 
     # prediction surface
     sppoly = areal_units( p=p )  # will redo if not found
-    res = sppoly@data["StrataID"]  # init results data frame
+    res = list(StrataID = sppoly[["StrataID"]])  # init results list
+    res$strata = as.numeric(res$StrataID)
 
     M = substrate_carstm( p=p, DS="carstm_inputs" )  # will redo if not found
+    M$strata  = as.numeric( M$StrataID)
+
     fit  = NULL
 
     if ( grepl("glm", p$carstm_modelengine) ) {
@@ -120,8 +123,8 @@ substrate_carstm = function( p=NULL, DS=NULL, redo=FALSE, ... ) {
       if (is.null(fit)) warning("model fit error")
       if ("try-error" %in% class(fit) ) warning("model fit error")
       save( fit, file=fn_fit, compress=TRUE )
-      ii = which( M$tag=="predictions" & M$StrataID %in% M[ which(M$tag=="observations"), "StrataID"] )
-      jj = match( M$StrataID[ii], res$StrataID)
+      ii = which( M$tag=="predictions" & M$strata %in% M[ which(M$tag=="observations"), "strata"] )
+      jj = match( M$strata[ii], res$strata)
       preds = predict( fit, newdata=M[ii,], type="link", na.action=na.omit, se.fit=TRUE )  # no/km2
       res[,"substrate.grainsize.predicted"] = exp( preds$fit[jj])
       res[,"substrate.grainsize.predicted_se"] = exp( preds$se.fit[jj])
@@ -135,8 +138,8 @@ substrate_carstm = function( p=NULL, DS=NULL, redo=FALSE, ... ) {
       if (is.null(fit)) warning("model fit error")
       if ("try-error" %in% class(fit) ) warning("model fit error")
       save( fit, file=fn_fit, compress=TRUE )
-      ii = which( M$tag=="predictions" & M$StrataID %in% M[ which(M$tag=="observations"), "StrataID"] )
-      jj = match( M$StrataID[ii], res$StrataID)
+      ii = which( M$tag=="predictions" & M$strata %in% M[ which(M$tag=="observations"), "strata"] )
+      jj = match( M$strata[ii], res$strata)
       preds = predict( fit, newdata=M[ii,], type="link", na.action=na.omit, se.fit=TRUE )  # no/km2
       res[,"substrate.grainsize.predicted"] = exp( preds$fit[jj] )
       res[,"substrate.grainsize.predicted_se"] = exp( preds$se.fit[jj])
@@ -148,17 +151,18 @@ substrate_carstm = function( p=NULL, DS=NULL, redo=FALSE, ... ) {
     if ( grepl("inla", p$carstm_modelengine) ) {
       H = carstm_hyperparameters( sd(log(M$substrate.grainsize), na.rm=TRUE), alpha=0.5, median( log(M$substrate.grainsize), na.rm=TRUE) )
       M$zi = discretize_data( M$z, p$discretization$z )
-      M$strata  = as.numeric( M$StrataID)
       M$iid_error = 1:nrow(M) # for inla indexing for set level variation
       assign("fit", eval(parse(text=paste( "try(", p$carstm_modelcall, ")" ) ) ))
       if (is.null(fit)) warning("model fit error")
       if ("try-error" %in% class(fit) ) warning("model fit error")
       save( fit, file=fn_fit, compress=TRUE )
       ii = which(M$tag=="predictions")
-      jj = match(M$StrataID[ii], res$StrataID)
+      jj = match(M$strata[ii], res$strata)
       res$substrate.grainsize.predicted = exp( fit$summary.fitted.values[ ii[jj], "mean" ])
       res$substrate.grainsize.predicted_lb = exp( fit$summary.fitted.values[ ii[jj], "0.025quant" ])
       res$substrate.grainsize.predicted_ub = exp( fit$summary.fitted.values[ ii[jj], "0.975quant" ])
+
+      # simple spatial so just do the following here
       res$substrate.grainsize.random_strata_nonspatial = exp( fit$summary.random$strata[ jj, "mean" ])
       res$substrate.grainsize.random_strata_spatial = exp( fit$summary.random$strata[ jj+max(jj), "mean" ])
       res$substrate.grainsize.random_sample_iid = exp( fit$summary.random$iid_error[ ii[jj], "mean" ])
