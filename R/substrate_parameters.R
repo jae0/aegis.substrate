@@ -49,6 +49,8 @@ substrate_parameters = function( p=NULL, project_name=NULL, project_class="defau
   if (!exists("spatial_domain", p) ) p$spatial_domain = "canada.east.highres"
   if (!exists("spatial_domain_subareas", p)) p$spatial_domain_subareas = c( "canada.east", "SSE", "snowcrab", "SSE.mpa" )
 
+  if (!exists("aegis_dimensionality", p)) p$aegis_dimensionality="space"
+
   p = spatial_parameters( p=p)  # default (= only supported resolution of 0.2 km discretization)  .. do NOT change
 
 
@@ -102,8 +104,6 @@ substrate_parameters = function( p=NULL, project_name=NULL, project_class="defau
       if (!exists("stmv_lowpass_phi", p)) p$stmv_lowpass_phi = p$pres*2 # FFT based method when operating gloablly
       if (!exists("stmv_lowpass_nu", p)) p$stmv_lowpass_nu = 0.5 # this is exponential covar
     }
-
-    if (!exists("aegis_dimensionality", p)) p$aegis_dimensionality="space"
 
     p = aegis_parameters( p=p, DS="stmv"  )
     return(p)
