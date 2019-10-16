@@ -16,14 +16,14 @@
   plot(sppoly)
 
   M = substrate.db( p=p, DS="aggregated_data", redo=TRUE )  # will redo if not found .. not used here but used for data matching/lookup in other aegis projects that use bathymetry
-  M = substrate_carstm( p=p, DS="carstm_inputs", redo=TRUE )  # will redo if not found
+  M = substrate.db( p=p, DS="carstm_inputs", redo=TRUE )  # will redo if not found
 
 # run model and obtain predictions
-  res = substrate_carstm( p=p, DS="carstm_modelled", redo=TRUE )
+  res = carstm_model( p=p, M=M )
 
 # extract results and examine
-  res = substrate_carstm( p=p, DS="carstm_modelled" ) # to load currently saved results
-  fit =  substrate_carstm( p=p, DS="carstm_modelled_fit" )  # extract currently saved model fit
+  res = carstm_model( p=p, DS="carstm_modelled" ) # to load currently saved results
+  fit =  carstm_model( p=p, DS="carstm_modelled_fit" )  # extract currently saved model fit
   plot(fit)
   plot(fit, plot.prior=TRUE, plot.hyperparameters=TRUE, plot.fixed.effects=FALSE )
   s = summary(fit)

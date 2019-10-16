@@ -97,6 +97,76 @@
     }
 
 
+    # ---------------------------------------
+
+
+
+  if ( DS=="carstm_inputs") {
+
+    fn = file.path( p$modeldir, paste( "substrate", "carstm_inputs", p$auid,
+      p$inputdata_spatial_discretization_planar_km,
+      "rdata", sep=".") )
+
+    if (!redo)  {
+      if (file.exists(fn)) {
+        load( fn)
+        return( M )
+      }
+    }
+    message( "Generating carstm_inputs ... ")
+
+    # prediction surface
+    sppoly = areal_units( p=p )  # will redo if not found
+
+    # do this immediately to reduce storage for sppoly (before adding other variables)
+    M = substrate.db ( p=p, DS="aggregated_data" )  # 16 GB in RAM just to store!
+    names(M)[which(names(M)=="substrate.grainsize.mean" )] = p$variabletomodel
+
+    # reduce size
+    M = M[ which( M$lon > p$corners$lon[1] & M$lon < p$corners$lon[2]  & M$lat > p$corners$lat[1] & M$lat < p$corners$lat[2] ), ]
+    # levelplot(substrate.grainsize.mean~plon+plat, data=M, aspect="iso")
+
+    crs_lonlat = sp::CRS(projection_proj4string("lonlat_wgs84"))
+    M$StrataID = over( SpatialPoints( M[, c("lon", "lat")], crs_lonlat ), spTransform(sppoly, crs_lonlat ) )$StrataID # match each datum to an area
+
+    M$lon = NULL
+    M$lat = NULL
+    M$plon = NULL
+    M$plat = NULL
+    M = M[ which(is.finite(M$StrataID)),]
+    M$tag = "observations"
+
+    DS="unified"
+    pb = aegis.bathymetry::bathymetry_parameters( p=p, project_class="carstm_auid" ) # transcribes relevant parts of p to load bathymetry
+    BI = bathymetry.db ( p=pb, DS="carstm_inputs" )  # unmodeled!
+    jj = match( as.character( M$StrataID), as.character( BI$StrataID) )
+    M$z = BI$z[jj]
+    jj =NULL
+
+    M = M[ which(is.finite(M$z)), ]
+
+    BI = NULL
+
+    sppoly_df = as.data.frame(sppoly)
+    BM = bathymetry.db ( p=pb, DS="carstm_modelled" )  # modeled!
+    kk = match( as.character(  sppoly_df$StrataID), as.character( BM$StrataID ) )
+    sppoly_df$z = BM$z.predicted[kk]
+    BM = NULL
+    sppoly_df[p$variabletomodel] = NA
+    sppoly_df$StrataID = as.character( sppoly_df$StrataID )
+    sppoly_df$tag ="predictions"
+
+    vn = c(p$variabletomodel, "z", "tag", "StrataID")
+
+    M = rbind( M[, vn], sppoly_df[, vn] )
+    sppoly_df = NULL
+
+    M$StrataID  = factor( as.character(M$StrataID), levels=levels( sppoly$StrataID ) ) # revert to factors
+    M$strata  = as.numeric( M$StrataID)
+
+    save( M, file=fn, compress=TRUE )
+    return( M )
+  }
 
 
     # ---------------------------------------
