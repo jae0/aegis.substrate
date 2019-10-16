@@ -163,6 +163,7 @@
 
     M$StrataID  = factor( as.character(M$StrataID), levels=levels( sppoly$StrataID ) ) # revert to factors
     M$strata  = as.numeric( M$StrataID)
+    M$zi = discretize_data( M$z, p$discretization$z )
 
     save( M, file=fn, compress=TRUE )
     return( M )
