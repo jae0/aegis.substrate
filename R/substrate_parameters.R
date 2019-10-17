@@ -20,6 +20,7 @@ substrate_parameters = function( p=NULL, project_name=NULL, project_class="defau
     P = substrate_parameters(
       project_class = "carstm", # defines which parameter class / set to load
       project_name = "substrate",
+      variabletomodel = "substrate.grainsize",
       spatial_domain = p$spatial_domain,  # defines spatial area, currenty: "snowcrab" or "SSE"
       areal_units_overlay = p$areal_units_overlay, # currently: "snowcrab_managementareas",  "groundfish_strata" .. additional polygon layers for subsequent analysis for now ..
       areal_units_resolution_km = p$areal_units_resolution_km, # km dim of lattice ~ 1 hr
@@ -44,6 +45,8 @@ substrate_parameters = function( p=NULL, project_name=NULL, project_class="defau
   if ( !exists("datadir", p) )   p$datadir  = file.path( p$data_root, "data" )
   if ( !exists("modeldir", p) )  p$modeldir = file.path( p$data_root, "modelled" )
 
+  if ( !exists("variabletomodel", p)) p$variabletomodel = "substrate.grainsize"
+
   if ( !file.exists(p$datadir) ) dir.create( p$datadir, showWarnings=F, recursive=T )
   if ( !file.exists(p$modeldir) ) dir.create( p$modeldir, showWarnings=F, recursive=T )
   if (!exists("spatial_domain", p) ) p$spatial_domain = "canada.east.highres"
@@ -52,6 +55,7 @@ substrate_parameters = function( p=NULL, project_name=NULL, project_class="defau
   if (!exists("aegis_dimensionality", p)) p$aegis_dimensionality="space"
 
   p = spatial_parameters( p=p)  # default (= only supported resolution of 0.2 km discretization)  .. do NOT change
+
 
 
   if (project_class=="default") {
@@ -66,14 +70,14 @@ substrate_parameters = function( p=NULL, project_name=NULL, project_class="defau
     if (!exists("stmv_local_modelengine", p)) p$stmv_local_modelengine="fft"  # currently the perferred approach
     if (!exists("stmv_global_modelengine", p)) p$stmv_global_modelengine = "gam"
     if (!exists("stmv_global_modelformula", p)) p$stmv_global_modelformula = formula( paste(
-      'substrate.grainsize ~  s( log(z), k=3, bs="ts") + s( log(dZ), k=3, bs="ts" ) + s( log(ddZ), k=3, bs="ts" ) ') )
+      p$variabletomodel, ' ~  s( log(z), k=3, bs="ts") + s( log(dZ), k=3, bs="ts" ) + s( log(ddZ), k=3, bs="ts" ) ') )
     if (!exists("stmv_global_family", p)) p$stmv_global_family = gaussian(link="log")
 
     if (p$stmv_global_modelengine == "gam") {
       p$libs = unique( c( p$libs, RLibrary ("mgcv")) )
       if (!exists("stmv_gam_optimizer", p)) p$stmv_gam_optimizer = c("outer", "bfgs")
       if (!exists("stmv_local_modelformula", p)) p$stmv_local_modelformula = formula( paste(
-        'substrate.grainsize ~ s(plon,k=3, bs="ts") + s(plat, k=3, bs="ts") + s(plon, plat, k=200, bs="ts")' ) )
+        p$variabletomodel, ' ~ s(plon,k=3, bs="ts") + s(plat, k=3, bs="ts") + s(plon, plat, k=200, bs="ts")' ) )
     }
 
     # some tweaked options for substrate
@@ -90,7 +94,7 @@ substrate_parameters = function( p=NULL, project_name=NULL, project_class="defau
     if ( p$stmv_local_modelengine == "bayesx" ) {
       p$libs = unique( c( p$libs, RLibrary ("bayesx")) )
       if (!exists("stmv_local_modelformula", p)) p$stmv_local_modelformula = formula( paste(
-        'substrate.grainsize ~ s(plon, bs="ps") + s(plat, bs="ps") + s(plon, plat, bs="te")') )  # more detail than "gs" .. "te" is preferred
+        p$variabletomodel, ' ~ s(plon, bs="ps") + s(plat, bs="ps") + s(plon, plat, bs="te")') )  # more detail than "gs" .. "te" is preferred
       if (!exists("stmv_local_model_bayesxmethod", p)) p$stmv_local_model_bayesxmethod="MCMC"  # REML actually seems to be the same speed ... i.e., most of the time is spent in thhe prediction step ..
       if (!exists("stmv_local_model_distanceweighted", p)) p$stmv_local_model_distanceweighted = TRUE
 
