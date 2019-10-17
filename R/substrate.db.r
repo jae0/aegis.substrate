@@ -150,20 +150,21 @@
     sppoly_df = as.data.frame(sppoly)
     BM = bathymetry.db ( p=pb, DS="carstm_modelled" )  # modeled!
     kk = match( as.character(  sppoly_df$StrataID), as.character( BM$StrataID ) )
-    sppoly_df$z = BM$z.predicted[kk]
+    sppoly_df[, pb$variabletomodel] = BM$z.predicted[kk]
+    sppoly_df[,  p$variabletomodel] = NA
     BM = NULL
-    sppoly_df[p$variabletomodel] = NA
     sppoly_df$StrataID = as.character( sppoly_df$StrataID )
     sppoly_df$tag ="predictions"
 
-    vn = c(p$variabletomodel, "z", "tag", "StrataID")
+    vn = c( p$variabletomodel, pb$variabletomodel, "tag", "StrataID")
 
     M = rbind( M[, vn], sppoly_df[, vn] )
     sppoly_df = NULL
 
     M$StrataID  = factor( as.character(M$StrataID), levels=levels( sppoly$StrataID ) ) # revert to factors
     M$strata  = as.numeric( M$StrataID)
-    M$zi = discretize_data( M$z, p$discretization$z )
+    M$zi = discretize_data( M[, pb$variabletomodel], p$discretization$z )
+    M$iid_error = 1:nrow(M) # for inla indexing for set level variation
 
     save( M, file=fn, compress=TRUE )
     return( M )
