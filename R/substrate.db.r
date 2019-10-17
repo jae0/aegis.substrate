@@ -136,7 +136,6 @@
     M = M[ which(is.finite(M$StrataID)),]
     M$tag = "observations"
 
-    DS="unified"
     pb = aegis.bathymetry::bathymetry_parameters( p=p, project_class="carstm_auid" ) # transcribes relevant parts of p to load bathymetry
     BI = bathymetry.db ( p=pb, DS="carstm_inputs" )  # unmodeled!
     jj = match( as.character( M$StrataID), as.character( BI$StrataID) )
@@ -148,7 +147,7 @@
     BI = NULL
 
     sppoly_df = as.data.frame(sppoly)
-    BM = bathymetry.db ( p=pb, DS="carstm_modelled" )  # modeled!
+    BM = carstm_model ( p=pb, DS="carstm_modelled" )  # modeled!
     kk = match( as.character(  sppoly_df$StrataID), as.character( BM$StrataID ) )
     sppoly_df[, pb$variabletomodel] = BM$z.predicted[kk]
     sppoly_df[,  p$variabletomodel] = NA
