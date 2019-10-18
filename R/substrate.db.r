@@ -136,8 +136,8 @@
     M = M[ which(is.finite(M$StrataID)),]
     M$tag = "observations"
 
-    pb = aegis.bathymetry::bathymetry_parameters( p=p, project_class="carstm_auid" ) # transcribes relevant parts of p to load bathymetry
-    BI = bathymetry.db ( p=pb, DS="carstm_inputs" )  # unmodeled!
+    pB = aegis.bathymetry::bathymetry_parameters( p=p, project_class="carstm_auid" ) # transcribes relevant parts of p to load bathymetry
+    BI = bathymetry.db ( p=pB, DS="carstm_inputs" )  # unmodeled!
     jj = match( as.character( M$StrataID), as.character( BI$StrataID) )
     M$z = BI$z[jj]
     jj =NULL
@@ -147,22 +147,22 @@
     BI = NULL
 
     sppoly_df = as.data.frame(sppoly)
-    BM = carstm_model ( p=pb, DS="carstm_modelled" )  # modeled!
+    BM = carstm_model ( p=pB, DS="carstm_modelled" )  # modeled!
     kk = match( as.character(  sppoly_df$StrataID), as.character( BM$StrataID ) )
-    sppoly_df[, pb$variabletomodel] = BM$z.predicted[kk]
+    sppoly_df[, pB$variabletomodel] = BM$z.predicted[kk]
     sppoly_df[,  p$variabletomodel] = NA
     BM = NULL
     sppoly_df$StrataID = as.character( sppoly_df$StrataID )
     sppoly_df$tag ="predictions"
 
-    vn = c( p$variabletomodel, pb$variabletomodel, "tag", "StrataID")
+    vn = c( p$variabletomodel, pB$variabletomodel, "tag", "StrataID")
 
     M = rbind( M[, vn], sppoly_df[, vn] )
     sppoly_df = NULL
 
     M$StrataID  = factor( as.character(M$StrataID), levels=levels( sppoly$StrataID ) ) # revert to factors
     M$strata  = as.numeric( M$StrataID)
-    M$zi = discretize_data( M[, pb$variabletomodel], p$discretization$z )
+    M$zi = discretize_data( M[, pB$variabletomodel], p$discretization$z )
     M$iid_error = 1:nrow(M) # for inla indexing for set level variation
 
     save( M, file=fn, compress=TRUE )
