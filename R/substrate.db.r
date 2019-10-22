@@ -57,6 +57,11 @@
 
     if ( DS=="aggregated_data") {
 
+      p = substrate_parameters(
+        variabletomodel = p$variabletomodel,
+        inputdata_spatial_discretization_planar_km=p$inputdata_spatial_discretization_planar_km
+      )
+
       fn = file.path( p$datadir, paste( "substrate", "aggregated_data", p$inputdata_spatial_discretization_planar_km, "rdata", sep=".") )
       if (!redo)  {
         if (file.exists(fn)) {
@@ -66,13 +71,13 @@
       }
 
       M = substrate.db( p=p, DS="lonlat.highres" )
-      M$substrate.grainsize = M$grainsize
+      M[,p$variabletomodel] = M$grainsize
 
       M$plon = round(M$plon / p$inputdata_spatial_discretization_planar_km + 1 ) * p$inputdata_spatial_discretization_planar_km
       M$plat = round(M$plat / p$inputdata_spatial_discretization_planar_km + 1 ) * p$inputdata_spatial_discretization_planar_km
 
       bb = as.data.frame( t( simplify2array(
-        tapply( X=M$substrate.grainsize, INDEX=list(paste(  M$plon, M$plat ) ),
+        tapply( X=M[,p$variabletomodel], INDEX=list(paste(  M$plon, M$plat ) ),
           FUN = function(w) { c(
             mean(w, na.rm=TRUE),
             sd(w, na.rm=TRUE),
@@ -80,14 +85,14 @@
           ) }, simplify=TRUE )
       )))
       M = NULL
-      colnames(bb) = c("substrate.grainsize.mean", "substrate.grainsize.sd", "substrate.grainsize.n")
+      colnames(bb) = paste( p$variabletomodel, c("mean", "sd", "n"), sep=".")
       plonplat = matrix( as.numeric( unlist(strsplit( rownames(bb), " ", fixed=TRUE))), ncol=2, byrow=TRUE)
 
       bb$plon = plonplat[,1]
       bb$plat = plonplat[,2]
       plonplat = NULL
 
-      M = bb[ which( is.finite( bb$substrate.grainsize.mean )) ,]
+      M = bb[ which( is.finite( bb[, paste(p$variabletomodel, "mean", sep=".") ] )) ,]
       bb =NULL
       gc()
       M = planar2lonlat( M, p$aegis_proj4string_planar_km)
@@ -120,7 +125,7 @@
 
     # do this immediately to reduce storage for sppoly (before adding other variables)
     M = substrate.db ( p=p, DS="aggregated_data" )  # 16 GB in RAM just to store!
-    names(M)[which(names(M)=="substrate.grainsize.mean" )] = p$variabletomodel
+    names(M)[which(names(M)==paste(p$variabletomodel, "mean", sep=".") )] = p$variabletomodel
 
     # reduce size
     M = M[ which( M$lon > p$corners$lon[1] & M$lon < p$corners$lon[2]  & M$lat > p$corners$lat[1] & M$lat < p$corners$lat[2] ), ]
@@ -142,14 +147,14 @@
     M$z = BI$z[jj]
     jj =NULL
 
-    M = M[ which(is.finite(M$z)), ]
+    M = M[ which(is.finite(M[, pB$variabletomodel] )), ]
 
     BI = NULL
 
     sppoly_df = as.data.frame(sppoly)
     BM = carstm_model ( p=pB, DS="carstm_modelled" )  # modeled!
     kk = match( as.character(  sppoly_df$StrataID), as.character( BM$StrataID ) )
-    sppoly_df[, pB$variabletomodel] = BM$z.predicted[kk]
+    sppoly_df[, pB$variabletomodel] = BM[ kk, paste(pB$variabletomodel, "predicted", sep=".") ]
     sppoly_df[,  p$variabletomodel] = NA
     BM = NULL
     sppoly_df$StrataID = as.character( sppoly_df$StrataID )
@@ -162,7 +167,7 @@
 
     M$StrataID  = factor( as.character(M$StrataID), levels=levels( sppoly$StrataID ) ) # revert to factors
     M$strata  = as.numeric( M$StrataID)
-    M$zi = discretize_data( M[, pB$variabletomodel], p$discretization$z )
+    M$zi = discretize_data( M[, pB$variabletomodel], p$discretization[[pB$variabletomodel]] )
     M$iid_error = 1:nrow(M) # for inla indexing for set level variation
 
     save( M, file=fn, compress=TRUE )
@@ -187,28 +192,29 @@
 
       S = substrate.db( p=p, DS="lonlat.highres" )
       S = lonlat2planar( S,  proj.type=p$aegis_proj4string_planar_km )  # utm20, WGS84 (snowcrab geoid)
-      S$substrate.grainsize = S$grainsize
-      S = S[ ,c("plon", "plat", "substrate.grainsize" )]
+      names(S)[which(names(S) == "grainsize")] = p$variabletomodel
+
+      S = S[ ,c("plon", "plat", p$variabletomodel )]
 
       # discretize to speed up the rest
       S$plon = round(S$plon/p$inputdata_spatial_discretization_planar_km + 1) * p$inputdata_spatial_discretization_planar_km
       S$plat = round(S$plat/p$inputdata_spatial_discretization_planar_km + 1) * p$inputdata_spatial_discretization_planar_km
 
       gsrez = 0.001
-      oo = paste( S$plon, S$plat, round(S$substrate.grainsize/gsrez +1 )*gsrez )
+      oo = paste( S$plon, S$plat, round(S[,p$variabletomodel]/gsrez +1 )*gsrez )
 
       S = S[!duplicated(oo),]  # drop all duplicated data
       rm(oo); gc()
 
       # clean up duplicated locations with variable data
-      S = tapply( X=S$substrate.grainsize, INDEX=list(S$plon, S$plat),
+      S = tapply( X=S[,p$variabletomodel], INDEX=list(S$plon, S$plat),
           FUN = function(w) {median(w, na.rm=TRUE)},
           simplify=TRUE )
       S = as.data.frame( as.table (S) )
       S[,1] = as.numeric(as.character( S[,1] ))
       S[,2] = as.numeric(as.character( S[,2] ))
       S = S[ which( is.finite( S[,3] )) ,]
-      names(S) = c("plon", "plat", "substrate.grainsize")  # geometric means ..
+      names(S) = c("plon", "plat", p$variabletomodel)  # geometric means ..
 
       # merge covars into S
       sid = stmv::array_map( "xy->1", S[,c("plon", "plat")], gridparams=p$gridparams )
@@ -257,7 +263,7 @@
       Slb = stmv_db( p=p, DS="stmv.prediction", ret="lb" )
       Sub = stmv_db( p=p, DS="stmv.prediction", ret="ub" )
       S = as.data.frame( cbind( Smean, Sub, Slb) )  # ub and lb swap due to log scaling and link space operation
-      names(S) = c( "substrate.grainsize", "substrate.grainsize.lb", "substrate.grainsize.ub")
+      names(S) = paste( p$variabletomodel, c( "", ".lb", ".ub") , sep="")
       rm (Smean, Slb, Sub); gc()
 
 
@@ -303,21 +309,20 @@
         S = S[, names(S0)]
 
         # range checks
-        ii = which( S$substrate.grainsize < exp(-6) )
-        if (length(ii) > 0 ) S$substrate.grainsize[ii] = exp(-6)
+        ii = which( S[,p$variabletomodel] < exp(-6) )
+        if (length(ii) > 0 ) S[,p$variabletomodel][ii] = exp(-6)
 
-        ii = which( S$substrate.grainsize > exp(5) )
-        if (length(ii) > 0 ) S$substrate.grainsize[ ii ] = exp(5)
+        ii = which( S[,p$variabletomodel] > exp(5) )
+        if (length(ii) > 0 ) S[,p$variabletomodel][ ii ] = exp(5)
 
         fn = file.path( p$modeldir, paste( "substrate", "complete", p1$spatial_domain, "rdata", sep=".") )
         save (S, file=fn, compress=TRUE)
       }
 
       if(0){
-        datarange = quantile( S$substrate.grainsize, probs=c(0.01, 0.99), na.rm=TRUE )
+        datarange = quantile( S[,p$variabletomodel], probs=c(0.01, 0.99), na.rm=TRUE )
         dr = log(seq( datarange[1], datarange[2], length.out=100))
-        levelplot(log(substrate.grainsize) ~ plon+plat, S,  at=dr, col.regions=(color.code( "seis", dr)))
-
+        levelplot(log( eval(p$variabletomodel) ~ plon+plat, S,  at=dr, col.regions=(color.code( "seis", dr))))
       }
       return ( "Completed subsets" )
     }
@@ -328,7 +333,7 @@
 
     if (DS=="maps") {
 
-      if (is.null(varnames)) varnames="substrate.grainsize"
+      if (is.null(varnames)) varnames=p$variabletomodel
       datarange=NULL
       logyvar=FALSE
       isodepths = c( 100, 300, 500 )
