@@ -16,8 +16,8 @@
   sppoly = areal_units( p=p )  # this has already been done in aegis.polygons::01 polygons.R .. should nto have to redo
   plot(sppoly)
 
-  M = substrate.db( p=p, DS="aggregated_data", redo=TRUE )  # will redo if not found .. not used here but used for data matching/lookup in other aegis projects that use bathymetry
-  M = substrate.db( p=p, DS="carstm_inputs", redo=TRUE )  # will redo if not found
+  M = substrate_carstm( p=p, DS="aggregated_data", redo=TRUE )  # will redo if not found .. not used here but used for data matching/lookup in other aegis projects that use bathymetry
+  M = substrate_carstm( p=p, DS="carstm_inputs", redo=TRUE )  # will redo if not found
 
 # run model and obtain predictions
   res = carstm_model( p=p, M=M )
@@ -42,8 +42,7 @@
   vn = paste(p$variabletomodel, "random_strata_nonspatial", sep=".")
   carstm_plot( p=p, res=res, vn=vn )
 
-  vn = paste(p$variabletomodel, "random_strata_spatial", sep=".")
-  carstm_plot( p=p, res=res, vn=vn )
+  vn = paste(p$variabletomodel, "random_strata_spatial", sep="._carstm  carstm_plot( p=p, res=res, vn=vn )
 
 
 # end
