@@ -142,7 +142,7 @@
     M$tag = "observations"
 
     pB = aegis.bathymetry::bathymetry_parameters( p=p, project_class="carstm_auid" ) # transcribes relevant parts of p to load bathymetry
-    BI = bathymetry.db ( p=pB, DS="carstm_inputs" )  # unmodeled!
+    BI = bathymetry_carstm_db ( p=pB, DS="carstm_inputs" )  # unmodeled!
     jj = match( as.character( M$StrataID), as.character( BI$StrataID) )
     M$z = BI$z[jj]
     jj =NULL
