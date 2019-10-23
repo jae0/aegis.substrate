@@ -123,7 +123,7 @@ substrate_parameters = function( p=NULL, project_name=NULL, project_class="defau
 
     if ( !exists("project_name", p)) p$project_name = "substrate"
 
-    p = aegis_parameters( p=p, DS="carstm" )
+    p = carstm_parameters( p=p, DS="basic" )
 
     if ( !exists("areal_units_strata_type", p)) p$areal_units_strata_type = "lattice" # "stmv_lattice" to use ageis fields instead of carstm fields ... note variables are not the same
 
