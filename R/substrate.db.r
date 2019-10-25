@@ -61,6 +61,64 @@
 
     # ---------------------------------------
 
+
+
+    if ( DS=="aggregated_data") {
+
+      fn = file.path( p$datadir, paste( "substrate", "aggregated_data", p$inputdata_spatial_discretization_planar_km, "rdata", sep=".") )
+      if (!redo)  {
+        if (file.exists(fn)) {
+          load( fn)
+          return( M )
+        }
+      }
+
+      M = substrate.db( p=p, DS="lonlat.highres" )
+      M[,p$variabletomodel] = M$grainsize
+
+
+      # p$quantile_bounds_data = c(0.0005, 0.9995)
+      if (exists("quantile_bounds_data", p)) {
+        TR = quantile(M[,p$variabletomodel], probs=p$quantile_bounds_data, na.rm=TRUE )
+        keep = which( M[,p$variabletomodel] >=  TR[1] & M[,p$variabletomodel] <=  TR[2] )
+        if (length(keep) > 0 ) M = M[ keep, ]
+      }
+
+      if (!exists("inputdata_spatial_discretization_planar_km", p) )  p$inputdata_spatial_discretization_planar_km = 1
+
+      M$plon = round(M$plon / p$inputdata_spatial_discretization_planar_km + 1 ) * p$inputdata_spatial_discretization_planar_km
+      M$plat = round(M$plat / p$inputdata_spatial_discretization_planar_km + 1 ) * p$inputdata_spatial_discretization_planar_km
+
+      gc()
+
+      bb = as.data.frame( t( simplify2array(
+        tapply( X=M[,p$variabletomodel], INDEX=list(paste(  M$plon, M$plat ) ),
+          FUN = function(w) { c(
+            mean(w, na.rm=TRUE),
+            sd(w, na.rm=TRUE),
+            length( which(is.finite(w)) )
+          ) }, simplify=TRUE )
+      )))
+      M = NULL
+      colnames(bb) = paste( p$variabletomodel, c("mean", "sd", "n"), sep=".")
+      plonplat = matrix( as.numeric( unlist(strsplit( rownames(bb), " ", fixed=TRUE))), ncol=2, byrow=TRUE)
+
+      bb$plon = plonplat[,1]
+      bb$plat = plonplat[,2]
+      plonplat = NULL
+
+      M = bb[ which( is.finite( bb[, paste(p$variabletomodel, "mean", sep=".") ] )) ,]
+      bb =NULL
+      gc()
+      M = planar2lonlat( M, p$aegis_proj4string_planar_km)
+      save(M, file=fn, compress=TRUE)
+
+      return( M )
+    }
+
+
+    # ---------------------------------------
+
     if ( DS=="stmv_inputs") {
 
       varstokeep = unique( c( p$variables$Y, p$variables$LOCS, p$variables$COV ) )
@@ -74,31 +132,7 @@
 
       bid = stmv::array_map( "xy->1", B[,c("plon", "plat")], gridparams=p$gridparams )
 
-      S = substrate.db( p=p, DS="lonlat.highres" )
-      S = lonlat2planar( S,  proj.type=p$aegis_proj4string_planar_km )  # utm20, WGS84 (snowcrab geoid)
-      names(S)[which(names(S) == "grainsize")] = p$variabletomodel
-
-      S = S[ ,c("plon", "plat", p$variabletomodel )]
-
-      # discretize to speed up the rest
-      S$plon = round(S$plon/p$inputdata_spatial_discretization_planar_km + 1) * p$inputdata_spatial_discretization_planar_km
-      S$plat = round(S$plat/p$inputdata_spatial_discretization_planar_km + 1) * p$inputdata_spatial_discretization_planar_km
-
-      gsrez = 0.001
-      oo = paste( S$plon, S$plat, round(S[,p$variabletomodel]/gsrez +1 )*gsrez )
-
-      S = S[!duplicated(oo),]  # drop all duplicated data
-      rm(oo); gc()
-
-      # clean up duplicated locations with variable data
-      S = tapply( X=S[,p$variabletomodel], INDEX=list(S$plon, S$plat),
-          FUN = function(w) {median(w, na.rm=TRUE)},
-          simplify=TRUE )
-      S = as.data.frame( as.table (S) )
-      S[,1] = as.numeric(as.character( S[,1] ))
-      S[,2] = as.numeric(as.character( S[,2] ))
-      S = S[ which( is.finite( S[,3] )) ,]
-      names(S) = c("plon", "plat", p$variabletomodel)  # geometric means ..
+      names(S)[which(names(S) == paste(p$variabletomodel, "mean", sep="."))] = p$variabletomodel
 
       # merge covars into S
       sid = stmv::array_map( "xy->1", S[,c("plon", "plat")], gridparams=p$gridparams )
@@ -107,7 +141,6 @@
       B_matched$plon = B_matched$plat = NULL
       S = cbind(S, B_matched )
       S = S[ is.finite( rowSums(S) ), ]
-
 
       OUT  = list( LOCS=B[, p$variables$LOCS], COV=B[, p$variables$COV ] )
 
