@@ -107,7 +107,8 @@
       bb$plat = plonplat[,2]
       plonplat = NULL
 
-      M = bb[ which( is.finite( bb[, paste(p$variabletomodel, "mean", sep=".") ] )) ,]
+      ii = which( is.finite( bb[, paste(p$variabletomodel, "mean", sep=".")] ))
+      M = bb[ii  ,]
       bb =NULL
       gc()
       M = planar2lonlat( M, p$aegis_proj4string_planar_km)
