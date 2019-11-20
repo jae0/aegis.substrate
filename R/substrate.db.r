@@ -124,7 +124,7 @@
 
     if ( DS=="stmv_inputs") {
 
-      varstokeep = unique( c( p$variables$Y, p$variables$LOCS, p$variables$COV ) )
+      varstokeep = unique( c( p$stmv_variables$Y, p$stmv_variables$LOCS, p$stmv_variables$COV ) )
       B = bathymetry.db( p=p, DS="baseline", varnames=varstokeep )
 
       # range checks
@@ -145,7 +145,7 @@
       S = cbind(S, B_matched )
       S = S[ is.finite( rowSums(S) ), ]
 
-      OUT  = list( LOCS=B[, p$variables$LOCS], COV=B[, p$variables$COV ] )
+      OUT  = list( LOCS=B[, p$stmv_variables$LOCS], COV=B[, p$stmv_variables$COV ] )
 
       return(  list( input=S, output=OUT ) )
 

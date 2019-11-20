@@ -44,8 +44,8 @@ substrate_parameters = function( p=NULL, project_name=NULL, project_class="defau
   if (project_class=="stmv") {
     p$libs = unique( c( p$libs, project.library ( "stmv" ) ) )
 
-    if (!exists("variables", p)) p$variables = list()
-    if (!exists("LOCS", p$variables)) p$variables$LOCS=c("plon", "plat")
+    if (!exists("stmv_variables", p)) p$stmv_variables = list()
+    if (!exists("LOCS", p$stmv_variables)) p$stmv_variables$LOCS=c("plon", "plat")
     if (!exists("stmv_local_modelengine", p)) p$stmv_local_modelengine="fft"  # currently the perferred approach
     if (!exists("stmv_global_modelengine", p)) p$stmv_global_modelengine = "gam"
     if (!exists("stmv_global_modelformula", p)) p$stmv_global_modelformula = formula( paste(
