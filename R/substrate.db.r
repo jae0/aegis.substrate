@@ -1,10 +1,15 @@
 
 
-  substrate.db = function( p=NULL, DS=NULL, varnames=NULL, redo=FALSE ) {
+  substrate.db = function( p=NULL, DS=NULL, varnames=NULL, redo=FALSE, ... ) {
 
 
-
-    if ( is.null(p)) p = substrate_parameters(...)
+    if ( is.null(p))  {
+      p_add = list(...)
+      if (length(p_add) > 0 )
+      p = substrate_parameters(...)
+    } else {
+      p = substrate_parameters()
+    }
 
     if ( !exists("project_name", p)) p$project_name = "substrate"
     if ( !exists("data_root", p) ) p$data_root = project.datadirectory( "aegis", p$project_name )
