@@ -2,13 +2,13 @@
 
   substrate.db = function( p=NULL, DS=NULL, varnames=NULL, redo=FALSE, ... ) {
 
-
     if ( is.null(p))  {
       p_add = list(...)
-      if (length(p_add) > 0 )
-      p = substrate_parameters(...)
-    } else {
-      p = substrate_parameters()
+      if (length(p_add) > 0 ) {
+        p = substrate_parameters(...)
+      } else {
+        p = substrate_parameters()
+      }
     }
 
     if ( !exists("project_name", p)) p$project_name = "substrate"
