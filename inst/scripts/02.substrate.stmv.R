@@ -55,8 +55,16 @@ p = aegis.substrate::substrate_parameters(
       cor_0.05 = rep("localhost", max(1, interpolate_ncpus-3)),
       cor_0.01 = rep("localhost", max(1, interpolate_ncpus-3))
     ),
+    interpolate_predictions = list(
+      c1 = rep("localhost", max(1, interpolate_ncpus-1)),  # ncpus for each runmode
+      c2 = rep("localhost", max(1, interpolate_ncpus-1)),  # ncpus for each runmode
+      c3 = rep("localhost", max(1, interpolate_ncpus-2)),
+      c4 = rep("localhost", max(1, interpolate_ncpus-3)),
+      c5 = rep("localhost", max(1, interpolate_ncpus-4)),
+      c6 = rep("localhost", max(1, interpolate_ncpus-4)),
+      c7 = rep("localhost", max(1, interpolate_ncpus-5))
+    ),
     restart_load = TRUE,
-    interpolate_predictions = TRUE,
     save_intermediate_results = TRUE,
     save_completed_data = TRUE # just a dummy variable with the correct name
   )
