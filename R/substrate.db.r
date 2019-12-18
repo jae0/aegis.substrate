@@ -140,6 +140,7 @@
 
       bid = stmv::array_map( "xy->1", B[,c("plon", "plat")], gridparams=p$gridparams )
 
+      S = substrate.db( p=p, DS="aggregated_data" )
       names(S)[which(names(S) == paste(p$variabletomodel, "mean", sep="."))] = p$variabletomodel
 
       # merge covars into S
@@ -147,10 +148,11 @@
       u = match( sid, bid )
       B_matched = B[u, ]
       B_matched$plon = B_matched$plat = NULL
-      S = cbind(S, B_matched )
-      S = S[ is.finite( rowSums(S) ), ]
 
-      OUT  = list( LOCS=B[, p$stmv_variables$LOCS], COV=B[, p$stmv_variables$COV ] )
+      S = cbind(S, B_matched )
+      S = S[ is.finite( S$substrate.grainsize ), ]
+
+      OUT  = list( LOCS=S[, p$stmv_variables$LOCS], COV=S[, p$stmv_variables$COV ] )
 
       return(  list( input=S, output=OUT ) )
 
