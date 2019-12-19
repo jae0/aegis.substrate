@@ -14,7 +14,7 @@ scale_ncpus = min( parallel::detectCores(), floor( (ram_local()- scale_ram_requi
 interpolate_ram_required_main_process = 2 # GB twostep / fft
 interpolate_ram_required_per_process  = 2  # twostep / fft /fields vario ..
 interpolate_ncpus = min( parallel::detectCores(), floor( (ram_local()- interpolate_ram_required_main_process) / interpolate_ram_required_per_process ) )
-
+interpolate_ncpus = 8
 
 p = aegis.substrate::substrate_parameters(
   project_class="stmv",
@@ -44,7 +44,7 @@ p = aegis.substrate::substrate_parameters(
   stmv_local_model_distanceweighted = TRUE,
   stmv_rsquared_threshold = 0.1, # lower threshold == ignore
   stmv_distance_statsgrid = 5, # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
-  stmv_distance_prediction_limits =c( 4, 20 ), # range of permissible predictions km (i.e 1/2 stats grid to upper limit based upon data density)
+  stmv_distance_prediction_limits =c( 4, 40 ), # range of permissible predictions km (i.e 1/2 stats grid to upper limit based upon data density)
   stmv_distance_scale = c( 5, 10, 25, 50, 75 ), # km ... approx guess of 95% AC range
   stmv_nmin = 100, # stmv_nmin/stmv_nmax changes with resolution
   stmv_nmax = 400, # numerical time/memory constraint -- anything larger takes too much time .. anything less .. errors
