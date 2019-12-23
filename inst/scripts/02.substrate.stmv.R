@@ -83,7 +83,8 @@ dev.new(); surface( as.image( Z=DATA$input$substrate.grainsize, x=DATA$input[, c
 predictions = stmv_db( p=p, DS="stmv.prediction", ret="mean" )
 statistics  = stmv_db( p=p, DS="stmv.stats" )
 
-locations = DATA$output$LOCS # these are the prediction locations
+# locations = DATA$output$LOCS # these are the prediction locations
+locations = bathymetry.db(spatial_domain=p$spatial_domain, DS="baseline")
 
 # comparisons
 dev.new(); surface( as.image( Z=log(predictions), x=locations, nx=p$nplons, ny=p$nplats, na.rm=TRUE) )
