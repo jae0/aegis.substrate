@@ -11,7 +11,7 @@ substrate.db ( DS="lonlat.highres.redo" ) # in future .. additional data would b
 p = substrate_parameters(
   data_root = project.datadirectory( "aegis", "substrate" ),
   spatial_domain = "canada.east.highres" ,
-  inputdata_spatial_discretization_planar_km = 1 / 20, # 1==p$pres; controls resolution of data prior to modelling (km .. ie 20 linear units smaller than the final discretization pres)
+  inputdata_spatial_discretization_planar_km = 0.5, # p$pres==0.5; controls resolution of data prior to modelling (km .. ie 20 linear units smaller than the final discretization pres)
   aegis_dimensionality="space"
 )
 M = substrate.db( p=p, DS="aggregated_data", redo=TRUE )  # will redo if not found .. not used here but used for data matching/lookup in other aegis projects that use bathymetry

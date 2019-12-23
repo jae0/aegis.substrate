@@ -152,7 +152,7 @@
       S = cbind(S, B_matched )
       S = S[ is.finite( S$substrate.grainsize ), ]
 
-      OUT  = list( LOCS=S[, p$stmv_variables$LOCS], COV=S[, p$stmv_variables$COV ] )
+      OUT  = list( LOCS=B[, p$stmv_variables$LOCS], COV=B[, p$stmv_variables$COV ] )
 
       return(  list( input=S, output=OUT ) )
 

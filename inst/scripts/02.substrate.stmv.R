@@ -22,7 +22,7 @@ p = aegis.substrate::substrate_parameters(
   DATA = 'substrate.db( p=p, DS="stmv_inputs" )',
   spatial_domain = "canada.east.highres" ,
   spatial_domain_subareas = c( "canada.east", "SSE", "snowcrab", "SSE.mpa" ),
-  inputdata_spatial_discretization_planar_km = 1 / 20, # 1==p$pres; controls resolution of data prior to modelling (km .. ie 20 linear units smaller than the final discretization pres)
+  inputdata_spatial_discretization_planar_km = 0.5, # 0.5==p$pres; controls resolution of data prior to modelling (km .. ie 20 linear units smaller than the final discretization pres)
   aegis_dimensionality="space",
   stmv_variables = list(Y="substrate.grainsize"),
   stmv_global_modelengine = "gam",
@@ -49,7 +49,7 @@ p = aegis.substrate::substrate_parameters(
   stmv_nmin = 100, # stmv_nmin/stmv_nmax changes with resolution
   stmv_nmax = 400, # numerical time/memory constraint -- anything larger takes too much time .. anything less .. errors
   stmv_runmode = list(
-    globalmodel = TRUE,
+    globalmodel = FALSE,
     scale = rep("localhost", scale_ncpus),
     interpolate = list(
       cor_0.25 = rep("localhost", interpolate_ncpus),
@@ -66,7 +66,7 @@ p = aegis.substrate::substrate_parameters(
       c6 = rep("localhost", max(1, interpolate_ncpus-4)),
       c7 = rep("localhost", max(1, interpolate_ncpus-5))
     ),
-    restart_load = TRUE,
+    restart_load = "interpolate_correlation_basis_0.01" ,  # only needed if this is restarting from some saved instance
     save_intermediate_results = TRUE,
     save_completed_data = TRUE # just a dummy variable with the correct name
   )
@@ -77,19 +77,20 @@ stmv( p=p )
 
 
 # quick look of data
+DATA = substrate.db( p=p, DS="stmv_inputs" )
 dev.new(); surface( as.image( Z=DATA$input$substrate.grainsize, x=DATA$input[, c("plon", "plat")], nx=p$nplons, ny=p$nplats, na.rm=TRUE) )
 
 predictions = stmv_db( p=p, DS="stmv.prediction", ret="mean" )
 statistics  = stmv_db( p=p, DS="stmv.stats" )
 
-locations = bathymetry.db( p=p, DS="baseline") # these are the prediction locations
+locations = DATA$output$LOCS # these are the prediction locations
 
 # comparisons
 dev.new(); surface( as.image( Z=log(predictions), x=locations, nx=p$nplons, ny=p$nplats, na.rm=TRUE) )
 
 # stats
 (p$statsvars)
-dev.new(); levelplot( log(predictions[]) ~ locations[,1] + locations[,2], aspect="iso" )
+dev.new(); levelplot( (predictions) ~ locations[,1] + locations[,2], aspect="iso" )
 dev.new(); levelplot( statistics[,match("nu", p$statsvars)]  ~ locations[,1] + locations[,2], aspect="iso" ) # nu
 dev.new(); levelplot( statistics[,match("sdTot", p$statsvars)]  ~ locations[,1] + locations[,2], aspect="iso" ) #sd total
 dev.new(); levelplot( statistics[,match("localrange", p$statsvars)]  ~ locations[,1] + locations[,2], aspect="iso" ) #localrange
