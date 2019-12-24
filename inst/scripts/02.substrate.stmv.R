@@ -117,9 +117,12 @@ substrate.figures( p=p, varnames=c( "substrate.grainsize", "s.localrange", "s.nu
 o = stmv_db( p=p, DS="global_model" )
 summary(o)
 plot(o)
-AIC(o)  # [1] 813065
+AIC(o)  # [1]  3263839.33
+
 
 # Global model results:
+Family: gaussian
+Link function: log
 Family: gaussian
 Link function: log
 
@@ -129,27 +132,17 @@ substrate.grainsize ~ s(b.sdSpatial, k = 3, bs = "ts") + s(b.localrange,
     k = 3, bs = "ts") + s(log(ddZ), k = 3, bs = "ts")
 
 Parametric coefficients:
-            Estimate Std. Error t value Pr(>|t|)
-(Intercept) -0.75422    0.00838     -90   <2e-16
+              Estimate Std. Error  t value   Pr(>|t|)
+(Intercept) -0.9053906  0.0111006 -81.5626 < 2.22e-16
 
 Approximate significance of smooth terms:
-                     edf Ref.df     F p-value
-s(b.sdSpatial)  9.93e-01      2   788 < 2e-16
-s(b.localrange) 2.00e+00      2  1935 < 2e-16
-s(log(z))       2.00e+00      2 17441 < 2e-16
-s(log(dZ))      3.19e-06      2     0 0.00017
-s(log(ddZ))     1.99e+00      2   678 < 2e-16
+                    edf Ref.df           F    p-value
+s(b.sdSpatial)  1.99628      2   304.92667 < 2.22e-16
+s(b.localrange) 1.99992      2  4461.65359 < 2.22e-16
+s(log(z))       1.99666      2 18144.34273 < 2.22e-16
+s(log(dZ))      1.98167      2    26.51703 2.2327e-12
+s(log(ddZ))     1.97150      2     7.92948 0.00031715
 
-R-sq.(adj) =  0.136   Deviance explained = 13.5%
-GCV = 5.7137  Scale est. = 5.7136    n = 714063
-||| Saved parameters to file:
-/home/jae/bio.data/aegis/substrate/modelled/substrate.grainsize/canada.east.highres/p.rdata
-||| Proportion to do: 1
+R-sq.(adj) =   0.14   Deviance explained = 13.8%
+GCV = 5.6951  Scale est. = 5.695     n = 713021
 
-Iteration 1 of 1
-
-
-||| Entering Predicting global effect of covariates at each prediction location: 2019-08-15 22:43:35
-
-||| This can take a while (usually a few minutes but hours if complex) ...
-Model Deviance: 4079829.74039671
