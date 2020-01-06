@@ -45,7 +45,7 @@ p = aegis.substrate::substrate_parameters(
   stmv_rsquared_threshold = 0.1, # lower threshold == ignore
   stmv_distance_statsgrid = 5, # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
   stmv_distance_prediction_limits =c( 4, 40 ), # range of permissible predictions km (i.e 1/2 stats grid to upper limit based upon data density)
-  stmv_distance_scale = c( 5, 10, 25, 50, 75 ), # km ... approx guess of 95% AC range
+  stmv_distance_scale = c( 5, 10, 25, 50, 75, 150 ), # km ... approx guess of 95% AC range
   stmv_nmin = 100, # stmv_nmin/stmv_nmax changes with resolution
   stmv_nmax = 400, # numerical time/memory constraint -- anything larger takes too much time .. anything less .. errors
   stmv_runmode = list(
