@@ -37,9 +37,10 @@ substrate_parameters = function( p=NULL, project_name=NULL, project_class="defau
 
 
 
-  if (project_class=="default") {
-    return(p)
-  }
+  if (project_class=="default") return(p)
+
+  if (project_class=="carstm")  return(p)
+
 
   if (project_class=="stmv") {
     p$libs = unique( c( p$libs, project.library ( "stmv" ) ) )
