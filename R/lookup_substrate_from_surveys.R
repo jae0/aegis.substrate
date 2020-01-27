@@ -1,10 +1,20 @@
 
 lookup_substrate_from_surveys = function( p, locs, vnames="substrate.grainsize.mean" ) {
 
-  B = substrate.db ( p=p, DS="aggregated_data" )
-  locs = lonlat2planar( locs, proj.type=p$aegis_proj4string_planar_km )
-  locs$plon = round(locs$plon / p$inputdata_spatial_discretization_planar_km + 1 ) * p$inputdata_spatial_discretization_planar_km
-  locs$plat = round(locs$plat / p$inputdata_spatial_discretization_planar_km + 1 ) * p$inputdata_spatial_discretization_planar_km
+  pS = spatial_parameters( spatial_domain=p$spatial_domain )
+  if (!exists("inputdata_spatial_discretization_planar_km", pS)) {
+    if (!exists("inputdata_spatial_discretization_planar_km", p)) {
+      pS$inputdata_spatial_discretization_planar_km = p$inputdata_spatial_discretization_planar_km
+    } else {
+      pS$inputdata_spatial_discretization_planar_km = 1
+    }
+  }
+  if (!exists("variabletomodel", pS)) pS$variabletomodel = "substrate.grainsize"
+
+  B = substrate.db ( p=pS, DS="aggregated_data" )
+  locs = lonlat2planar( locs, proj.type=pS$aegis_proj4string_planar_km )
+  locs$plon = round(locs$plon / pS$inputdata_spatial_discretization_planar_km + 1 ) * pS$inputdata_spatial_discretization_planar_km
+  locs$plat = round(locs$plat / pS$inputdata_spatial_discretization_planar_km + 1 ) * pS$inputdata_spatial_discretization_planar_km
   locs_map = paste(locs$plon, locs$plat, sep=".")
   domain_map = paste(B$plon, B$plat, sep=".")
   locs_index = match( locs_map, domain_map )
