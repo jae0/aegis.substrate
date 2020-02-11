@@ -12,9 +12,14 @@ lookup_substrate_from_surveys = function( p, locs, vnames="substrate.grainsize.m
   if (!exists("variabletomodel", pS)) pS$variabletomodel = "substrate.grainsize"
 
   B = substrate.db ( p=pS, DS="aggregated_data" )
+  B = lonlat2planar( B, proj.type=pS$aegis_proj4string_planar_km )
+  B$plon = round(B$plon / pS$inputdata_spatial_discretization_planar_km + 1 ) * pS$inputdata_spatial_discretization_planar_km
+  B$plat = round(B$plat / pS$inputdata_spatial_discretization_planar_km + 1 ) * pS$inputdata_spatial_discretization_planar_km
+
   locs = lonlat2planar( locs, proj.type=pS$aegis_proj4string_planar_km )
   locs$plon = round(locs$plon / pS$inputdata_spatial_discretization_planar_km + 1 ) * pS$inputdata_spatial_discretization_planar_km
   locs$plat = round(locs$plat / pS$inputdata_spatial_discretization_planar_km + 1 ) * pS$inputdata_spatial_discretization_planar_km
+
   locs_map = paste(locs$plon, locs$plat, sep=".")
   domain_map = paste(B$plon, B$plat, sep=".")
   locs_index = match( locs_map, domain_map )
