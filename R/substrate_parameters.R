@@ -4,11 +4,7 @@ substrate_parameters = function( p=NULL, project_name=NULL, project_class="defau
 
   # ---------------------
   # deal with additional passed parameters
-  if ( is.null(p) ) p=list()
-  p_add = list(...)
-  if (length(p_add) > 0 ) p = c(p, p_add)
-  i = which(duplicated(names(p), fromLast = TRUE ))
-  if ( length(i) > 0 ) p = p[-i] # give any passed parameters a higher priority, overwriting pre-existing variable
+ p = parameters_control(p, list(...), control="add") # add passed args to parameter list, priority to args
 
 
   # ---------------------
