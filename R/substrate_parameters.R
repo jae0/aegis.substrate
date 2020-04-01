@@ -27,7 +27,7 @@ substrate_parameters = function( p=NULL, project_name=NULL, project_class="defau
   if (!exists("spatial_domain", p) ) p$spatial_domain = "canada.east.highres"
   if (!exists("spatial_domain_subareas", p)) p$spatial_domain_subareas = c( "canada.east", "SSE", "snowcrab", "SSE.mpa" )
 
-  if (!exists("aegis_dimensionality", p)) p$aegis_dimensionality="space"
+  p$aegis_dimensionality="space"
 
   p = spatial_parameters( p=p)  # default (= only supported resolution of 0.2 km discretization)  .. do NOT change
 
