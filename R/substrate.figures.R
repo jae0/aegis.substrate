@@ -26,8 +26,8 @@ substrate.figures = function( p=NULL, varnames="substrate.grainsize", datarange=
       contour=FALSE, labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE),
       panel = function(x, y, subscripts, ...) {
         panel.levelplot (x, y, subscripts, aspect="iso", rez=c(1,1), ...)
-        sp.lines( isobath.db( p=p, DS="isobath", depths=isodepths, crs=p$aegis_proj4string_planar_km ), col = "gray80", cex=0.1 )
-        sp.lines( coastline.db( p=p, crs=p$aegis_proj4string_planar_km ), col = "steelblue", cex=0.1 )
+        sp.lines( isobath.db( p=p, DS="isobath", depths=isodepths, project_to=p$aegis_proj4string_planar_km ), col = "gray80", cex=0.1 )
+        sp.lines( coastline.db( p=p, project_to=p$aegis_proj4string_planar_km ), col = "steelblue", cex=0.1 )
       }
     )
 
