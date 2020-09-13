@@ -16,6 +16,8 @@ substrate_carstm = function( p=NULL, DS="parameters", redo=FALSE, ... ) {
       p$datadir  = NULL
       p$data_transformation= NULL
       p$carstm_modelcall = NULL  # defaults to generic
+      p$carstm_model_tag = NULL
+
 
       p = aegis.substrate::substrate_parameters(p=p, ...)
     }
