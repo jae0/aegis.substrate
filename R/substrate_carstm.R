@@ -54,7 +54,7 @@ substrate_carstm = function( p=NULL, DS="parameters", redo=FALSE, ... ) {
           inla(
             formula =', p$variabletomodel, ' ~ 1
               + f( inla.group(z, method="quantile", n=9),  model="rw2", scale.model=TRUE, hyper=H$rw2)
-              + f(auid, model="bym2", graph=sppoly@nb, scale.model=TRUE, constr=TRUE, hyper=H$bym2),
+              + f(auid, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, constr=TRUE, hyper=H$bym2),
             family = "lognormal",
             data= M,
             control.compute=list(dic=TRUE, waic=TRUE, cpo=TRUE, config=TRUE),
@@ -158,10 +158,10 @@ substrate_carstm = function( p=NULL, DS="parameters", redo=FALSE, ... ) {
 
 
     if (!(exists(pB$variabletomodel, M ))) M[,pB$variabletomodel] = NA
-
     kk =  which( !is.finite(M[, pB$variabletomodel]))
-    M[, pB$variabletomodel] = lookup_bathymetry_from_surveys( p=p, locs=M[, c("lon", "lat")] )
-
+    if (length(kk) > 0) {
+      M[kk, pB$variabletomodel] = bathymetry_lookup( p=p, locs=M[kk, c("lon", "lat")], source_data_class="aggregated_rawdata" )
+    }
 
     # if any still missing then use a randomly chosen depth by AUID
     kk =  which( !is.finite(M[, pB$variabletomodel]))
