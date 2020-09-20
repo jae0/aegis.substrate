@@ -3,6 +3,27 @@
 substrate_carstm = function( p=NULL, DS="parameters", redo=FALSE, ... ) {
 
 
+
+  if (DS=="parameters_production") {
+
+      # copy of param list for global analysis in aegis.bathymetry/inst/scripts/02.bathymetry.carstm.R
+      p = aegis.substrate::substrate_carstm(
+          DS = "parameters",
+          project_name = "substrate",
+          spatial_domain = "SSE",  # defines spatial area, currenty: "snowcrab" or "SSE"
+          inputdata_spatial_discretization_planar_km = 1,  # km controls resolution of data prior to modelling to reduce data set and speed up modelling
+          variabletomodel ="substrate.grainsize",
+          carstm_model_label = "production",
+          areal_units_fn = "default",
+          areal_units_resolution_km = 5, # km dim of lattice ~ 1 hr
+          areal_units_proj4string_planar_km = aegis::projection_proj4string("utm20") , # coord system to use for areal estimation and gridding for carstm
+          areal_units_source = "lattice", # "stmv_fields" to use ageis fields instead of carstm fields ... note variables are not the same
+          areal_units_overlay = "none"
+      )
+      return(p)
+  }
+
+
   if (DS=="parameters") {
 
     if ( is.null(p)) {
@@ -146,6 +167,7 @@ substrate_carstm = function( p=NULL, DS="parameters", redo=FALSE, ... ) {
     M = M[ which( M$lon > p$corners$lon[1] & M$lon < p$corners$lon[2]  & M$lat > p$corners$lat[1] & M$lat < p$corners$lat[2] ), ]
     M = lonlat2planar(M, p$aegis_proj4string_planar_km)  # should not be required but to make sure
     # levelplot(substrate.grainsize.mean~plon+plat, data=M, aspect="iso")
+
 
     M$AUID = over( SpatialPoints( M[, c("lon", "lat")], crs_lonlat ), spTransform(sppoly, crs_lonlat ) )$AUID # match each datum to an area
     M = M[ which(!is.na(M$AUID)),]
