@@ -113,8 +113,9 @@ substrate_lookup = function( p, locs, vnames="substrate.grainsize", output_data_
       Bsf = sf::st_transform( Bsf, crs=CRS(proj4string(locs)) )
       for (vn in Bnames) {
         vn2 = paste(vn, "sd", sep="." )
-        slot(locs,"data")[,vn] = sp::over( locs, as(Bsf, "Spatial"), fn=mean, na.rm=TRUE )[,vn]
-        slot(locs,"data")[,vn2] = sp::over( locs, as(Bsf, "Spatial"), fn=sd, na.rm=TRUE )[,vn]
+        Boo = as(Bsf, "Spatial")
+        slot(locs,"data")[,vn] = sp::over( locs, Boo, fn=mean, na.rm=TRUE )[,vn]
+        slot(locs,"data")[,vn2] = sp::over( locs, Boo, fn=sd, na.rm=TRUE )[,vn]
       }
       vnames = intersect( names(B), vnames )
       if ( length(vnames) ==0 ) vnames=names(B) # no match returns all
@@ -132,8 +133,9 @@ substrate_lookup = function( p, locs, vnames="substrate.grainsize", output_data_
       for (vn in Bnames) {
         Bf = fasterize::fasterize( Bsf, raster_template, field=vn )
         vn2 = paste(vn, "sd", sep="." )
-        slot(locs,"data")[,vn] = sp::over( locs, as(B, "SpatialPolygonsDataFrame"), fn=mean, na.rm=TRUE )[,vn]
-        slot(locs,"data")[,vn2] = sp::over( locs, as(B, "SpatialPolygonsDataFrame"), fn=sd, na.rm=TRUE )[,vn]
+        Boo = as(B, "SpatialPolygonsDataFrame")
+        slot(locs,"data")[,vn] = sp::over( locs, Boo, fn=mean, na.rm=TRUE )[,vn]
+        slot(locs,"data")[,vn2] = sp::over( locs, Boo, fn=sd, na.rm=TRUE )[,vn]
       }
       vnames = intersect( names(B), vnames )
       if ( length(vnames) ==0 ) vnames=names(B) # no match returns all
