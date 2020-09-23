@@ -84,7 +84,7 @@ predictions = stmv_db( p=p, DS="stmv.prediction", ret="mean" )
 statistics  = stmv_db( p=p, DS="stmv.stats" )
 
 # locations = DATA$output$LOCS # these are the prediction locations
-locations = bathymetry.db(spatial_domain=p$spatial_domain, DS="baseline")
+locations = bathymetry_db(spatial_domain=p$spatial_domain, DS="baseline")
 
 # comparisons
 dev.new(); surface( as.image( Z=log(predictions), x=locations, nx=p$nplons, ny=p$nplats, na.rm=TRUE) )
@@ -102,7 +102,7 @@ substrate_db( p=p, DS="complete.redo" )
 
 
 # quick map
-b = bathymetry.db(spatial_domain=p$spatial_domain, DS="baseline")
+b = bathymetry_db(spatial_domain=p$spatial_domain, DS="baseline")
 o = substrate_db( p=p, DS="complete" )
 lattice::levelplot( log(o$substrate.grainsize) ~ plon +plat, data=b, aspect="iso")
 

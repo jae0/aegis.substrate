@@ -130,7 +130,7 @@
     if ( DS=="stmv_inputs") {
 
       varstokeep = unique( c( p$stmv_variables$Y, p$stmv_variables$LOCS, p$stmv_variables$COV ) )
-      B = bathymetry.db( p=p, DS="baseline", varnames=varstokeep )
+      B = bathymetry_db( p=p, DS="baseline", varnames=varstokeep )
 
       # range checks
       if (exists("z", B))  B$z[ which( B$z < 0.5)]  = 0.5 # meters
@@ -195,7 +195,7 @@
 
 
       if (0) {
-        B = bathymetry.db(p=p, DS="baseline")
+        B = bathymetry_db(p=p, DS="baseline")
         levelplot( (S[,1]) ~ plon + plat, B, aspect="iso", labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
         levelplot( log(S[,1]) ~ plon + plat, B, aspect="iso", labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
       }
@@ -209,7 +209,7 @@
 
       p0 = p  # the originating parameters
       S0 = S
-      L0 = bathymetry.db( p=p, DS="baseline" )
+      L0 = bathymetry_db( p=p, DS="baseline" )
       L0i = array_map( "xy->2", L0, gridparams=p0$gridparams )
 
       varnames = setdiff( names(S0), c("plon","plat", "lon", "lat") )
@@ -218,7 +218,7 @@
       for (gr in grids ) {
         print(gr)
         p1 = spatial_parameters( spatial_domain=gr ) #target projection
-        L1 = bathymetry.db( p=p1, DS="baseline" )
+        L1 = bathymetry_db( p=p1, DS="baseline" )
         L1i = array_map( "xy->2", L1[, c("plon", "plat")], gridparams=p1$gridparams )
         L1 = planar2lonlat( L1, proj.type=p1$aegis_proj4string_planar_km )
         S = L1
@@ -285,8 +285,8 @@
           contour=FALSE, labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE),
           panel = function(x, y, subscripts, ...) {
             panel.levelplot (x, y, subscripts, aspect="iso", rez=c(1,1), ...)
-            sp.lines( isobath.db( p=p, DS="isobath", depths=isodepths, project_to=p$aegis_proj4string_planar_km ), col = "gray80", cex=0.1 )
-            sp.lines( aegis.coastline::coastline.db( p=p, project_to=p$aegis_proj4string_planar_km, DS="gshhg coastline highres" ), col = "steelblue", cex=0.1 )
+            sp.lines( isobath_db( p=p, DS="isobath", depths=isodepths, project_to=p$aegis_proj4string_planar_km ), col = "gray80", cex=0.1 )
+            sp.lines( aegis.coastline::coastline_db( p=p, project_to=p$aegis_proj4string_planar_km, DS="gshhg coastline highres" ), col = "steelblue", cex=0.1 )
           }
         )
       )
