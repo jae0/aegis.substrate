@@ -9,7 +9,7 @@
   sppoly = areal_units( p=p )  # this has already been done in aegis.polygons::01 polygons.R .. should nto have to redo
   plot(sppoly) # spplot( sppoly, "AUID", main="AUID", sp.layout=p$coastLayout )
 
-  M = substrate.db( p=p, DS="aggregated_data", redo=TRUE )  # will redo if not found .. not used here but used for data matching/lookup in other aegis projects that use bathymetry
+  M = substrate_db( p=p, DS="aggregated_data", redo=TRUE )  # will redo if not found .. not used here but used for data matching/lookup in other aegis projects that use bathymetry
   M = substrate_carstm( p=p, DS="carstm_inputs", redo=TRUE )  # will redo if not found
 
 # run model and obtain predictions

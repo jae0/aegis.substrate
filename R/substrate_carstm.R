@@ -143,10 +143,10 @@ substrate_carstm = function( p=NULL, DS="parameters", redo=FALSE, ... ) {
     # do this immediately to reduce storage for sppoly (before adding other variables)
 
     if (p$carstm_inputs_aggregated) {
-      M = substrate.db ( p=p, DS="aggregated_data" )  # 16 GB in RAM just to store!
+      M = substrate_db ( p=p, DS="aggregated_data" )  # 16 GB in RAM just to store!
       names(M)[which(names(M)==paste(p$variabletomodel, "mean", sep=".") )] = p$variabletomodel
     } else {
-      M = substrate.db( p=p, DS="lonlat.highres" )
+      M = substrate_db( p=p, DS="lonlat.highres" )
       names(M)[which(names(M)=="grainsize" )] = p$variabletomodel
       attr( M, "proj4string_planar" ) =  p$aegis_proj4string_planar_km
       attr( M, "proj4string_lonlat" ) =  projection_proj4string("lonlat_wgs84")

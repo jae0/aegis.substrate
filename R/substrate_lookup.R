@@ -21,19 +21,19 @@ substrate_lookup = function( p, locs, vnames="substrate.grainsize", output_data_
   # load input data or reformat it
    if (source_data_class=="rawdata") {
 
-      B = substrate.db ( p=p_source, DS="lonlat.highres" )  # 16 GB in RAM just to store!
+      B = substrate_db ( p=p_source, DS="lonlat.highres" )  # 16 GB in RAM just to store!
 #      Bnames = c("lon", "lat", "grainsize", "plon", "plat"),
 
    } else if (source_data_class=="aggregated_rawdata") {
 
-      B = substrate.db ( p=p_source, DS="aggregated_data" )
+      B = substrate_db ( p=p_source, DS="aggregated_data" )
 #       Bnames = c("substrate.grainsize.mean", "substrate.grainsize.sd",  "substrate.grainsize.n", "plon", "plat", "lon", "lat")
       B$substrate.grainsize = B$substrate.grainsize.mean
       B$substrate.grainsize.mean  = NULL
 
    } else if (source_data_class=="modelled_stmv") {
 
-      B = substrate.db(p=p_source, DS="complete", varnames="all" )
+      B = substrate_db(p=p_source, DS="complete", varnames="all" )
     # Bnames = c( "plon", "plat", "substrate.grainsize", "substrate.grainsize.lb", "substrate.grainsize.ub",
     #   "s.sdTotal", "s.rsquared", "s.ndata", "s.sdSpatial", "s.sdObs", "s.phi", "s.nu", "s.localrange" )
       zname = "substrate.grainsize"

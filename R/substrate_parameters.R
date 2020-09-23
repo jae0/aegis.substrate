@@ -31,6 +31,7 @@ substrate_parameters = function( p=NULL, project_name=NULL, project_class="defau
 
   p = spatial_parameters( p=p)  # default (= only supported resolution of 0.2 km discretization)  .. do NOT change
 
+      Bcarstm = carstm_summary( p=p_source ) # to load currently saved sppoly  ("locs")
 
   if (project_class=="default") return(p)
 

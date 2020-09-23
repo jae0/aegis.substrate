@@ -19,7 +19,7 @@ interpolate_ncpus = 8
 p = aegis.substrate::substrate_parameters(
   project_class="stmv",
   data_root = project.datadirectory( "aegis", "substrate" ),
-  DATA = 'substrate.db( p=p, DS="stmv_inputs" )',
+  DATA = 'substrate_db( p=p, DS="stmv_inputs" )',
   spatial_domain = "canada.east.highres" ,
   spatial_domain_subareas = c( "canada.east", "SSE", "snowcrab", "SSE.mpa" ),
   inputdata_spatial_discretization_planar_km = 0.5, # 0.5==p$pres; controls resolution of data prior to modelling (km .. ie 20 linear units smaller than the final discretization pres)
@@ -77,7 +77,7 @@ stmv( p=p )
 
 
 # quick look of data
-DATA = substrate.db( p=p, DS="stmv_inputs" )
+DATA = substrate_db( p=p, DS="stmv_inputs" )
 dev.new(); surface( as.image( Z=DATA$input$substrate.grainsize, x=DATA$input[, c("plon", "plat")], nx=p$nplons, ny=p$nplats, na.rm=TRUE) )
 
 predictions = stmv_db( p=p, DS="stmv.prediction", ret="mean" )
@@ -98,19 +98,19 @@ dev.new(); levelplot( statistics[,match("localrange", p$statsvars)]  ~ locations
 
 
 # as the interpolation process is so expensive, regrid based off the above run
-substrate.db( p=p, DS="complete.redo" )
+substrate_db( p=p, DS="complete.redo" )
 
 
 # quick map
 b = bathymetry.db(spatial_domain=p$spatial_domain, DS="baseline")
-o = substrate.db( p=p, DS="complete" )
+o = substrate_db( p=p, DS="complete" )
 lattice::levelplot( log(o$substrate.grainsize) ~ plon +plat, data=b, aspect="iso")
 
 
 # or a cleaner map:
 # p = aegis_parameters()
-substrate.figures( p=p, varnames=c( "s.ndata", "s.sdTotal", "s.sdSpatial", "s.sdObs" ), logyvar=FALSE, savetofile="png" )
-substrate.figures( p=p, varnames=c( "substrate.grainsize", "s.localrange", "s.nu", "s.phi"), logyvar=TRUE, savetofile="png" )
+substrate_figures( p=p, varnames=c( "s.ndata", "s.sdTotal", "s.sdSpatial", "s.sdObs" ), logyvar=FALSE, savetofile="png" )
+substrate_figures( p=p, varnames=c( "substrate.grainsize", "s.localrange", "s.nu", "s.phi"), logyvar=TRUE, savetofile="png" )
 
 
 # to summarize just the global model
