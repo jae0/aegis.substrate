@@ -81,15 +81,12 @@
       M = substrate_db( p=p, DS="lonlat.highres" )
       M[,p$variabletomodel] = M$grainsize
 
-
       # p$quantile_bounds_data = c(0.0005, 0.9995)
       if (exists("quantile_bounds_data", p)) {
         TR = quantile(M[,p$variabletomodel], probs=p$quantile_bounds_data, na.rm=TRUE )
         keep = which( M[,p$variabletomodel] >=  TR[1] & M[,p$variabletomodel] <=  TR[2] )
         if (length(keep) > 0 ) M = M[ keep, ]
       }
-
-      if (!exists("inputdata_spatial_discretization_planar_km", p) )  p$inputdata_spatial_discretization_planar_km = 1
 
       M = lonlat2planar( M, p$aegis_proj4string_planar_km)  # ensure the use of correct projection
 
@@ -124,6 +121,122 @@
       return( M )
     }
 
+
+    # ---------------------------------------
+
+
+    if ( DS=="carstm_inputs") {
+
+      # prediction surface
+      crs_lonlat = sp::CRS(projection_proj4string("lonlat_wgs84"))
+      sppoly = areal_units( p=p )  # will redo if not found
+      areal_units_fn = attributes(sppoly)[["areal_units_fn"]]
+
+      if (p$carstm_inputs_aggregated) {
+        fn = carstm_filenames( p=p, projectname="substrate", projecttype="carstm_inputs", areal_units_fn=areal_units_fn )
+      } else {
+        fn = paste( "substrate", "carstm_inputs", areal_units_fn, "rawdata", "rdata", sep=".")
+      }
+
+      fn = file.path( p$modeldir, fn)
+
+      if (!redo)  {
+        if (file.exists(fn)) {
+          load( fn)
+          return( M )
+        }
+      }
+
+
+      # do this immediately to reduce storage for sppoly (before adding other variables)
+
+      if (p$carstm_inputs_aggregated) {
+        M = substrate_db ( p=p, DS="aggregated_data" )  # 16 GB in RAM just to store!
+        names(M)[which(names(M)==paste(p$variabletomodel, "mean", sep=".") )] = p$variabletomodel
+      } else {
+        M = substrate_db( p=p, DS="lonlat.highres" )
+        names(M)[which(names(M)=="grainsize" )] = p$variabletomodel
+        attr( M, "proj4string_planar" ) =  p$aegis_proj4string_planar_km
+        attr( M, "proj4string_lonlat" ) =  projection_proj4string("lonlat_wgs84")
+
+        # p$quantile_bounds_data = c(0.0005, 0.9995)
+        if (exists("quantile_bounds_data", p)) {
+          TR = quantile(M[,p$variabletomodel], probs=p$quantile_bounds_data, na.rm=TRUE ) # this was -1.7, 21.8 in 2015
+          keep = which( M[,p$variabletomodel] >=  TR[1] & M[,p$variabletomodel] <=  TR[2] )
+          if (length(keep) > 0 ) M = M[ keep, ]
+          # this was -1.7, 21.8 in 2015
+        }
+
+      }
+
+      M = M[ which(is.finite(M[, p$variabletomodel] )), ]
+
+      # reduce size
+      M = M[ which( M$lon > p$corners$lon[1] & M$lon < p$corners$lon[2]  & M$lat > p$corners$lat[1] & M$lat < p$corners$lat[2] ), ]
+      M = lonlat2planar(M, p$aegis_proj4string_planar_km)  # should not be required but to make sure
+      # levelplot(substrate.grainsize.mean~plon+plat, data=M, aspect="iso")
+
+
+      M$AUID = over( SpatialPoints( M[, c("lon", "lat")], crs_lonlat ), spTransform(sppoly, crs_lonlat ) )$AUID # match each datum to an area
+      M = M[ which(!is.na(M$AUID)),]
+
+
+
+      pB = bathymetry_parameters( p=p, project_class="carstm", reset_data_location=TRUE )
+
+  #    pB$modeldir = file.path( pB$data_root, "modelled" )  # override separate project results
+
+
+      if (!(exists(pB$variabletomodel, M ))) M[,pB$variabletomodel] = NA
+      kk =  which( !is.finite(M[, pB$variabletomodel]))
+      if (length(kk) > 0) {
+        M[kk, pB$variabletomodel] = bathymetry_lookup( p=p, locs=M[kk, c("lon", "lat")], source_data_class="aggregated_rawdata" )
+      }
+
+      # if any still missing then use a randomly chosen depth by AUID
+      kk =  which( !is.finite(M[, pB$variabletomodel]))
+      if (length(kk) > 0) {
+        AD = bathymetry_db ( p=pB, DS="aggregated_data"   )  # 16 GB in RAM just to store!
+        AD = AD[ which( AD$lon > p$corners$lon[1] & AD$lon < p$corners$lon[2]  & AD$lat > p$corners$lat[1] & AD$lat < p$corners$lat[2] ), ]
+        # levelplot( eval(paste(p$variabletomodel, "mean", sep="."))~plon+plat, data=M, aspect="iso")
+        AD$AUID = over( SpatialPoints( AD[, c("lon", "lat")], crs_lonlat ), spTransform(sppoly, crs_lonlat ) )$AUID # match each datum to an area
+        AD = AD[ which(!is.na(AD$AUID)),]
+        oo = tapply( AD[, paste(pB$variabletomodel, "mean", sep="." )], AD$AUID, FUN=median, na.rm=TRUE )
+        jj = match( as.character( M$AUID[kk]), as.character( names(oo )) )
+        M[kk, pB$variabletomodel] = oo[jj ]
+      }
+
+      if ( exists("spatial_domain", p)) M = geo_subset( spatial_domain=p$spatial_domain, Z=M ) # need to be careful with extrapolation ...  filter depths
+
+      M$lon = NULL
+      M$lat = NULL
+      M$plon = NULL
+      M$plat = NULL
+      M$tag = "observations"
+
+      sppoly_df = as.data.frame(sppoly)
+
+
+      BM = carstm_summary ( p=pB )  # modeled!
+      kk = match( as.character(  sppoly_df$AUID), as.character( BM$AUID ) )
+      sppoly_df[, pB$variabletomodel] = BM[[ paste(pB$variabletomodel, "predicted", sep=".") ]] [kk]
+
+      sppoly_df[,  p$variabletomodel] = NA
+      BM = NULL
+      sppoly_df$AUID = as.character( sppoly_df$AUID )
+      sppoly_df$tag ="predictions"
+
+      vn = c( p$variabletomodel, pB$variabletomodel, "tag", "AUID")
+
+      M = rbind( M[, vn], sppoly_df[, vn] )
+      sppoly_df = NULL
+
+      M$auid  = as.numeric( factor(M$AUID) )
+      M$zi = discretize_data( M[, pB$variabletomodel], p$discretization[[pB$variabletomodel]] )
+
+      save( M, file=fn, compress=TRUE )
+      return( M )
+    }
 
     # ---------------------------------------
 

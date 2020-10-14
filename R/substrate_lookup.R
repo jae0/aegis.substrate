@@ -6,15 +6,15 @@ substrate_lookup = function( p, locs, vnames="substrate.grainsize", output_data_
   require(aegis.substrate)
 
   # set up parameters for input data
-  if ( source_data_class %in% c("rawdata", "aggregated_rawdata", "modelled_stmv" ) ) {
-    if (source_data_class=="modelled_stmv") {
+  if ( source_data_class %in% c("rawdata", "aggregated_rawdata", "stmv" ) ) {
+    if (source_data_class=="stmv") {
       p_source = substrate_parameters(p=p, project_class="stmv")
     } else {
-      p_source = substrate_parameters(p=p, project_class="default")
+      p_source = substrate_parameters(p=p, project_class="model")
   }
-  } else if (source_data_class %in% "modelled_carstm" ) {
+  } else if (source_data_class %in% "carstm" ) {
       # copy of param list for global analysis in aegis.substrate/inst/scripts/02.substrate.carstm.R
-      p_source = aegis.substrate::substrate_carstm( DS = "parameters_production" )
+      p_source = substrate_parameters(p=p, project_class= "carstm" )
   }
 
 
@@ -31,14 +31,14 @@ substrate_lookup = function( p, locs, vnames="substrate.grainsize", output_data_
       B$substrate.grainsize = B$substrate.grainsize.mean
       B$substrate.grainsize.mean  = NULL
 
-   } else if (source_data_class=="modelled_stmv") {
+   } else if (source_data_class=="stmv") {
 
       B = substrate_db(p=p_source, DS="complete", varnames="all" )
     # Bnames = c( "plon", "plat", "substrate.grainsize", "substrate.grainsize.lb", "substrate.grainsize.ub",
     #   "s.sdTotal", "s.rsquared", "s.ndata", "s.sdSpatial", "s.sdObs", "s.phi", "s.nu", "s.localrange" )
       zname = "substrate.grainsize"
 
-   } else if (source_data_class=="modelled_carstm") {
+   } else if (source_data_class=="carstm") {
 
       Bcarstm = carstm_summary( p=p_source ) # to load currently saved sppoly
       B = areal_units( p=p_source )
@@ -55,7 +55,7 @@ substrate_lookup = function( p, locs, vnames="substrate.grainsize", output_data_
 
   if (output_data_class == "points ") {
 
-    if ( source_data_class %in% c("rawdata", "aggregated_rawdata", "modelled_stmv" ) )  {
+    if ( source_data_class %in% c("rawdata", "aggregated_rawdata", "stmv" ) )  {
 
       if ( is.null( locs_proj4string) ) locs_proj4string = attr( locs, "proj4string" )
       if ( is.null( locs_proj4string ) ) {
@@ -81,7 +81,7 @@ substrate_lookup = function( p, locs, vnames="substrate.grainsize", output_data_
       return( B[locs_index, vnames] )
     }
 
-    if ( source_data_class=="modelled_carstm") {
+    if ( source_data_class=="carstm") {
       # convert to raster then match
       require(raster)
       raster_template = raster(extent(locs))
@@ -107,7 +107,7 @@ substrate_lookup = function( p, locs, vnames="substrate.grainsize", output_data_
 
     # expects loc to be a spatial polygon data frame
 
-    if ( source_data_class %in% c("rawdata", "aggregated_rawdata", "modelled_stmv" ) ) {
+    if ( source_data_class %in% c("rawdata", "aggregated_rawdata", "stmv" ) ) {
       Bsf = sf::st_as_sf( B, coords=c("lon", "lat") )
       st_crs(Bsf) = CRS( projection_proj4string("lonlat_wgs84") )
       Bsf = sf::st_transform( Bsf, crs=CRS(proj4string(locs)) )
@@ -123,7 +123,7 @@ substrate_lookup = function( p, locs, vnames="substrate.grainsize", output_data_
     }
 
 
-    if ( source_data_class=="modelled_carstm") {
+    if ( source_data_class=="carstm") {
       # convert to raster then match
       require(raster)
       raster_template = raster(extent(locs)) # +1 to increase the area
