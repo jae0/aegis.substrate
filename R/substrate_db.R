@@ -181,11 +181,7 @@
       M = M[ which(!is.na(M$AUID)),]
 
 
-
-      pB = bathymetry_parameters( p=p, project_class="carstm", reset_data_location=TRUE )
-
-  #    pB$modeldir = file.path( pB$data_root, "modelled" )  # override separate project results
-
+      pB = bathymetry_parameters( p=parameters_reset(p), project_class="carstm"  )
 
       if (!(exists(pB$variabletomodel, M ))) M[,pB$variabletomodel] = NA
       kk =  which( !is.finite(M[, pB$variabletomodel]))
