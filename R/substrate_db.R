@@ -128,8 +128,9 @@
     if ( DS=="carstm_inputs") {
 
       # prediction surface
-      crs_lonlat = sp::CRS(projection_proj4string("lonlat_wgs84"))
+      crs_lonlat = st_crs(projection_proj4string("lonlat_wgs84"))
       sppoly = areal_units( p=p )  # will redo if not found
+      sppoly = st_transform(sppoly, crs=crs_lonlat )
       areal_units_fn = attributes(sppoly)[["areal_units_fn"]]
 
       if (p$carstm_inputs_aggregated) {
@@ -146,7 +147,6 @@
           return( M )
         }
       }
-
 
       # do this immediately to reduce storage for sppoly (before adding other variables)
 
@@ -175,11 +175,13 @@
       M = M[ which( M$lon > p$corners$lon[1] & M$lon < p$corners$lon[2]  & M$lat > p$corners$lat[1] & M$lat < p$corners$lat[2] ), ]
       M = lonlat2planar(M, p$aegis_proj4string_planar_km)  # should not be required but to make sure
       # levelplot(substrate.grainsize.mean~plon+plat, data=M, aspect="iso")
+      M$AUID = st_points_in_polygons(
+        pts = st_as_sf( M, coords=c("lon","lat"), crs=crs_lonlat ),
+        polys = sppoly[, "AUID"],
+        varname = "AUID"
+      )
 
-
-      M$AUID = over( SpatialPoints( M[, c("lon", "lat")], crs_lonlat ), spTransform(sppoly, crs_lonlat ) )$AUID # match each datum to an area
       M = M[ which(!is.na(M$AUID)),]
-
 
       pB = bathymetry_parameters( p=parameters_reset(p), project_class="carstm"  )
 
@@ -195,7 +197,12 @@
         AD = bathymetry_db ( p=pB, DS="aggregated_data"   )  # 16 GB in RAM just to store!
         AD = AD[ which( AD$lon > p$corners$lon[1] & AD$lon < p$corners$lon[2]  & AD$lat > p$corners$lat[1] & AD$lat < p$corners$lat[2] ), ]
         # levelplot( eval(paste(p$variabletomodel, "mean", sep="."))~plon+plat, data=M, aspect="iso")
-        AD$AUID = over( SpatialPoints( AD[, c("lon", "lat")], crs_lonlat ), spTransform(sppoly, crs_lonlat ) )$AUID # match each datum to an area
+        AD$AUID = st_points_in_polygons(
+          pts = st_as_sf( AD, coords=c("lon","lat"), crs=crs_lonlat ),
+          polys = sppoly[, "AUID"],
+          varname = "AUID"
+        )
+
         AD = AD[ which(!is.na(AD$AUID)),]
         oo = tapply( AD[, paste(pB$variabletomodel, "mean", sep="." )], AD$AUID, FUN=median, na.rm=TRUE )
         jj = match( as.character( M$AUID[kk]), as.character( names(oo )) )
@@ -209,25 +216,29 @@
       M$plon = NULL
       M$plat = NULL
       M$tag = "observations"
+      gc()
 
-      sppoly_df = as.data.frame(sppoly)
-
+      region.id = slot( slot(sppoly, "nb"), "region.id" )
+      APS = st_drop_geometry(sppoly)
+      sppoly = NULL
+      gc()
 
       BM = carstm_summary ( p=pB )  # modeled!
-      kk = match( as.character(  sppoly_df$AUID), as.character( BM$AUID ) )
-      sppoly_df[, pB$variabletomodel] = BM[[ paste(pB$variabletomodel, "predicted", sep=".") ]] [kk]
+      kk = match( as.character(  APS$AUID), as.character( BM$AUID ) )
+      APS[, pB$variabletomodel] = BM[[ paste(pB$variabletomodel, "predicted", sep=".") ]] [kk]
 
-      sppoly_df[,  p$variabletomodel] = NA
+      APS[,  p$variabletomodel] = NA
       BM = NULL
-      sppoly_df$AUID = as.character( sppoly_df$AUID )
-      sppoly_df$tag ="predictions"
+      APS$AUID = as.character( APS$AUID )
+      APS$tag ="predictions"
 
       vn = c( p$variabletomodel, pB$variabletomodel, "tag", "AUID")
 
-      M = rbind( M[, vn], sppoly_df[, vn] )
-      sppoly_df = NULL
+      M = rbind( M[, vn], APS[, vn] )
+      APS = NULL
 
-      M$auid  = as.numeric( factor(M$AUID) )
+      M$auid = match( M$AUID, region.id )
+
       M$zi = discretize_data( M[, pB$variabletomodel], p$discretization[[pB$variabletomodel]] )
 
       save( M, file=fn, compress=TRUE )
