@@ -258,13 +258,13 @@
       if (exists("ddZ", B))  B$ddZ[ which( B$ddZ < 0.001)] = 0.001
       if (exists("b.sdTotal", B))  B$b.sdTotal[ which(!is.finite(B$b.sdTotal))] = median( B$b.sdTotal, na.rm=TRUE )
 
-      bid = stmv::array_map( "xy->1", B[,c("plon", "plat")], gridparams=p$gridparams )
+      bid = array_map( "xy->1", B[,c("plon", "plat")], gridparams=p$gridparams )
 
       S = substrate_db( p=p, DS="aggregated_data" )
       names(S)[which(names(S) == paste(p$variabletomodel, "mean", sep="."))] = p$variabletomodel
 
       # merge covars into S
-      sid = stmv::array_map( "xy->1", S[,c("plon", "plat")], gridparams=p$gridparams )
+      sid = array_map( "xy->1", S[,c("plon", "plat")], gridparams=p$gridparams )
       u = match( sid, bid )
       B_matched = B[u, ]
       B_matched$plon = B_matched$plat = NULL
