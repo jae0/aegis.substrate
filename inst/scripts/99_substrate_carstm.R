@@ -2,7 +2,7 @@
 # construct basic parameter list defining the main characteristics of the study
 # and some plotting parameters (bounding box, projection, bathymetry layout, coastline)
 
-  p = aegis.substrate::substrate_parameters( project_class="carstm" )
+  p = aegis.substrate::substrate_parameters( project_class="carstm", workflow="centralized" )
 
 # prepare data
   # sppoly = areal_units( p=p, redo=TRUE )  # this has already been done in aegis.polygons::01 polygons.R .. should nto have to redo

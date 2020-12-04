@@ -11,12 +11,6 @@
       }
     }
 
-    if ( !exists("project_name", p)) p$project_name = "substrate"
-    if ( !exists("data_root", p) ) p$data_root = project.datadirectory( "aegis", p$project_name )
-    if ( !exists("datadir", p) )   p$datadir  = file.path( p$data_root, "data" )
-    if ( !exists("modeldir", p) )  p$modeldir = file.path( p$data_root, "modelled" )
-
-
 
     if ( DS %in% c("substrate.initial", "substrate.initial.redo") ) {
       # Read in the ArcInfo ascii grid file using library maptools and output a SpatialGridDataFrame
@@ -209,7 +203,7 @@
         M[kk, pB$variabletomodel] = oo[jj ]
       }
 
-      if ( exists("spatial_domain", p)) M = geo_subset( spatial_domain=p$spatial_domain, Z=M ) # need to be careful with extrapolation ...  filter depths
+      if ( exists("spatial_domain", p)) M = M[ geo_subset( spatial_domain=p$spatial_domain, Z=M ), ] # need to be careful with extrapolation ...  filter depths
 
       M$lon = NULL
       M$lat = NULL
@@ -285,7 +279,9 @@
      #// substrate_db( DS="complete" .. ) returns the final form of the substrate data after
      #// regridding and selection to area of interest as specificied by girds.new=c("SSE", etc)
 
-      fn = file.path( p$modeldir, paste( "substrate", "complete", p$spatial_domain, "rdata", sep=".") )
+      outdir = file.path( p$modeldir, p$stmv_model_label, p$project_class, paste(  p$stmv_global_modelengine, stmv_local_modelengine, sep="_") )
+
+      fn = file.path( outdir, paste( "substrate", "complete", p$spatial_domain, "rdata", sep=".") )
 
       if ( DS %in% c("complete") ) {
 
@@ -362,7 +358,7 @@
         ii = which( S[,p$variabletomodel] > exp(5) )
         if (length(ii) > 0 ) S[,p$variabletomodel][ ii ] = exp(5)
 
-        fn = file.path( p$modeldir, paste( "substrate", "complete", p1$spatial_domain, "rdata", sep=".") )
+        fn = file.path( outdir, paste( "substrate", "complete", p1$spatial_domain, "rdata", sep=".") )
         save (S, file=fn, compress=TRUE)
       }
 

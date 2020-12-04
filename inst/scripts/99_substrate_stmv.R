@@ -90,11 +90,13 @@ locations = bathymetry_db(spatial_domain=p$spatial_domain, DS="baseline")
 dev.new(); surface( as.image( Z=log(predictions), x=locations, nx=p$nplons, ny=p$nplats, na.rm=TRUE) )
 
 # stats
-(p$statsvars)
+# statsvars = c( "sdTotal", "rsquared", "ndata", "sdSpatial", "sdObs", "phi", "nu", "localrange" )
+statsvars = dimnames(statistics)[[2]]
+
 dev.new(); levelplot( (predictions) ~ locations[,1] + locations[,2], aspect="iso" )
-dev.new(); levelplot( statistics[,match("nu", p$statsvars)]  ~ locations[,1] + locations[,2], aspect="iso" ) # nu
-dev.new(); levelplot( statistics[,match("sdTot", p$statsvars)]  ~ locations[,1] + locations[,2], aspect="iso" ) #sd total
-dev.new(); levelplot( statistics[,match("localrange", p$statsvars)]  ~ locations[,1] + locations[,2], aspect="iso" ) #localrange
+dev.new(); levelplot( statistics[,match("nu", statsvars)]  ~ locations[,1] + locations[,2], aspect="iso" ) # nu
+dev.new(); levelplot( statistics[,match("sdTot", statsvars)]  ~ locations[,1] + locations[,2], aspect="iso" ) #sd total
+dev.new(); levelplot( statistics[,match("localrange", statsvars)]  ~ locations[,1] + locations[,2], aspect="iso" ) #localrange
 
 
 # as the interpolation process is so expensive, regrid based off the above run
