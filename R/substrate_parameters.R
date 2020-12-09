@@ -1,6 +1,6 @@
 
 
-substrate_parameters = function( p=list(), project_name="substrate", project_class="core", workflow_decentralized=FALSE, ... ) {
+substrate_parameters = function( p=list(), project_name="substrate", project_class="core", ... ) {
 
   p = parameters_add(p, list(...) ) # add passed args to parameter list, priority to args
 
@@ -13,6 +13,8 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
     "parallel",  "sf", "sp", "GADMTools", "INLA" ) ) )
 
   p$libs = unique( c( p$libs, project.library ( "aegis", "aegis.bathymetry", "aegis.coastline", "aegis.polygons", "aegis.substrate" ) ) )
+
+  p$project_class = project_class
 
   p = parameters_add_without_overwriting( p, project_name = project_name )
   p = parameters_add_without_overwriting( p, data_root = project.datadirectory( "aegis", p$project_name ) )
@@ -88,7 +90,6 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
 
   if (project_class %in% c("stmv") ) {
     p = parameters_add_without_overwriting( p,
-      project_class="stmv",
       DATA = 'substrate_db( p=p, DS="stmv_inputs" )',  # _highres
       stmv_variables = list(Y="substrate.grainsize", LOCS=c("plon", "plat")),  # required as fft has no formulae
       stmv_model_label="default",
@@ -104,7 +105,7 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
       stmv_lowpass_phi = stmv::matern_distance2phi( distance=0.1, nu=0.5, cor=0.1 ),
       stmv_autocorrelation_fft_taper = 0.9,  # benchmark from which to taper
       stmv_autocorrelation_localrange = 0.1,  # for output to stats
-      stmv_autocorrelation_basis_interpolation = c(0.25, 0.1, 0.05, 0.01),
+      stmv_autocorrelation_interpolation = c(0.25, 0.1, 0.05, 0.01),
       stmv_variogram_method = "fft",
       stmv_filter_depth_m = FALSE,  # need data above sea level to get coastline
       stmv_Y_transform =list(
@@ -115,7 +116,7 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
       stmv_distance_statsgrid = 5, # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
       stmv_distance_prediction_limits =c( 3, 25 ), # range of permissible predictions km (i.e 1/2 stats grid to upper limit based upon data density)
       stmv_distance_scale = c( 5, 10, 20, 25, 40, 80, 150, 200), # km ... approx guesses of 95% AC range
-      stmv_distance_basis_interpolation = c(  2.5 , 5, 10, 15, 20, 40, 80, 150, 200 ) , # range of permissible predictions km (i.e 1/2 stats grid to upper limit) .. in this case 5, 10, 20
+      stmv_distance_interpolation = c(  2.5 , 5, 10, 15, 20, 40, 80, 150, 200 ) , # range of permissible predictions km (i.e 1/2 stats grid to upper limit) .. in this case 5, 10, 20
       stmv_nmin = 90, # min number of data points req before attempting to model in a localized space
       stmv_nmax = 1000, # no real upper bound.. just speed /RAM
       stmv_force_complete_method = "linear_interp"
@@ -176,7 +177,6 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
   if (project_class %in% c("hybrid", "default") ) {
 
     p = parameters_add_without_overwriting( p,
-      project_class="stmv",
       DATA = 'substrate_db( p=p, DS="stmv_inputs" )',  # _highres
       stmv_variables = list(Y="substrate.grainsize", LOCS=c("plon", "plat")),  # required as fft has no formulae
       stmv_model_label="default",
@@ -202,9 +202,9 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
         ) '
       ),   # NOTE:: this is a local model call
       stmv_distance_statsgrid = 1, # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
-    #  stmv_interpolation_basis_distance = 5,   # fixed distance 2 x statsgrid
+    #  stmv_interpolation_distance = 5,   # fixed distance 2 x statsgrid
       stmv_distance_prediction_limits =c( 5, 25 ), # range of permissible predictions km (i.e 1/2 stats grid to upper limit based upon data density)
-      stmv_interpolation_basis_distance_choices = c(5, 10),
+      stmv_distance_interpolation = c(5, 10),
       stmv_nmin = 10, # min number of data points req before attempting to model in a localized space
       stmv_nmax = 1000, # no real upper bound.. just speed /RAM
       stmv_runmode = list(

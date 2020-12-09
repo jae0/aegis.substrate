@@ -177,30 +177,28 @@
 
       M = M[ which(!is.na(M$AUID)),]
 
-      pB = bathymetry_parameters( p=parameters_reset(p), project_class="carstm"  )
+      pB = bathymetry_parameters( parameters_reset(p)  )
 
       if (!(exists(pB$variabletomodel, M ))) M[,pB$variabletomodel] = NA
       kk =  which( !is.finite(M[, pB$variabletomodel]))
       if (length(kk) > 0) {
-        M[kk, pB$variabletomodel] = bathymetry_lookup( p=p, locs=M[kk, c("lon", "lat")], source_data_class="aggregated_rawdata" )
+        M[kk, pB$variabletomodel] = bathymetry_lookup( p=pB, locs=M[kk, c("lon", "lat")], output_data_class="points", source_data_class="aggregated_rawdata" )
+      }
+
+      kk =  which( !is.finite(M[, pB$variabletomodel]))
+      if (length(kk) > 0) {
+        M[kk, pB$variabletomodel] = bathymetry_lookup( p=pB, locs=M[kk, c("lon", "lat")], output_data_class="points", source_data_class="stmv" )
       }
 
       # if any still missing then use a randomly chosen depth by AUID
       kk =  which( !is.finite(M[, pB$variabletomodel]))
       if (length(kk) > 0) {
-        AD = bathymetry_db ( p=pB, DS="aggregated_data"   )  # 16 GB in RAM just to store!
-        AD = AD[ which( AD$lon > p$corners$lon[1] & AD$lon < p$corners$lon[2]  & AD$lat > p$corners$lat[1] & AD$lat < p$corners$lat[2] ), ]
-        # levelplot( eval(paste(p$variabletomodel, "mean", sep="."))~plon+plat, data=M, aspect="iso")
-        AD$AUID = st_points_in_polygons(
-          pts = st_as_sf( AD, coords=c("lon","lat"), crs=crs_lonlat ),
-          polys = sppoly[, "AUID"],
-          varname = "AUID"
-        )
+        M[kk, pB$variabletomodel] = bathymetry_lookup( p=pB, locs=M[kk, c("lon", "lat")], output_data_class="points", source_data_class="carstm" )
+      }
 
-        AD = AD[ which(!is.na(AD$AUID)),]
-        oo = tapply( AD[, paste(pB$variabletomodel, "mean", sep="." )], AD$AUID, FUN=median, na.rm=TRUE )
-        jj = match( as.character( M$AUID[kk]), as.character( names(oo )) )
-        M[kk, pB$variabletomodel] = oo[jj ]
+      kk =  which( !is.finite(M[, pB$variabletomodel]))
+      if (length(kk) > 0) {
+        M = M[ -kk, ]
       }
 
       if ( exists("spatial_domain", p)) M = M[ geo_subset( spatial_domain=p$spatial_domain, Z=M ), ] # need to be careful with extrapolation ...  filter depths

@@ -5,43 +5,36 @@ substrate_lookup = function( p, locs, vnames="substrate.grainsize", output_data_
 
   require(aegis.substrate)
 
-  # set up parameters for input data
-  if ( source_data_class %in% c("rawdata", "aggregated_rawdata", "stmv" ) ) {
-    if (source_data_class=="stmv") {
-      p_source = substrate_parameters(p=p, project_class="stmv")
-    } else {
-      p_source = substrate_parameters(p=p, project_class="model")
-  }
-  } else if (source_data_class %in% "carstm" ) {
-      # copy of param list for global analysis in aegis.substrate/inst/scripts/02.substrate.carstm.R
-      p_source = substrate_parameters(p=p, project_class= "carstm" )
+  if (p$project_name != "substrate") {
+    p = substrate_parameters(p=parameters_reset(p), project_name="substrate" )
+    warning( "Parameter list may be inconsistent")
   }
 
 
   # load input data or reformat it
    if (source_data_class=="rawdata") {
 
-      B = substrate_db ( p=p_source, DS="lonlat.highres" )  # 16 GB in RAM just to store!
+      B = substrate_db ( p=p, DS="lonlat.highres" )  # 16 GB in RAM just to store!
 #      Bnames = c("lon", "lat", "grainsize", "plon", "plat"),
 
    } else if (source_data_class=="aggregated_rawdata") {
 
-      B = substrate_db ( p=p_source, DS="aggregated_data" )
+      B = substrate_db ( p=p, DS="aggregated_data" )
 #       Bnames = c("substrate.grainsize.mean", "substrate.grainsize.sd",  "substrate.grainsize.n", "plon", "plat", "lon", "lat")
       B$substrate.grainsize = B$substrate.grainsize.mean
       B$substrate.grainsize.mean  = NULL
 
    } else if (source_data_class=="stmv") {
 
-      B = substrate_db(p=p_source, DS="complete", varnames="all" )
+      B = substrate_db(p=p, DS="complete", varnames="all" )
     # Bnames = c( "plon", "plat", "substrate.grainsize", "substrate.grainsize.lb", "substrate.grainsize.ub",
     #   "s.sdTotal", "s.rsquared", "s.ndata", "s.sdSpatial", "s.sdObs", "s.phi", "s.nu", "s.localrange" )
       zname = "substrate.grainsize"
 
    } else if (source_data_class=="carstm") {
 
-      Bcarstm = carstm_summary( p=p_source ) # to load currently saved sppoly
-      B = areal_units( p=p_source )
+      Bcarstm = carstm_summary( p=p ) # to load currently saved sppoly
+      B = areal_units( p=p )
       bm = match( B$AUID, Bcarstm$AUID )
       B$substrate.grainsize  = Bcarstm$substrate.grainsize.predicted[ bm ]
       B$substrate.grainsize.se = Bcarstm$substrate.grainsize.predicted_se[ bm ]
@@ -60,21 +53,21 @@ substrate_lookup = function( p, locs, vnames="substrate.grainsize", output_data_
       if ( is.null( locs_proj4string) ) locs_proj4string = attr( locs, "proj4string" )
       if ( is.null( locs_proj4string ) ) {
         # assume projection is the same as that specified by "aegis_proj4string_planar_km"
-        locs_proj4string = p_source$aegis_proj4string_planar_km
+        locs_proj4string = p$aegis_proj4string_planar_km
         names( locs) = c("plon", "plat")
       }
       if ( locs_proj4string =="lonlat" ) {
         names( locs) = c("lon", "lat")
-        locs = lonlat2planar( locs[, c("lon", "lat")], proj.type=p_source$aegis_proj4string_planar_km )
-        locs_proj4string = p_source$aegis_proj4string_planar_km
+        locs = lonlat2planar( locs[, c("lon", "lat")], proj.type=p$aegis_proj4string_planar_km )
+        locs_proj4string = p$aegis_proj4string_planar_km
       }
-      if ( locs_proj4string != p_source$aegis_proj4string_planar_km ) {
+      if ( locs_proj4string != p$aegis_proj4string_planar_km ) {
         locs = planar2lonlat( locs[, c("plon", "plat")], proj.type=locs_proj4string )
-        locs = lonlat2planar( locs[, c("lon", "lat")], proj.type=p_source$aegis_proj4string_planar_km )
-        locs_proj4string = p_source$aegis_proj4string_planar_km
+        locs = lonlat2planar( locs[, c("lon", "lat")], proj.type=p$aegis_proj4string_planar_km )
+        locs_proj4string = p$aegis_proj4string_planar_km
       }
-      B_map = array_map( "xy->1", B[,c("plon","plat")], gridparams=p_source$gridparams )
-      locs_map = array_map( "xy->1", locs[,c("plon","plat")], gridparams=p_source$gridparams )
+      B_map = array_map( "xy->1", B[,c("plon","plat")], gridparams=p$gridparams )
+      locs_map = array_map( "xy->1", locs[,c("plon","plat")], gridparams=p$gridparams )
       locs_index = match( locs_map, B_map )
       vnames = intersect( names(B), vnames )
       if ( length(vnames) ==0 ) vnames=names(B) # no match returns all
@@ -85,7 +78,7 @@ substrate_lookup = function( p, locs, vnames="substrate.grainsize", output_data_
       # convert to raster then match
       require(raster)
       raster_template = raster(extent(locs))
-      res(raster_template) = p_source$areal_units_resolution_km  # crs usually in meters, but aegis's crs is in km
+      res(raster_template) = p$areal_units_resolution_km  # crs usually in meters, but aegis's crs is in km
       crs(raster_template) = projection(locs) # transfer the coordinate system to the raster
 
       locs = sf::st_as_sf( as.data.frame(locs), coords=c(1, 2) )
@@ -127,7 +120,7 @@ substrate_lookup = function( p, locs, vnames="substrate.grainsize", output_data_
       # convert to raster then match
       require(raster)
       raster_template = raster(extent(locs)) # +1 to increase the area
-      res(raster_template) = p_source$areal_units_resolution_km  # crs usually in meters, but aegis's crs is in km
+      res(raster_template) = p$areal_units_resolution_km  # crs usually in meters, but aegis's crs is in km
       crs(raster_template) = projection(locs) # transfer the coordinate system to the raster
       Bsf = sf::st_transform( as(B, "sf"), crs=CRS(proj4string(locs)) )  # B is a carstm sppoly
       for (vn in Bnames) {
