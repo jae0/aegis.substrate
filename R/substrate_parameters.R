@@ -14,8 +14,6 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
 
   p$libs = unique( c( p$libs, project.library ( "aegis", "aegis.bathymetry", "aegis.coastline", "aegis.polygons", "aegis.substrate" ) ) )
 
-  p$project_class = project_class
-
   p = parameters_add_without_overwriting( p, project_name = project_name )
   p = parameters_add_without_overwriting( p, data_root = project.datadirectory( "aegis", p$project_name ) )
   p = parameters_add_without_overwriting( p, datadir  = file.path( p$data_root, "data" ) )
@@ -40,7 +38,10 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
 
   # ---------------------
 
-  if (project_class=="core") return(p)
+  if (project_class=="core") {
+    p$project_class="core"
+    return(p)
+  }
 
   # ---------------------
 
@@ -49,6 +50,7 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
     #   one global, run directly from  polygons defined in aegis.bathymetry/inst/scripts/99.bathymetry.carstm.R
     #   and one that is called secondarily specific to a local project's polygons (eg. snow crab)
     p$libs = c( p$libs, project.library ( "carstm", "INLA"  ) )
+    p$project_class="carstm"
 
     p = parameters_add_without_overwriting( p,
       areal_units_source = "lattice", # "stmv_fields" to use ageis fields instead of carstm fields ... note variables are not the same
@@ -88,7 +90,9 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
 
   # ---------------------
 
-  if (project_class %in% c("stmv") ) {
+  if (project_class %in% c("stmv" ,"default") ) {
+    p$project_class="stmv"
+
     p = parameters_add_without_overwriting( p,
       DATA = 'substrate_db( p=p, DS="stmv_inputs" )',  # _highres
       stmv_variables = list(Y="substrate.grainsize", LOCS=c("plon", "plat")),  # required as fft has no formulae
@@ -174,7 +178,9 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
 
   # ---------------------
 
-  if (project_class %in% c("hybrid", "default") ) {
+  if (project_class %in% c("hybrid") ) {
+
+    p$project_class="hybrid"
 
     p = parameters_add_without_overwriting( p,
       DATA = 'substrate_db( p=p, DS="stmv_inputs" )',  # _highres
