@@ -102,7 +102,6 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
         p$variabletomodel, ' ~  s( log(z), k=3, bs="ts") + s( log(dZ), k=3, bs="ts" ) + s( log(ddZ), k=3, bs="ts" ) ') ),
       stmv_global_family = gaussian(link="log"),
       stmv_gam_optimizer = c("outer", "bfgs"),
-
       stmv_local_modelengine="fft",
       stmv_fft_filter = "matern tapered lowpass modelled fast_predictions", #  act as a low pass filter first before matern with taper .. depth has enough data for this. Otherwise, use:
       stmv_lowpass_nu = 0.5, # exp
@@ -111,11 +110,7 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
       stmv_autocorrelation_localrange = 0.1,  # for output to stats
       stmv_autocorrelation_interpolation = c(0.25, 0.1, 0.05, 0.01),
       stmv_variogram_method = "fft",
-      stmv_filter_depth_m = FALSE,  # need data above sea level to get coastline
-      stmv_Y_transform =list(
-        transf = function(x) {log10(x + 2500)} ,
-        invers = function(x) {10^(x) - 2500}
-      ), # data range is from -1667 to 5467 m: make all positive valued
+      stmv_filter_depth_m = TRUE,  # need data above sea level to get coastline
       stmv_rsquared_threshold = 0.01, # lower threshold  .. ignore
       stmv_distance_statsgrid = 5, # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
       stmv_distance_prediction_limits =c( 3, 25 ), # range of permissible predictions km (i.e 1/2 stats grid to upper limit based upon data density)
