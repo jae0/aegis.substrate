@@ -22,7 +22,7 @@ p = aegis.substrate::substrate_parameters(
   DATA = 'substrate_db( p=p, DS="stmv_inputs" )',
   spatial_domain = "canada.east.highres" ,
   spatial_domain_subareas = c( "canada.east", "SSE", "snowcrab", "SSE.mpa" ),
-  inputdata_spatial_discretization_planar_km = 0.5, # 0.5==p$pres; controls resolution of data prior to modelling (km .. ie 20 linear units smaller than the final discretization pres)
+  inputdata_spatial_discretization_planar_km = 0.5 / 2, # 0.5==p$pres; controls resolution of data prior to modelling (km .. ie 20 linear units smaller than the final discretization pres)
   aegis_dimensionality="space",
   stmv_variables = list(Y="substrate.grainsize"),
   stmv_global_modelengine = "gam",
@@ -36,7 +36,7 @@ p = aegis.substrate::substrate_parameters(
   stmv_fft_filter = "matern_tapered_modelled", #
   # stmv_lowpass_nu = 0.1,
   # stmv_lowpass_phi = stmv::matern_distance2phi( distance=0.25, nu=0.1, cor=0.5 ), # default p$res = 0.5;
-  stmv_autocorrelation_fft_taper = 0.5,  # benchmark from which to taper
+  stmv_autocorrelation_fft_taper = 0.75,  # benchmark from which to taper
   stmv_autocorrelation_localrange = 0.1,  # for output to stats
   stmv_autocorrelation_interpolation = c(0.25, 0.1, 0.05, 0.01 ),
   stmv_variogram_method = "fft",
