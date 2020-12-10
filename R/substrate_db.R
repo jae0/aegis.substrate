@@ -177,7 +177,7 @@
 
       M = M[ which(!is.na(M$AUID)),]
 
-      pB = bathymetry_parameters( parameters_reset(p), project_class="default"  )  # default is the best performing method
+      pB = bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="default"  )  # default is the best performing method
 
       if (!(exists(pB$variabletomodel, M ))) M[,pB$variabletomodel] = NA
       kk =  which( !is.finite(M[, pB$variabletomodel]))
@@ -242,7 +242,7 @@
     if ( DS=="stmv_inputs") {
 
       varstokeep = unique( c( p$stmv_variables$Y, p$stmv_variables$LOCS, p$stmv_variables$COV ) )
-      pB = bathymetry_parameters( parameters_reset(p), project_class="default"  )  # default is the best performing method
+      pB = bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="default"  )  # default is the best performing method
       B = bathymetry_db( p=pB, DS="baseline", varnames=varstokeep )
 
       # range checks
@@ -310,7 +310,7 @@
 
 
       if (0) {
-        pB = bathymetry_parameters( parameters_reset(p), project_class="default"  )  # default is the best performing method
+        pB = bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="default"  )  # default is the best performing method
         B = bathymetry_db(p=pB, DS="baseline")
         levelplot( (S[,1]) ~ plon + plat, B, aspect="iso", labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
         levelplot( log(S[,1]) ~ plon + plat, B, aspect="iso", labels=FALSE, pretty=TRUE, xlab=NULL,ylab=NULL,scales=list(draw=FALSE) )
@@ -325,7 +325,7 @@
 
       p0 = p  # the originating parameters
       S0 = S
-      p0 = bathymetry_parameters( parameters_reset(p0), project_class="default"  )  # default is the best performing method
+      p0 = bathymetry_parameters( spatial_domain=p0$spatial_domain, project_class="default"  )  # default is the best performing method
       L0 = bathymetry_db( p=p0, DS="baseline" )
       L0i = array_map( "xy->2", L0, gridparams=p0$gridparams )
 
@@ -334,8 +334,8 @@
       grids = setdiff( unique( p0$spatial_domain_subareas ), p0$spatial_domain )
       for (gr in grids ) {
         print(gr)
-        p1 = spatial_parameters( spatial_domain=gr ) #target projection
-        p1 = bathymetry_parameters( parameters_reset(p1), project_class="default"  )  # default is the best performing method
+        #target projection
+        p1 = bathymetry_parameters( spatial_domain=gr, project_class="default"  )  # default is the best performing method
         L1 = bathymetry_db( p=p1, DS="baseline" )
         L1i = array_map( "xy->2", L1[, c("plon", "plat")], gridparams=p1$gridparams )
         L1 = planar2lonlat( L1, proj.type=p1$aegis_proj4string_planar_km )
