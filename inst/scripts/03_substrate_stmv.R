@@ -11,43 +11,46 @@ require(aegis.substrate)
 
 p = substrate_parameters(
   project_class="stmv",
-  stmv_distance_prediction_limits = p$stmv_distance_statsgrid * c( 1/2, 5 ), # range of permissible predictions km (i.e 1/2 stats grid to upper limit based upon data density)
-  stmv_distance_scale = p$stmv_distance_statsgrid * c( 1, 2, 3, 4, 5, 10, 20, 40), # km ... approx guesses of 95% AC range
-  stmv_distance_interpolation = p$stmv_distance_statsgrid * c( 1/2, 1, 2, 3, 4, 5, 10, 20, 40),  # range of permissible predictions km (i.e 1/2 stats grid to upper limit) .. in this case 5, 10, 20
-  stmv_distance_interpolate_predictions = p$stmv_distance_statsgrid * c( 1/2, 1, 2, 3, 4, 8), # finalizing preds using linear interpolation
   stmv_nmin = 100, # stmv_nmin/stmv_nmax changes with resolution
-  stmv_nmax = 400 # numerical time/memory constraint -- anything larger takes too much time .. anything less .. errors
+  stmv_nmax = 1000 # numerical time/memory constraint -- anything larger takes too much time .. anything less .. errors
 )
 
 
-if (0) {
-    # default is serial mode .. to enable multicore:
-    scale_ncpus = ram_local( "ncores", ram_main=2, ram_process=1 ) # in GB; about 24 hr
+p$stmv_distance_prediction_limits = p$stmv_distance_statsgrid * c( 1/2, 5 ) # range of permissible predictions km (i.e 1/2 stats grid to upper limit based upon data density)
+p$stmv_distance_scale = p$stmv_distance_statsgrid * c( 1, 2, 3, 4, 5, 10, 20, 40) # km ... approx guesses of 95% AC range
+p$stmv_distance_interpolation = p$stmv_distance_statsgrid * c( 1/2, 1, 2, 3, 4, 5, 10, 20, 40)  # range of permissible predictions km (i.e 1/2 stats grid to upper limit) .. in this case 5, 10, 20
+p$stmv_distance_interpolate_predictions = p$stmv_distance_statsgrid * c( 1/2, 1, 2, 3, 4, 8) # finalizing preds using linear interpolation
+
+use_parallel_mode = FALSE
+if (use_parallel_mode) {
+    # default is serial mode .. to enable parallel processing, pick and choose:
+    scale_ncpus = ram_local( "ncores", ram_main=10, ram_process=4 ) # in GB; about 24  hr
     interpolate_ncpus = ram_local( "ncores", ram_main=2, ram_process=2 ) # nn hrs
 
-    p = parameters_add_without_overwriting( p,
-      stmv_runmode = list(
-        globalmodel = TRUE,
-        scale = rep("localhost", scale_ncpus),
-        interpolate = list(
-          cor_0.25 = rep("localhost", interpolate_ncpus),
-          cor_0.1  = rep("localhost", interpolate_ncpus),
-          cor_0.05 = rep("localhost", interpolate_ncpus),
-          cor_0.01 = rep("localhost", interpolate_ncpus)
-        ),
-        interpolate_predictions = list(
-          c1 = rep("localhost", interpolate_ncpus),  
-          c2 = rep("localhost", interpolate_ncpus),  
-          c3 = rep("localhost", interpolate_ncpus),
-          c4 = rep("localhost", interpolate_ncpus),
-          c5 = rep("localhost", interpolate_ncpus),
-          c6 = rep("localhost", interpolate_ncpus),
-          c7 = rep("localhost", interpolate_ncpus)
-        ),
-        save_intermediate_results = TRUE,
-        save_completed_data = TRUE # just a dummy variable with the correct name
-      )
+    if (!exists("stmv_runmode", p)) p$stmv_runmode = list()
+
+    p$stmv_runmode$globalmodel = TRUE
+
+    p$stmv_runmode$scale = rep("localhost", scale_ncpus)
+
+    p$stmv_runmode$interpolate = list(
+      cor_0.25 = rep("localhost", interpolate_ncpus),
+      cor_0.1  = rep("localhost", interpolate_ncpus),
+      cor_0.05 = rep("localhost", interpolate_ncpus),
+      cor_0.01 = rep("localhost", interpolate_ncpus)
     )
+    p$stmv_runmode$interpolate_predictions = list(
+      c1 = rep("localhost", interpolate_ncpus),
+      c2 = rep("localhost", interpolate_ncpus),
+      c3 = rep("localhost", interpolate_ncpus),
+      c4 = rep("localhost", interpolate_ncpus),
+      c5 = rep("localhost", interpolate_ncpus),
+      c6 = rep("localhost", interpolate_ncpus),
+      c7 = rep("localhost", interpolate_ncpus)
+    )
+
+    p$stmv_runmode$save_intermediate_results = TRUE
+    p$stmv_runmode$save_completed_data = TRUE
 
 }
 

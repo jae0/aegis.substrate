@@ -107,14 +107,14 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
       stmv_global_modelengine = "gam",  # only marginally useful .. consider removing it and use "none",
       stmv_local_modelengine="fft",
       stmv_variogram_method = "fft",
-      stmv_filter_depth_m = 0.5,  # > 0.5 m 
+      stmv_filter_depth_m = 0.5,  # > 0.5 m
       stmv_rsquared_threshold = 0.01, # lower threshold  .. ignore
       stmv_distance_statsgrid = 5, # resolution (km) of data aggregation (i.e. generation of the ** statistics ** )
       stmv_nmin = 90, # min number of data points req before attempting to model in a localized space
       stmv_nmax = 1000, # no real upper bound.. just speed /RAM
       stmv_force_complete_method = "linear_interp"
     )
-    
+
     p = parameters_add_without_overwriting( p,
       stmv_distance_prediction_limits = p$stmv_distance_statsgrid * c( 1/2, 5 ), # range of permissible predictions km (i.e 1/2 stats grid to upper limit based upon data density)
       stmv_distance_scale = p$stmv_distance_statsgrid * c( 1, 2, 3, 4, 5, 10, 20, 40), # km ... approx guesses of 95% AC range
@@ -132,9 +132,7 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
       p$libs = unique( c( p$libs, RLibrary ("mgcv")))
       p = parameters_add_without_overwriting( p,
         stmv_global_modelformula = formula( paste(
-          p$variabletomodel, ' ~  1
-            + s( log(z), k=3, bs="ts") + s( log(dZ), k=3, bs="ts" ) + s( log(ddZ), k=3, bs="ts" ) 
-            + s( b.sdSpatial, k=3, bs="ts") + s( b.localrange, k=3, bs="ts") 
+          p$variabletomodel, ' ~  1 + s( log(z), k=3, bs="ts") + s( log(dZ), k=3, bs="ts" ) + s( log(ddZ), k=3, bs="ts" )+ s( b.sdSpatial, k=3, bs="ts") + s( b.localrange, k=3, bs="ts")
           ') ),
         stmv_global_family = gaussian(link="log"),
         stmv_gam_optimizer = c("outer", "bfgs")
@@ -164,7 +162,7 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
       nu = 0.5  # exponential smoothing
       ac_local = 0.1  # ac at which to designate "effective range"
       p = parameters_add_without_overwriting( p,
-        stmv_fft_filter = "matern tapered lowpass modelled fast_predictions", #  act as a low pass filter first before matern with taper  
+        stmv_fft_filter = "matern tapered lowpass modelled fast_predictions", #  act as a low pass filter first before matern with taper
         # stmv_fft_filter = "matern_tapered_modelled",
         stmv_autocorrelation_fft_taper = 0.75,  # benchmark from which to taper
         stmv_autocorrelation_localrange = ac_local,  # for output to stats
@@ -186,8 +184,8 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
           cor_0.01 = rep("localhost", 1)
         ),
         interpolate_predictions = list(
-          c1 = rep("localhost", 1),  
-          c2 = rep("localhost", 1),  
+          c1 = rep("localhost", 1),
+          c2 = rep("localhost", 1),
           c3 = rep("localhost", 1),
           c4 = rep("localhost", 1),
           c5 = rep("localhost", 1),
@@ -223,9 +221,9 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
       stmv_model_label="default",
       stmv_global_modelengine = "gam",  # only marginally useful .. consider removing it and use "none",
       stmv_global_modelformula = formula( paste(
-        p$variabletomodel, ' ~  1 
-          + s( log(z), k=3, bs="ts") + s( log(dZ), k=3, bs="ts" ) + s( log(ddZ), k=3, bs="ts" ) 
-          + s( b.sdSpatial, k=3, bs="ts") + s( b.localrange, k=3, bs="ts") 
+        p$variabletomodel, ' ~  1
+          + s( log(z), k=3, bs="ts") + s( log(dZ), k=3, bs="ts" ) + s( log(ddZ), k=3, bs="ts" )
+          + s( b.sdSpatial, k=3, bs="ts") + s( b.localrange, k=3, bs="ts")
         ') ),
       stmv_global_family = gaussian(link="log"),
       stmv_local_modelengine="carstm",
@@ -249,7 +247,7 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
       stmv_nmax = 1000 # no real upper bound.. just speed /RAM
     )
 
- 
+
     p = parameters_add_without_overwriting( p,
       stmv_distance_prediction_limits = p$stmv_distance_statsgrid * c( 1, 5 ), # range of permissible predictions km (i.e  stats grid to upper limit based upon data density)
       stmv_distance_interpolation = p$stmv_distance_statsgrid * c( 1/2, 1, 2, 3, 4, 5),  # range of permissible predictions km (i.e 1/2 stats grid to upper limit) .. in this case 5, 10, 20
@@ -262,7 +260,7 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
         globalmodel = FALSE,
         save_intermediate_results = TRUE,
         save_completed_data = TRUE
-      )  
+      )
     )
 
     p = aegis_parameters( p=p, DS="stmv" )  # get defaults
