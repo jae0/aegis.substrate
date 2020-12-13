@@ -33,7 +33,7 @@ if (use_parallel_mode) {
 
     p$stmv_runmode$scale = rep("localhost", scale_ncpus)
 
-    p$stmv_runmode$interpolate = list(
+    p$stmv_runmode$interpolate_correlation_basis = list(
       cor_0.25 = rep("localhost", interpolate_ncpus),
       cor_0.1  = rep("localhost", interpolate_ncpus),
       cor_0.05 = rep("localhost", interpolate_ncpus),
