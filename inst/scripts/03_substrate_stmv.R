@@ -57,6 +57,34 @@ if (use_parallel_mode) {
 
 stmv( p=p )
 
+if (0) {
+
+  # some results
+    Family: gaussian
+    Link function: log
+
+    Formula:
+    substrate.grainsize ~ 1 + s(log(z), k = 3, bs = "ts") + s(log(dZ),
+        k = 3, bs = "ts") + s(log(ddZ), k = 3, bs = "ts") + s(b.sdSpatial,
+        k = 3, bs = "ts") + s(b.localrange, k = 3, bs = "ts")
+
+    Parametric coefficients:
+                  Estimate  Std. Error  t value   Pr(>|t|)
+    (Intercept) -0.73990381  0.00914741 -80.8867 < 2.22e-16
+
+    Approximate significance of smooth terms:
+                        edf Ref.df          F    p-value
+    s(log(z))       1.99999      2 17127.5251 < 2.22e-16
+    s(log(dZ))      1.98812      2    61.6070 < 2.22e-16
+    s(log(ddZ))     1.99484      2    74.5122 < 2.22e-16
+    s(b.sdSpatial)  1.98713      2   200.4013 < 2.22e-16
+    s(b.localrange) 1.99985      2  4541.8526 < 2.22e-16
+
+    R-sq.(adj) =  0.137   Deviance explained = 13.6%
+    GCV = 5.7096  Scale est. = 5.7095    n = 714026
+
+}
+
 
 # quick look of data
 DATA = substrate_db( p=p, DS="stmv_inputs" )
@@ -66,7 +94,7 @@ predictions = stmv_db( p=p, DS="stmv.prediction", ret="mean" )
 statistics  = stmv_db( p=p, DS="stmv.stats" )
 
 # locations = DATA$output$LOCS # these are the prediction locations
-locations = bathymetry_db(spatial_domain=p$spatial_domain, DS="baseline")
+locations = bathymetry_db(p=bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="default"  ), DS="baseline")
 
 # comparisons
 dev.new(); surface( as.image( Z=log(predictions), x=locations, nx=p$nplons, ny=p$nplats, na.rm=TRUE) )

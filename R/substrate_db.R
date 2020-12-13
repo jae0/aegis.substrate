@@ -278,7 +278,7 @@
      #// substrate_db( DS="complete" .. ) returns the final form of the substrate data after
      #// regridding and selection to area of interest as specificied by girds.new=c("SSE", etc)
 
-      outdir = file.path( p$modeldir, p$stmv_model_label, p$project_class, paste(  p$stmv_global_modelengine, stmv_local_modelengine, sep="_") )
+      outdir = file.path( p$modeldir, p$stmv_model_label, p$project_class, paste(  p$stmv_global_modelengine, p$stmv_local_modelengine, sep="_") )
 
       fn = file.path( outdir, paste( "substrate", "complete", p$spatial_domain, "rdata", sep=".") )
 
@@ -367,6 +367,9 @@
       if(0){
         datarange = quantile( S[,p$variabletomodel], probs=c(0.01, 0.99), na.rm=TRUE )
         dr = log(seq( datarange[1], datarange[2], length.out=100))
+        locations = bathymetry_db(p=bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="default"  ), DS="baseline")
+        S$plon = locations$plon
+        S$plat = locations$plat
         levelplot(log( eval(p$variabletomodel) ~ plon+plat, S,  at=dr, col.regions=(color.code( "seis", dr))))
       }
       return ( "Completed subsets" )
