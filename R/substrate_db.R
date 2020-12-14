@@ -242,7 +242,7 @@
     if ( DS=="stmv_inputs") {
 
       varstokeep = unique( c( p$stmv_variables$Y, p$stmv_variables$LOCS, p$stmv_variables$COV ) )
-      pB = bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="default"  )  # default is the best performing method
+      pB = bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="default"  )  # default is the "best" performing method
       B = bathymetry_db( p=pB, DS="baseline", varnames=varstokeep )
 
       # range checks
