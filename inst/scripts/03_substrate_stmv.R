@@ -31,7 +31,14 @@ if (use_parallel_mode) {
 
     p$stmv_runmode$globalmodel = TRUE
 
-    p$stmv_runmode$scale = rep("localhost", scale_ncpus)
+    p$stmv_runmode$scale = list(
+      s1 = rep("localhost", scale_ncpus),
+      s2 = rep("localhost", scale_ncpus),
+      s3 = rep("localhost", scale_ncpus),
+      s4 = rep("localhost", scale_ncpus),
+      s5 = rep("localhost", scale_ncpus),
+      s6 = rep("localhost", scale_ncpus)
+    )
 
     p$stmv_runmode$interpolate_correlation_basis = list(
       cor_0.25 = rep("localhost", interpolate_ncpus),
@@ -57,34 +64,6 @@ if (use_parallel_mode) {
 
 stmv( p=p )
 
-if (0) {
-
-  # some results
-    Family: gaussian
-    Link function: log
-
-    Formula:
-    substrate.grainsize ~ 1 + s(log(z), k = 3, bs = "ts") + s(log(dZ),
-        k = 3, bs = "ts") + s(log(ddZ), k = 3, bs = "ts") + s(b.sdSpatial,
-        k = 3, bs = "ts") + s(b.localrange, k = 3, bs = "ts")
-
-    Parametric coefficients:
-                  Estimate  Std. Error  t value   Pr(>|t|)
-    (Intercept) -0.73990381  0.00914741 -80.8867 < 2.22e-16
-
-    Approximate significance of smooth terms:
-                        edf Ref.df          F    p-value
-    s(log(z))       1.99999      2 17127.5251 < 2.22e-16
-    s(log(dZ))      1.98812      2    61.6070 < 2.22e-16
-    s(log(ddZ))     1.99484      2    74.5122 < 2.22e-16
-    s(b.sdSpatial)  1.98713      2   200.4013 < 2.22e-16
-    s(b.localrange) 1.99985      2  4541.8526 < 2.22e-16
-
-    R-sq.(adj) =  0.137   Deviance explained = 13.6%
-    GCV = 5.7096  Scale est. = 5.7095    n = 714026
-
-}
-
 
 # quick look of data
 DATA = substrate_db( p=p, DS="stmv_inputs" )
@@ -94,10 +73,7 @@ predictions = stmv_db( p=p, DS="stmv.prediction", ret="mean" )
 statistics  = stmv_db( p=p, DS="stmv.stats" )
 
 # locations = DATA$output$LOCS # these are the prediction locations
-locations = bathymetry_db(p=bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="default"  ), DS="baseline")
-
-# comparisons
-dev.new(); surface( as.image( Z=log(predictions), x=locations, nx=p$nplons, ny=p$nplats, na.rm=TRUE) )
+locations = bathymetry_db(p=bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="stmv"  ), DS="baseline")
 
 # stats
 # statsvars = c( "sdTotal", "rsquared", "ndata", "sdSpatial", "sdObs", "phi", "nu", "localrange" )
@@ -105,7 +81,9 @@ statsvars = dimnames(statistics)[[2]]
 
 dev.new(); levelplot( (predictions) ~ locations[,1] + locations[,2], aspect="iso" )
 dev.new(); levelplot( statistics[,match("nu", statsvars)]  ~ locations[,1] + locations[,2], aspect="iso" ) # nu
-dev.new(); levelplot( statistics[,match("sdTot", statsvars)]  ~ locations[,1] + locations[,2], aspect="iso" ) #sd total
+dev.new(); levelplot( statistics[,match("sdTotal", statsvars)]  ~ locations[,1] + locations[,2], aspect="iso" ) #sd total
+dev.new(); levelplot( statistics[,match("sdSpatial", statsvars)]  ~ locations[,1] + locations[,2], aspect="iso" ) #sd total
+dev.new(); levelplot( statistics[,match("sdObs", statsvars)]  ~ locations[,1] + locations[,2], aspect="iso" ) #sd total
 dev.new(); levelplot( statistics[,match("localrange", statsvars)]  ~ locations[,1] + locations[,2], aspect="iso" ) #localrange
 
 
@@ -114,7 +92,8 @@ substrate_db( p=p, DS="complete.redo" )
 
 
 # quick map
-b = bathymetry_db(spatial_domain=p$spatial_domain, DS="baseline")
+b =  bathymetry_db(p=bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="stmv"  ), DS="baseline")
+
 o = substrate_db( p=p, DS="complete" )
 lattice::levelplot( log(o$substrate.grainsize) ~ plon +plat, data=b, aspect="iso")
 
@@ -125,36 +104,38 @@ substrate_figures( p=p, varnames=c( "s.ndata", "s.sdTotal", "s.sdSpatial", "s.sd
 substrate_figures( p=p, varnames=c( "substrate.grainsize", "s.localrange", "s.nu", "s.phi"), logyvar=TRUE, savetofile="png" )
 
 
-# to summarize just the global model
-o = stmv_global_model( p=p, DS="global_model" )
-summary(o)
-plot(o)
-AIC(o)  # [1]  3263839.33
 
+if (0) {
 
-# Global model results:
-Family: gaussian
-Link function: log
-Family: gaussian
-Link function: log
+  # to summarize just the global model
+  o = stmv_global_model( p=p, DS="global_model" )
+  AIC(o)  # 3273912.52
+  plot(o)
 
-Formula:
-substrate.grainsize ~ s(b.sdSpatial, k = 3, bs = "ts") + s(b.localrange,
-    k = 3, bs = "ts") + s(log(z), k = 3, bs = "ts") + s(log(dZ),
-    k = 3, bs = "ts") + s(log(ddZ), k = 3, bs = "ts")
+  summary(o)
 
-Parametric coefficients:
-              Estimate Std. Error  t value   Pr(>|t|)
-(Intercept) -0.9053906  0.0111006 -81.5626 < 2.22e-16
+      # some results
+    Family: gaussian 
+    Link function: log 
 
-Approximate significance of smooth terms:
-                    edf Ref.df           F    p-value
-s(b.sdSpatial)  1.99628      2   304.92667 < 2.22e-16
-s(b.localrange) 1.99992      2  4461.65359 < 2.22e-16
-s(log(z))       1.99666      2 18144.34273 < 2.22e-16
-s(log(dZ))      1.98167      2    26.51703 2.2327e-12
-s(log(ddZ))     1.97150      2     7.92948 0.00031715
+    Formula:
+    substrate.grainsize ~ 1 + s(log(z), k = 3, bs = "ts") + s(log(dZ), 
+        k = 3, bs = "ts") + s(log(ddZ), k = 3, bs = "ts") + s(b.sdSpatial, 
+        k = 3, bs = "ts") + s(b.localrange, k = 3, bs = "ts")
 
-R-sq.(adj) =   0.14   Deviance explained = 13.8%
-GCV = 5.6951  Scale est. = 5.695     n = 713021
+    Parametric coefficients:
+                  Estimate  Std. Error  t value   Pr(>|t|)
+    (Intercept) -0.71326276  0.00869995 -81.9847 < 2.22e-16
 
+    Approximate significance of smooth terms:
+                        edf Ref.df          F    p-value
+    s(log(z))       1.99776      2 16854.1116 < 2.22e-16
+    s(log(dZ))      1.98567      2    53.3451 < 2.22e-16
+    s(log(ddZ))     1.99586      2    61.5455 < 2.22e-16
+    s(b.sdSpatial)  1.99926      2   274.5414 < 2.22e-16
+    s(b.localrange) 1.99970      2  2584.6173 < 2.22e-16
+
+    R-sq.(adj) =  0.132   Deviance explained = 13.1%
+    GCV = 5.7405  Scale est. = 5.7404    n = 713983
+    
+}
