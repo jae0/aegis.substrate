@@ -1,6 +1,7 @@
 
-substrate_lookup = function( p, locs, vnames="substrate.grainsize", output_data_class="points", source_data_class="aggregated_rawdata", locs_proj4string=NULL ) {
+substrate_lookup = function( p, locs, vnames="substrate.grainsize", output_data_class="points", source_data_class="aggregated_rawdata", locs_proj4string="lonlat" ) {
 
+  # deprecated ... too slow when multiple data loads are required and needless transformations
   # if locs is points, then need to send info on projection as an attribute proj4string"
 
   require(aegis.substrate)
@@ -50,12 +51,7 @@ substrate_lookup = function( p, locs, vnames="substrate.grainsize", output_data_
 
     if ( source_data_class %in% c("rawdata", "aggregated_rawdata", "stmv" ) )  {
 
-      if ( is.null( locs_proj4string) ) locs_proj4string = attr( locs, "proj4string" )
-      if ( is.null( locs_proj4string ) ) {
-        # assume projection is the same as that specified by "aegis_proj4string_planar_km"
-        locs_proj4string = p$aegis_proj4string_planar_km
-        names( locs) = c("plon", "plat")
-      }
+      if ( !is.null( attr( locs, "proj4string" )) ) locs_proj4string = attr( locs, "proj4string" )
       if ( locs_proj4string =="lonlat" ) {
         names( locs) = c("lon", "lat")
         locs = lonlat2planar( locs[, c("lon", "lat")], proj.type=p$aegis_proj4string_planar_km )

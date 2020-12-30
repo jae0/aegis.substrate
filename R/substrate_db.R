@@ -182,18 +182,28 @@
       if (!(exists(pB$variabletomodel, M ))) M[,pB$variabletomodel] = NA
       kk =  which( !is.finite(M[, pB$variabletomodel]))
       if (length(kk) > 0) {
-        M[kk, pB$variabletomodel] = bathymetry_lookup( p=pB, locs=M[kk, c("lon", "lat")], output_data_class="points", source_data_class="aggregated_rawdata" )
-      }
+        pB = bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="core"  )
+        BS = bathymetry_db ( p=pB, DS="aggregated_data" )  # raw data
+        BS = BS[ which( BS$lon > p$corners$lon[1] & BS$lon < p$corners$lon[2]  & BS$lat > p$corners$lat[1] & BS$lat < p$corners$lat[2] ), ]
+        # levelplot( eval(paste(p$variabletomodel, "mean", sep="."))~plon+plat, data=M, aspect="iso")
+        BS_map = array_map( "xy->1", BS[,c("plon","plat")], gridparams=p$gridparams )
+        M_map  = array_map( "xy->1", M[kk, c("plon","plat")], gridparams=p$gridparams )
+        M[kk, pB$variabletomodel] = BS[ match( M_map, BS_map ), "z.mean" ]
+        BS_map = NULL
+        M_map = NULL
+        ll =  which( !is.finite(M[, pB$variabletomodel]))
+        if (length(ll) > 0) {
+          pB = bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="stmv"  )
+          BS = bathymetry_db ( p=pB, DS="complete", varnames="all" )  # raw data
+          BS = BS[ which( BS$lon > p$corners$lon[1] & BS$lon < p$corners$lon[2]  & BS$lat > p$corners$lat[1] & BS$lat < p$corners$lat[2] ), ]
+          # levelplot( eval(paste(p$variabletomodel, "mean", sep="."))~plon+plat, data=M, aspect="iso")
+          BS_map = array_map( "xy->1", BS[,c("plon","plat")], gridparams=p$gridparams )
+          M_map  = array_map( "xy->1", M[ll, c("plon","plat")], gridparams=p$gridparams )
+          M[ll, pB$variabletomodel] = BS[ match( M_map, BS_map ), "z" ]
+          BS_map = NULL
+          M_map = NULL
+        }
 
-      kk =  which( !is.finite(M[, pB$variabletomodel]))
-      if (length(kk) > 0) {
-        M[kk, pB$variabletomodel] = bathymetry_lookup( p=pB, locs=M[kk, c("lon", "lat")], output_data_class="points", source_data_class="stmv" )
-      }
-
-      # if any still missing then use a randomly chosen depth by AUID
-      kk =  which( !is.finite(M[, pB$variabletomodel]))
-      if (length(kk) > 0) {
-        M[kk, pB$variabletomodel] = bathymetry_lookup( p=pB, locs=M[kk, c("lon", "lat")], output_data_class="points", source_data_class="carstm" )
       }
 
       kk =  which( !is.finite(M[, pB$variabletomodel]))
