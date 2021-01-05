@@ -168,6 +168,8 @@
       # reduce size
       M = M[ which( M$lon > p$corners$lon[1] & M$lon < p$corners$lon[2]  & M$lat > p$corners$lat[1] & M$lat < p$corners$lat[2] ), ]
       M = lonlat2planar(M, p$aegis_proj4string_planar_km)  # should not be required but to make sure
+
+
       # levelplot(substrate.grainsize.mean~plon+plat, data=M, aspect="iso")
       M$AUID = st_points_in_polygons(
         pts = st_as_sf( M, coords=c("lon","lat"), crs=crs_lonlat ),
@@ -176,42 +178,49 @@
       )
 
       M = M[ which(!is.na(M$AUID)),]
+      M$AUID = as.character( M$AUID )  # match each datum to an area
+ 
 
       pB = bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="default"  )  # default is the best performing method
+      vnmod = pB$variabletomodel
+      if (!(exists(vnmod, M ))) M[,vnmod] = NA
 
-      if (!(exists(pB$variabletomodel, M ))) M[,pB$variabletomodel] = NA
-      kk =  which( !is.finite(M[, pB$variabletomodel]))
-      if (length(kk) > 0) {
-        pB = bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="core"  )
-        BS = bathymetry_db ( p=pB, DS="aggregated_data" )  # raw data
-        BS = BS[ which( BS$lon > p$corners$lon[1] & BS$lon < p$corners$lon[2]  & BS$lat > p$corners$lat[1] & BS$lat < p$corners$lat[2] ), ]
-        # levelplot( eval(paste(p$variabletomodel, "mean", sep="."))~plon+plat, data=M, aspect="iso")
-        BS_map = array_map( "xy->1", BS[,c("plon","plat")], gridparams=p$gridparams )
-        M_map  = array_map( "xy->1", M[kk, c("plon","plat")], gridparams=p$gridparams )
-        M[kk, pB$variabletomodel] = BS[ match( M_map, BS_map ), "z.mean" ]
-        BS_map = NULL
+      iM =  which( !is.finite(M[, vnmod]))
+      if (length(iM) > 0) {
+        LU = bathymetry_db ( p=bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="core"  ), DS="aggregated_data" )  # raw data
+        LU = LU[ which( LU$lon > p$corners$lon[1] & LU$lon < p$corners$lon[2]  & LU$lat > p$corners$lat[1] & LU$lat < p$corners$lat[2] ), ]
+        # levelplot( eval(paste(vnmod, "mean", sep="."))~plon+plat, data=M, aspect="iso")
+        LU_map = array_map( "xy->1", LU[,c("plon","plat")], gridparams=p$gridparams )
+        M_map  = array_map( "xy->1", M[iM, c("plon","plat")], gridparams=p$gridparams )
+        M[iM, vnmod] = LU[ match( M_map, LU_map ), paste(vnmod, "mean", sep=".") ]
+        LU = NULL
+        LU_map = NULL
         M_map = NULL
-        ll =  which( !is.finite(M[, pB$variabletomodel]))
-        if (length(ll) > 0) {
-          pB = bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="stmv"  )
-          BS = bathymetry_db ( p=pB, DS="complete", varnames="all" )  # raw data
-          BS = BS[ which( BS$lon > p$corners$lon[1] & BS$lon < p$corners$lon[2]  & BS$lat > p$corners$lat[1] & BS$lat < p$corners$lat[2] ), ]
-          # levelplot( eval(paste(p$variabletomodel, "mean", sep="."))~plon+plat, data=M, aspect="iso")
-          BS_map = array_map( "xy->1", BS[,c("plon","plat")], gridparams=p$gridparams )
-          M_map  = array_map( "xy->1", M[ll, c("plon","plat")], gridparams=p$gridparams )
-          M[ll, pB$variabletomodel] = BS[ match( M_map, BS_map ), "z" ]
+        iM = NULL
+        iM =  which( !is.finite(M[, vnmod]))
+        if (length(iM) > 0) {
+          LU = bathymetry_db ( p=bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="stmv"  ), DS="complete", varnames="all" )  # raw data
+          LU = LU[ which( LU$lon > p$corners$lon[1] & LU$lon < p$corners$lon[2]  & LU$lat > p$corners$lat[1] & LU$lat < p$corners$lat[2] ), ]
+          # levelplot( eval(paste(vnmod, "mean", sep="."))~plon+plat, data=M, aspect="iso")
+          LU_map = array_map( "xy->1", LU[,c("plon","plat")], gridparams=p$gridparams )
+          M_map  = array_map( "xy->1", M[iM, c("plon","plat")], gridparams=p$gridparams )
+          M[iM, vnmod] = LU[ match( M_map, LU_map ), vnmod ]
           BS_map = NULL
           M_map = NULL
+          iM = NULL
+          LU = NULL
         }
 
       }
 
-      kk =  which( !is.finite(M[, pB$variabletomodel]))
-      if (length(kk) > 0) {
-        M = M[ -kk, ]
-      }
+      iM =  which( !is.finite(M[, vnmod]))
+      if (length(iM) > 0)  M = M[ -iM, ]
 
-      if ( exists("spatial_domain", p)) M = M[ geo_subset( spatial_domain=p$spatial_domain, Z=M ), ] # need to be careful with extrapolation ...  filter depths
+      # if (p$carstm_inputs_aggregated) {
+      #   if ( exists("spatial_domain", p)) {
+      #     M = M[ geo_subset( spatial_domain=p$spatial_domain, Z=M ) , ] # need to be careful with extrapolation ...  filter depths
+      #   }
+      # }
 
       M$lon = NULL
       M$lat = NULL
@@ -220,23 +229,76 @@
       M$tag = "observations"
       gc()
 
+
+    # ----------
+    
+ 
       region.id = slot( slot(sppoly, "nb"), "region.id" )
       APS = st_drop_geometry(sppoly)
+
+      APS$AUID = as.character( APS$AUID )
+      APS$tag ="predictions"
+      APS[, p$variabletomodel] = NA
+  
+  
+      if (p$carstm_inputadata_model_source=="carstm") {
+        LU = carstm_summary( p=pB ) # to load exact sppoly, if present
+        LU_sppoly = areal_units( p=pB )  # default poly
+
+        if (is.null(LU)) {
+          message("Exactly modelled surface not found, estimating from default run...")
+          pBD = bathymetry_parameters( project_class="carstm" ) # choose "default" full bathy carstm run and re-estimate:
+          vnmod = pBD$variabletomodel
+          vnp = paste(vnmod, "predicted", sep=".")
+          # vnps = paste(vnmod, "predicted_se", sep=".")
+
+          LU = carstm_summary( p=pBD )
+          LU_sppoly = areal_units( p=pBD )  # default poly
+        }
+      
+        bm = match( LU_sppoly$AUID, LU$AUID )
+        LU_sppoly[[vnp]] = LU[[vnp]][ bm ]
+        # LU_sppoly[[vnps]] = LU[[vnps]][ bm ]
+        bm = NULL
+        LU = NULL
+      
+        # now rasterize and estimate
+        raster_template = raster( sppoly, res=p$areal_units_resolution_km, crs=st_crs( sppoly ) ) # +1 to increase the area
+        # transfer the coordinate system to the raster
+        LU_sppoly = sf::st_transform( as( LU_sppoly, "sf" ), crs=st_crs(LU_sppoly) )  # B is a carstm LU
+        LU_sppoly = fasterize::fasterize( LU_sppoly, raster_template, field=vnp )
+        sppoly[[vnp]] = sp::over( sppoly, LU_sppoly[, vnp ], fn=mean, na.rm=TRUE )
+        # sppoly[[vnps]] = sp::over( sppoly, LU_sppoly[, vnp ], fn=sd, na.rm=TRUE )
+        LU_sppoly = NULL
+        raster_template = NULL
+      }
+
+
+      if (p$carstm_inputadata_model_source %in% c("stmv", "hybrid")) {
+        pBD = bathymetry_parameters( project_class=p$carstm_inputadata_model_source )  # full default
+        vnmod = pBD$variabletomodel
+        vnp = paste(vnmod, "predicted", sep=".")
+        # vnps = paste(vnmod, "predicted_se", sep=".")
+
+        LU = bathymetry_db( p=pBD, DS="baseline", varnames=c(vnmod, "plon", "plat") )
+        LU = planar2lonlat(LU, pBD$aegis_proj4string_planar_km)
+        LU = sf::st_as_sf( LU[, c( vnmod, "lon", "lat")], coords=c("lon", "lat") )
+        st_crs(LU) = st_crs( projection_proj4string("lonlat_wgs84") )
+        LU = sf::st_transform( LU, crs=st_crs(sppoly) )
+        sppoly[[ vnp ]] = aggregate( LU[, vnmod], sppoly, mean, na.rm=TRUE )[[vnmod]]
+        # sppoly[[ vnps ]] = aggregate( LU[, vnmod], sppoly, sd, na.rm=TRUE )[[vnmod]]
+      }
+
+      iAS = match( as.character( APS$AUID), as.character( sppoly$AUID ) )
+      APS[, pB$variabletomodel] = sppoly[[ paste(pB$variabletomodel, "predicted", sep=".") ]] [iAS]
+      iAS =NULL
       sppoly = NULL
       gc()
 
-      BM = carstm_summary ( p=pB )  # modeled!
-      kk = match( as.character(  APS$AUID), as.character( BM$AUID ) )
-      APS[, pB$variabletomodel] = BM[[ paste(pB$variabletomodel, "predicted", sep=".") ]] [kk]
-
-      APS[,  p$variabletomodel] = NA
-      BM = NULL
-      APS$AUID = as.character( APS$AUID )
-      APS$tag ="predictions"
-
       vn = c( p$variabletomodel, pB$variabletomodel, "tag", "AUID")
+      APS = APS[, vn] 
 
-      M = rbind( M[, vn], APS[, vn] )
+      M = rbind( M[, vn], APS )
       APS = NULL
 
       M$auid = match( M$AUID, region.id )
