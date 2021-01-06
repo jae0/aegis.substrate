@@ -189,7 +189,8 @@
       if (length(iM) > 0) {
         LU = bathymetry_db ( p=bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="core"  ), DS="aggregated_data" )  # raw data
         LU = LU[ which( LU$lon > p$corners$lon[1] & LU$lon < p$corners$lon[2]  & LU$lat > p$corners$lat[1] & LU$lat < p$corners$lat[2] ), ]
-        # levelplot( eval(paste(vnmod, "mean", sep="."))~plon+plat, data=M, aspect="iso")
+        LU = lonlat2planar(LU, proj.type=p$aegis_proj4string_planar_km)
+         # levelplot( eval(paste(vnmod, "mean", sep="."))~plon+plat, data=M, aspect="iso")
         LU_map = array_map( "xy->1", LU[,c("plon","plat")], gridparams=p$gridparams )
         M_map  = array_map( "xy->1", M[iM, c("plon","plat")], gridparams=p$gridparams )
         M[iM, vnmod] = LU[ match( M_map, LU_map ), paste(vnmod, "mean", sep=".") ]
