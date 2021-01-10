@@ -127,13 +127,15 @@
       sppoly = st_transform(sppoly, crs=crs_lonlat )
       areal_units_fn = attributes(sppoly)[["areal_units_fn"]]
 
-      if (p$carstm_inputs_aggregated) {
-        fn = carstm_filenames( p=p, projectname="substrate", projecttype="carstm_inputs", areal_units_fn=areal_units_fn )
-      } else {
-        fn = paste( "substrate", "carstm_inputs", areal_units_fn, "rawdata", "rdata", sep=".")
+      fn = carstm_filenames( p=p, returntype="carstm_inputs", areal_units_fn=areal_units_fn )
+      if (!p$carstm_inputs_aggregated) {
+        fn = carstm_filenames( p=p, returntype="carstm_inputs_rawdata", areal_units_fn=areal_units_fn )
       }
 
-      fn = file.path( p$modeldir, fn)
+      # inputs are shared across various secneario using the same polys
+      #.. store at the modeldir level as default
+      outputdir = dirname( fn )
+      if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
 
       if (!redo)  {
         if (file.exists(fn)) {
@@ -241,8 +243,7 @@
       APS$tag ="predictions"
       APS[, p$variabletomodel] = NA
   
-  
-      if (p$carstm_inputadata_model_source=="carstm") {
+      if ( p$carstm_inputadata_model_source$bathymetry == "carstm") {
         LU = carstm_summary( p=pB ) # to load exact sppoly, if present
         LU_sppoly = areal_units( p=pB )  # default poly
 
@@ -275,8 +276,8 @@
       }
 
 
-      if (p$carstm_inputadata_model_source %in% c("stmv", "hybrid")) {
-        pBD = bathymetry_parameters( project_class=p$carstm_inputadata_model_source )  # full default
+      if (p$carstm_inputadata_model_source$bathymetry %in% c("stmv", "hybrid")) {
+        pBD = bathymetry_parameters( project_class=p$carstm_inputadata_model_source$bathymetry )  # full default
         vnmod = pBD$variabletomodel
         vnp = paste(vnmod, "predicted", sep=".")
         # vnps = paste(vnmod, "predicted_se", sep=".")

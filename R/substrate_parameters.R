@@ -54,7 +54,7 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
 
     p = parameters_add_without_overwriting( p,
       areal_units_type = "lattice", # "stmv_fields" to use ageis fields instead of carstm fields ... note variables are not the same
-      areal_units_resolution_km = 5, # default in case not provided ... 25 km dim of lattice ~ 1 hr; 5km = 79hrs; 2km = ?? hrs
+      areal_units_resolution_km = 25, # default in case not provided ... 25 km dim of lattice ~ 1 hr; 5km = 79hrs; 2km = ?? hrs
       areal_units_proj4string_planar_km = p$aegis_proj4string_planar_km,  # coord system to use for areal estimation and gridding for carstm
       # areal_units_proj4string_planar_km = projection_proj4string("omerc_nova_scotia")  # coord system to use for areal estimation and gridding for carstm
       areal_units_overlay = "none",
@@ -62,6 +62,9 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
       carstm_model_label = "default",
       carstm_inputs_aggregated = TRUE
     )
+
+    if ( !exists("carstm_inputadata_model_source", p))  p$carstm_inputadata_model_source = list()
+    if ( !exists("bathymetry", p$carstm_inputadata_model_source ))  p$carstm_inputadata_model_source$bathymetry = "stmv",  # "stmv", "hybrid", "carstm"
 
     if ( !exists("carstm_model_call", p)  ) {
       if ( grepl("inla", p$carstm_modelengine) ) {
