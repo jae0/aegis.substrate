@@ -288,7 +288,7 @@
     
       iAS = match( as.character( APS$AUID), as.character( sppoly$AUID ) )
 
-      if ( p$carstm_inputadata_model_source$bathymetry == "carstm") {
+      if ( p$carstm_inputdata_model_source$bathymetry == "carstm") {
         LU = carstm_summary( p=pB ) # to load exact sppoly, if present
         LU_sppoly = areal_units( p=pB )  # default poly
 
@@ -322,8 +322,8 @@
       }
 
 
-      if ( p$carstm_inputadata_model_source$bathymetry %in% c("stmv", "hybrid")) {
-        pBD = bathymetry_parameters( project_class=p$carstm_inputadata_model_source$bathymetry )  # full default
+      if ( p$carstm_inputdata_model_source$bathymetry %in% c("stmv", "hybrid")) {
+        pBD = bathymetry_parameters( project_class=p$carstm_inputdata_model_source$bathymetry )  # full default
         LU = bathymetry_db( p=pBD, DS="baseline", varnames="all" )
         LU = planar2lonlat(LU, pBD$aegis_proj4string_planar_km)
         LU = sf::st_as_sf( LU, coords=c("lon", "lat") )

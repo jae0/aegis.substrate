@@ -68,8 +68,8 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
       carstm_inputs_aggregated = TRUE
     )
 
-    if ( !exists("carstm_inputadata_model_source", p))  p$carstm_inputadata_model_source = list()
-    if ( !exists("bathymetry", p$carstm_inputadata_model_source ))  p$carstm_inputadata_model_source$bathymetry = "stmv"  # "stmv", "hybrid", "carstm"
+    if ( !exists("carstm_inputdata_model_source", p))  p$carstm_inputdata_model_source = list()
+    if ( !exists("bathymetry", p$carstm_inputdata_model_source ))  p$carstm_inputdata_model_source$bathymetry = "stmv"  # "stmv", "hybrid", "carstm"
 
     if ( !exists("carstm_model_call", p)  ) {
       if ( grepl("inla", p$carstm_modelengine) ) {
