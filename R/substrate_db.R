@@ -246,7 +246,7 @@
       iM = NULL
       iM =  which( !is.finite(M[, vnmod]))
       if (length(iM) > 0) {
-        pBBB = p=bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="stmv"  )
+        pBBB = bathymetry_parameters( spatial_domain=p$spatial_domain, project_class="stmv"  )
         LU = bathymetry_db ( pBBB, DS="complete", varnames="all" )  # raw data
         LU = planar2lonlat(LU, proj.type=p$aegis_proj4string_planar_km)
         LU = LU[ which( LU$lon > p$corners$lon[1] & LU$lon < p$corners$lon[2]  & LU$lat > p$corners$lat[1] & LU$lat < p$corners$lat[2] ), ]
