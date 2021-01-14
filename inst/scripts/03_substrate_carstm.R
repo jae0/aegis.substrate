@@ -3,8 +3,10 @@
 # and some plotting parameters (bounding box, projection, bathymetry layout, coastline)
 
   p = aegis.substrate::substrate_parameters( project_class="carstm"  )
-  p$inla_num.threads=  parallel::detectCores() 
-  p$inla_blas.num.threads=1 
+
+    # adjust based upon RAM requirements and ncores
+    inla.setOption(num.threads= floor( parallel::detectCores() / 3) )
+    inla.setOption(blas.num.threads= 3 )
 
 
   sppoly = areal_units( p=p )  # this has already been done in aegis.polygons::01 polygons.R .. should nto have to redo

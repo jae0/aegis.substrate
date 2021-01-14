@@ -61,6 +61,7 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
       areal_units_overlay = "none",
       areal_units_timeperiod = "none",
       tus="none", 
+      fraction_todrop = 1/5,
       fraction_cv = 1.0, 
       fraction_good_bad = 0.9, 
       nAU_min = 30,  
@@ -70,25 +71,20 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
     )
 
     if ( !exists("carstm_inputdata_model_source", p))  p$carstm_inputdata_model_source = list()
-    if ( !exists("bathymetry", p$carstm_inputdata_model_source ))  p$carstm_inputdata_model_source$bathymetry = "stmv"  # "stmv", "hybrid", "carstm"
+    p$carstm_inputdata_model_source = parameters_add_without_overwriting( p$carstm_inputdata_model_source,
+      bathymetry = "stmv"  # "stmv", "hybrid", "carstm"
+    )
 
-    if ( !exists("carstm_model_call", p)  ) {
-      if ( grepl("inla", p$carstm_modelengine) ) {
-        p$carstm_model_call = paste(
-         'inla(
-            formula =', p$variabletomodel, ' ~ 1
-              + f( inla.group(z, method="quantile", n=9),  model="rw2", scale.model=TRUE, hyper=H$rw2)
-              + f(auid, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, constr=TRUE, hyper=H$bym2),
-            family = "lognormal",
-            data= M,
-            control.compute=list(dic=TRUE, waic=TRUE, cpo=TRUE, config=FALSE),
-            control.results=list(return.marginals.random=TRUE, return.marginals.predictor=TRUE ),
-            control.predictor=list(compute=FALSE, link=1 ),
-            control.fixed=H$fixed,  # priors for fixed effects, generic is ok
-            control.inla = list(h=1e-3, tolerance=1e-9, cmin=0), # restart=3), # restart a few times in case posteriors are poorly defined
-            verbose=TRUE
-          ) ' )
+
+    if ( grepl("inla", p$carstm_modelengine) ) {
+      if ( !exists("carstm_model_formula", p)  ) {
+        p$carstm_model_formula = as.formula( paste(
+         p$variabletomodel, ' ~ 1',
+             '+ f( inla.group(z, method="quantile", n=9),  model="rw2", scale.model=TRUE, hyper=H$rw2)',
+             '+ f(auid, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, constr=TRUE, hyper=H$bym2)'
+         ) )
       }
+      if ( !exists("carstm_model_family", p)  )  p$carstm_model_family = "lognormal"
     }
 
     p = carstm_parameters( p=p )  # fill in anything missing with defaults and do some checks
