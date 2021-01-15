@@ -60,11 +60,11 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
       # areal_units_proj4string_planar_km = projection_proj4string("omerc_nova_scotia")  # coord system to use for areal estimation and gridding for carstm
       areal_units_overlay = "none",
       areal_units_timeperiod = "none",
-      tus="none", 
+      tus="none",
       fraction_todrop = 1/5,
-      fraction_cv = 1.0, 
-      fraction_good_bad = 0.9, 
-      nAU_min = 30,  
+      fraction_cv = 1.0,
+      fraction_good_bad = 0.9,
+      nAU_min = 30,
       carstm_modelengine = "inla",  # {model engine}.{label to use to store}
       carstm_model_label = "default",
       carstm_inputs_aggregated = TRUE
@@ -207,7 +207,7 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
     if ( p$inputdata_spatial_discretization_planar_km >= p$pres ) {
       warning( "p$inputdata_spatial_discretization_planar_km >= p$pres " )
     }
-    message ("p$stmv_distance_statsgrid: ", p$stmv_distance_statsgrid)
+  #    message ("p$stmv_distance_statsgrid: ", p$stmv_distance_statsgrid)
 
     return(p)
   }
