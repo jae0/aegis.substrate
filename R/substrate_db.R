@@ -118,7 +118,7 @@
 
     # ---------------------------------------
    # ------------------------------
- 
+
     if ( DS=="areal_units_input" ) {
 
       fn = file.path( p$datadir,  "areal_units_input.rdata" )
@@ -205,16 +205,26 @@
 
       M = M[ which(!is.na(M$AUID)),]
       M$AUID = as.character( M$AUID )  # match each datum to an area
- 
 
+
+
+     # already has depth .. but in case some are missing data
       pB = bathymetry_parameters( p=parameters_reset(p), project_class="carstm"  )
-      if (!(exists(pB$variabletomodel, M ))) M[,pB$variabletomodel] = NA
-      iM = which(!is.finite( M[, pB$variabletomodel] ))
+      vnB = pB$variabletomodel
+      if ( !(exists(vnB, M ))) {
+        vnB2 = paste(vnB, "mean", sep=".")
+        if ((exists(vnB2, M ))) {
+          names(M)[which(names(M) == vnB2 )] = vnB
+        } else {
+          M[,vnB] = NA
+        }
+      }
+      iM = which(!is.finite( M[, vnB] ))
       if (length(iM > 0)) {
-        M[iM, pB$variabletomodel] = bathymetry_lookup_rawdata( spatial_domain=p$spatial_domain, lonlat=M[iM, c("lon", "lat")], sppoly=sppoly )
+        M[iM, vnB] = bathymetry_lookup_rawdata( spatial_domain=p$spatial_domain, lonlat=M[iM, c("lon", "lat")], sppoly=sppoly )
       }
 
-      M = M[ is.finite(M[ , pB$variabletomodel]  ) , ]
+      M = M[ is.finite(M[ , vnB]  ) , ]
 
       # must go after depths have been finalized
       if (p$carstm_inputs_aggregated) {
@@ -232,15 +242,15 @@
 
 
     # ----------
-    
- 
+
+
       region.id = slot( slot(sppoly, "nb"), "region.id" )
       APS = st_drop_geometry(sppoly)
 
       APS$AUID = as.character( APS$AUID )
       APS$tag ="predictions"
       APS[, p$variabletomodel] = NA
-    
+
       iAS = match( as.character( APS$AUID), as.character( sppoly$AUID ) )
 
       if ( p$carstm_inputdata_model_source$bathymetry == "carstm") {
@@ -253,11 +263,11 @@
           LU = carstm_summary( p=pBD )
           LU_sppoly = areal_units( p=pBD )  # default poly
         }
-      
+
         # now rasterize and re-estimate
         raster_template = raster( sppoly, res=p$areal_units_resolution_km, crs=st_crs( sppoly ) ) # +1 to increase the area
 
-        vns = intersect( c( "z.predicted", "z.predicted_se" ), names(LU) ) 
+        vns = intersect( c( "z.predicted", "z.predicted_se" ), names(LU) )
 
         bm = match( LU_sppoly$AUID, LU$AUID )
         for (vn in vns) {
@@ -278,17 +288,17 @@
 
 
       if ( p$carstm_inputdata_model_source$bathymetry %in% c("stmv", "hybrid")) {
-        pBD = 
+        pBD =
         ( project_class=p$carstm_inputdata_model_source$bathymetry )  # full default
         LU = bathymetry_db( p=pBD, DS="baseline", varnames="all" )
         LU = planar2lonlat(LU, pBD$aegis_proj4string_planar_km)
         LU = sf::st_as_sf( LU, coords=c("lon", "lat") )
         st_crs(LU) = st_crs( projection_proj4string("lonlat_wgs84") )
         LU = sf::st_transform( LU, crs=st_crs(sppoly) )
-        vns = intersect( 
+        vns = intersect(
           c( "z", "dZ", "ddZ", "b.sdSpatial", "b.sdObs", "b.phi", "b.nu", "b.localrange" ),
           names(LU)
-        ) 
+        )
         for (vn in vns) {
           # sppoly[[ vn ]] = aggregate( LU[, vn], sppoly, median, na.rm=TRUE )[[vn]]
           # APS[, vn] = sppoly[[ vn ]] [iAS]
