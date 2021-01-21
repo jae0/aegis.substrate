@@ -116,7 +116,6 @@
     }
 
 
-    # ---------------------------------------
    # ------------------------------
 
     if ( DS=="areal_units_input" ) {
@@ -133,9 +132,7 @@
       }
       xydata = substrate_db( p=p, DS="aggregated_data"   )  #
       xydata = xydata[ , c("lon", "lat"  )]
-      xydata = lonlat2planar(xydata, p$areal_units_proj4string_planar_km)  # should not be required but to make sure
-      xydata = st_as_sf ( xydata, coords= c('lon', 'lat'), crs = st_crs(projection_proj4string("lonlat_wgs84")) )
-      xydata = st_transform( xydata, st_crs( p$areal_units_proj4string_planar_km ))
+
       save(xydata, file=fn, compress=TRUE )
       return( xydata )
     }
