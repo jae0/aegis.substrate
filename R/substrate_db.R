@@ -131,6 +131,9 @@
         }
       }
       xydata = substrate_db( p=p, DS="aggregated_data"   )  #
+      names(xydata)[which(names(xydata)=="z.mean" )] = "z"
+      xydata = xydata[ geo_subset( spatial_domain=p$spatial_domain, Z=xydata ) , ] # need to be careful with extrapolation ...  filter depths
+
       xydata = xydata[ , c("lon", "lat"  )]
 
       save(xydata, file=fn, compress=TRUE )
@@ -251,13 +254,13 @@
       iAS = match( as.character( APS$AUID), as.character( sppoly$AUID ) )
 
       if ( p$carstm_inputdata_model_source$bathymetry == "carstm") {
-        LU = carstm_summary( p=pB ) # to load exact sppoly, if present
+        LU = carstm_model( p=pB, DS="carstm_modelled_summary" ) # to load exact sppoly, if present
         LU_sppoly = areal_units( p=pB )  # default poly
 
         if (is.null(LU)) {
           message("Exactly modelled surface not found, estimating from default run...")
           pBD = bathymetry_parameters( project_class="carstm" ) # choose "default" full bathy carstm run and re-estimate:
-          LU = carstm_summary( p=pBD )
+          LU = carstm_model( p=pBD, DS="carstm_modelled_summary" )
           LU_sppoly = areal_units( p=pBD )  # default poly
         }
 

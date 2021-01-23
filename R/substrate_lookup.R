@@ -34,7 +34,7 @@ substrate_lookup = function( p, locs, vnames="substrate.grainsize", output_data_
 
    } else if (source_data_class=="carstm") {
 
-      Bcarstm = carstm_summary( p=p ) # to load currently saved sppoly
+      Bcarstm = carstm_model( p=p, DS="carstm_modelled_summary" ) # to load currently saved sppoly
       B = areal_units( p=p )
       bm = match( B$AUID, Bcarstm$AUID )
       B$substrate.grainsize  = Bcarstm$substrate.grainsize.predicted[ bm ]
