@@ -207,9 +207,8 @@
       M$AUID = as.character( M$AUID )  # match each datum to an area
 
 
-
      # already has depth .. but in case some are missing data
-      pB = bathymetry_parameters( p=parameters_reset(p), project_class="carstm"  )
+      pB = bathymetry_parameters( project_class="core"  )
       vnB = pB$variabletomodel
       if ( !(exists(vnB, M ))) {
         vnB2 = paste(vnB, "mean", sep=".")
@@ -221,7 +220,7 @@
       }
       iM = which(!is.finite( M[, vnB] ))
       if (length(iM > 0)) {
-        M[iM, vnB] = bathymetry_lookup_rawdata( spatial_domain=p$spatial_domain, lonlat=M[iM, c("lon", "lat")], sppoly=sppoly )
+        M[iM, vnB] = bathymetry_lookup_rawdata( spatial_domain=p$spatial_domain, M=M[iM, c("lon", "lat")], sppoly=sppoly )
       }
 
       M = M[ is.finite(M[ , vnB]  ) , ]
@@ -232,6 +231,7 @@
           M = M[ geo_subset( spatial_domain=p$spatial_domain, Z=M ) , ] # need to be careful with extrapolation ...  filter depths
         }
       }
+
 
       M$lon = NULL
       M$lat = NULL
@@ -252,6 +252,7 @@
       APS[, p$variabletomodel] = NA
 
       iAS = match( as.character( APS$AUID), as.character( sppoly$AUID ) )
+
 
       if ( p$carstm_inputdata_model_source$bathymetry == "carstm") {
         LU = carstm_model( p=pB, DS="carstm_modelled_summary" ) # to load exact sppoly, if present
@@ -319,7 +320,9 @@
 
       M$auid = match( M$AUID, region.id )
 
-      M$zi = discretize_data( M[, pB$variabletomodel], p$discretization[[pB$variabletomodel]] )
+      if (0) {
+        M$zi = discretize_data( M[, pB$variabletomodel], p$discretization[[pB$variabletomodel]] )
+      }
 
       save( M, file=fn, compress=TRUE )
       return( M )
