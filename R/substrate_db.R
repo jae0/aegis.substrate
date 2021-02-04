@@ -251,68 +251,14 @@
       APS$tag ="predictions"
       APS[, p$variabletomodel] = NA
 
-      iAS = match( as.character( APS$AUID), as.character( sppoly$AUID ) )
+      APS[, pB$variabletomodel] = bathymetry_lookup(  LOCS=sppoly, 
+        lookup_from = p$carstm_inputdata_model_source$bathymetry,
+        lookup_to = "areal_units", 
+        spatial_domain=p$spatial_domain, 
+        vnames="z" 
+      )
 
-
-      if ( p$carstm_inputdata_model_source$bathymetry == "carstm") {
-        LU = carstm_model( p=pB, DS="carstm_modelled_summary" ) # to load exact sppoly, if present
-        LU_sppoly = areal_units( p=pB )  # default poly
-
-        if (is.null(LU)) {
-          message("Exactly modelled surface not found, estimating from default run...")
-          pBD = bathymetry_parameters( project_class="carstm" ) # choose "default" full bathy carstm run and re-estimate:
-          LU = carstm_model( p=pBD, DS="carstm_modelled_summary" )
-          LU_sppoly = areal_units( p=pBD )  # default poly
-        }
-
-        # now rasterize and re-estimate
-        raster_template = raster( sppoly, res=p$areal_units_resolution_km, crs=st_crs( sppoly ) ) # +1 to increase the area
-
-        vns = intersect( c( "z.predicted", "z.predicted_se" ), names(LU) )
-
-        bm = match( LU_sppoly$AUID, LU$AUID )
-        for (vn in vns) {
-          LL = LU_sppoly
-          LL[[vn]] = LU[,vn][ bm ]
-          # transfer the coordinate system to the raster
-  #        LL = sf::st_transform( as( LL, "sf" ), crs=st_crs(LL) )  # B is a carstm LU
-          LL = fasterize::fasterize( LL, raster_template, field=vn )
-          sppoly[[vn]] = sp::over( sppoly, LL[, vn ], fn=median, na.rm=TRUE )
-          APS[, vn] = sppoly[[ vn ]] [iAS]
-        }
-        raster_template = NULL
-        LL = NULL
-        bm = NULL
-        LU = NULL
-
-      }
-
-
-      if ( p$carstm_inputdata_model_source$bathymetry %in% c("stmv", "hybrid")) {
-        pBD =
-        ( project_class=p$carstm_inputdata_model_source$bathymetry )  # full default
-        LU = bathymetry_db( p=pBD, DS="baseline", varnames="all" )
-        LU = planar2lonlat(LU, pBD$aegis_proj4string_planar_km)
-        LU = sf::st_as_sf( LU, coords=c("lon", "lat") )
-        st_crs(LU) = st_crs( projection_proj4string("lonlat_wgs84") )
-        LU = sf::st_transform( LU, crs=st_crs(sppoly) )
-        vns = intersect(
-          c( "z", "dZ", "ddZ", "b.sdSpatial", "b.sdObs", "b.phi", "b.nu", "b.localrange" ),
-          names(LU)
-        )
-        for (vn in vns) {
-          # sppoly[[ vn ]] = aggregate( LU[, vn], sppoly, median, na.rm=TRUE )[[vn]]
-          # APS[, vn] = sppoly[[ vn ]] [iAS]
-          APS[, vn] = aggregate( LU[, vn], sppoly, median, na.rm=TRUE ) [[vn]] [iAS]
-        }
-
-      }
-
-      iAS =NULL
-      sppoly = NULL
-      gc()
-
-      avn = c( p$variabletomodel, vns, "tag", "AUID"  )
+      avn = c( p$variabletomodel, "z", "tag", "AUID"  )
       APS = APS[, avn]
 
       M = rbind( M[, vn], APS )
