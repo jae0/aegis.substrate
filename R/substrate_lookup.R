@@ -16,12 +16,12 @@ message("need to check::  [match( APS$AUID, as.character( sppoly$AUID ) )] ")
     # matching to point (LU) to point (LOCS) 
     vn = "substrate.grainsize"
     vn2 = paste( vn, "mean", sep="." )
-
+ 
     pB = bathymetry_parameters( spatial_domain=pS$spatial_domain, project_class=lookup_from  )
-    BA = bathymetry_db ( pB, DS="baseline", varnames=c("lon", "lat")  )
+    BA = bathymetry_db ( p=pB, DS="baseline_prediction_locations", varnames=c("lon", "lat")  )
     BA = planar2lonlat(BA, pB$aegis_proj4string_planar_km)
 
-    LU = substrate_db ( p=pB, DS=lookup_from_class )  # raw data
+    LU = substrate_db ( p=pS, DS=lookup_from_class )  # raw data
     names(LU)[ which(names(LU) == vn2 ) ] =  vn
 
     LOCS = lonlat2planar(LOCS, proj.type=pB$aegis_proj4string_planar_km) # get planar projections of lon/lat in km
@@ -39,7 +39,7 @@ message("need to check::  [match( APS$AUID, as.character( sppoly$AUID ) )] ")
     vn2 = paste( vn, "mean", sep="." )
 
     pB = bathymetry_parameters( spatial_domain=pS$spatial_domain, project_class=lookup_from  )
-    BA = bathymetry_db ( pB, DS="baseline", varnames=c("lon", "lat")  )
+    BA = bathymetry_db ( p=pB, DS="baseline_prediction_locations", varnames=c("lon", "lat")  )
     BA = planar2lonlat(BA, pB$aegis_proj4string_planar_km)
 
     LU = substrate_db ( p=pB, DS=lookup_from_class )  # raw data
@@ -57,16 +57,16 @@ message("need to check::  [match( APS$AUID, as.character( sppoly$AUID ) )] ")
     # matching to point (LU) to point (LOCS)
     # if any still missing then use stmv depths
     pB = bathymetry_parameters( spatial_domain=pS$spatial_domain, project_class=lookup_from  )
-    BA = bathymetry_db ( pB, DS="baseline", varnames=c("lon", "lat")  )
+    BA = bathymetry_db ( p=pB, DS="baseline", varnames=c("lon", "lat")  )
     BA = planar2lonlat(BA, proj.type=pS$aegis_proj4string_planar_km)
 
-    LU = substrate_db ( pS, DS="complete", varnames="all" )  # raw data
+    LU = substrate_db ( p=pS, DS="complete", varnames="all" )  # raw data
     LU = cbind(LU, BA )
     
     LOCS = lonlat2planar(LOCS, proj.type=pB$aegis_proj4string_planar_km) # get planar projections of lon/lat in km
     LOCS[,vnames] = LU[ match(
-        array_map( "xy->1", LOCS[, c("plon","plat")], gridparams=pS$gridparams ),
-        array_map( "xy->1", LU[,c("plon","plat")], gridparams=pS$gridparams )
+        array_map( "xy->1", LOCS[, c("plon","plat")], gridparams=pB$gridparams ),
+        array_map( "xy->1", LU[,c("plon","plat")], gridparams=pB$gridparams )
     ), vnames ]
     return( LOCS[,vnames] )
   }
@@ -74,10 +74,10 @@ message("need to check::  [match( APS$AUID, as.character( sppoly$AUID ) )] ")
   if ( lookup_from %in% c("stmv", "hybrid") & lookup_to == "areal_units" )  {
     # point (LU) -> areal unit (LOCS)
     pB = bathymetry_parameters( spatial_domain=pS$spatial_domain, project_class=lookup_from  )
-    BA = bathymetry_db ( pB, DS="baseline", varnames=c("lon", "lat")  )
+    BA = bathymetry_db ( p=pB, DS="baseline", varnames=c("lon", "lat")  )
     BA = planar2lonlat(BA, pB$aegis_proj4string_planar_km)
     
-    LU = substrate_db ( pS, DS="complete", varnames="all" )  # raw data
+    LU = substrate_db ( p=pS, DS="complete", varnames="all" )  # raw data
     LU = cbind(LU, BA )
     LU = sf::st_as_sf( LU, coords=c("lon", "lat") )
     st_crs(LU) = st_crs( projection_proj4string("lonlat_wgs84") )
