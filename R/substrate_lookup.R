@@ -19,7 +19,7 @@ message("need to check::  [match( APS$AUID, as.character( sppoly$AUID ) )] ")
  
     pB = bathymetry_parameters( spatial_domain=pS$spatial_domain, project_class=lookup_from  )
     BA = bathymetry_db ( p=pB, DS="baseline_prediction_locations", varnames=c("lon", "lat")  )
-    BA = planar2lonlat(BA, pB$aegis_proj4string_planar_km)
+    BA = lonlat2planar(BA, pB$aegis_proj4string_planar_km)
 
     LU = substrate_db ( p=pS, DS=lookup_from_class )  # raw data
     names(LU)[ which(names(LU) == vn2 ) ] =  vn
