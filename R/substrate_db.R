@@ -75,9 +75,9 @@
       M = substrate_db( p=p, DS="lonlat.highres" )
       M[,p$variabletomodel] = M$grainsize
 
-      # p$quantile_bounds_data = c(0.0005, 0.9995)
-      if (exists("quantile_bounds_data", p)) {
-        TR = quantile(M[,p$variabletomodel], probs=p$quantile_bounds_data, na.rm=TRUE )
+      # p$quantile_bounds = c(0.0005, 0.9995)
+      if (exists("quantile_bounds", p)) {
+        TR = quantile(M[,p$variabletomodel], probs=p$quantile_bounds, na.rm=TRUE )
         keep = which( M[,p$variabletomodel] >=  TR[1] & M[,p$variabletomodel] <=  TR[2] )
         if (length(keep) > 0 ) M = M[ keep, ]
       }
@@ -179,9 +179,9 @@
         attr( M, "proj4string_planar" ) =  p$aegis_proj4string_planar_km
         attr( M, "proj4string_lonlat" ) =  projection_proj4string("lonlat_wgs84")
 
-        # p$quantile_bounds_data = c(0.0005, 0.9995)
-        if (exists("quantile_bounds_data", p)) {
-          TR = quantile(M[,p$variabletomodel], probs=p$quantile_bounds_data, na.rm=TRUE ) # this was -1.7, 21.8 in 2015
+        # p$quantile_bounds = c(0.0005, 0.9995)
+        if (exists("quantile_bounds", p)) {
+          TR = quantile(M[,p$variabletomodel], probs=p$quantile_bounds, na.rm=TRUE ) # this was -1.7, 21.8 in 2015
           keep = which( M[,p$variabletomodel] >=  TR[1] & M[,p$variabletomodel] <=  TR[2] )
           if (length(keep) > 0 ) M = M[ keep, ]
           # this was -1.7, 21.8 in 2015
