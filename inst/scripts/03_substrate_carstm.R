@@ -48,6 +48,9 @@
 
 
 
+  plot_crs = p$aegis_proj4string_planar_km
+  coastline=aegis.coastline::coastline_db( DS="eastcoast_gadm", project_to=plot_crs )
+  isobaths=aegis.bathymetry::isobath_db( depths=c(50, 100, 200, 400, 800), project_to )
 
   # maps of some of the results
   vn = paste(p$variabletomodel, "predicted", sep=".")
@@ -55,21 +58,38 @@
   if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
 
   fn = file.path( outdir, paste("substrate_grain_size", "png", sep=".") )
-  png( filename=fn, width=3072, height=2304, pointsize=40, res=300  )
-    vn = paste(p$variabletomodel, "predicted", sep=".")
-    print( carstm_map( res=res, vn=vn, at=p$discretization$z, sp.layout=p$coastLayout, col.regions=p$mypalette, main="Substrate grain size"  ) )
-  dev.off()
+  carstm_map(  res=res, vn=vn, 
+      palette="viridis",
+      coastline=coastline,
+      isobaths=isobaths,
+      main=paste( "Substrate grainsize",  vn ),
+      outfilename=fn
+    )  
 
 
   vn = paste(p$variabletomodel, "random_sample_iid", sep=".")
-  carstm_map( res=res, vn=vn, at=p$discretization$z, sp.layout=p$coastLayout, col.regions=p$mypalette, main="Substrate sample iid"  )
+  carstm_map(  res=res, vn=vn, 
+      palette="viridis",
+      coastline=coastline,
+      isobaths=isobaths,
+      main=paste( "Substrate grainsize",  vn )
+    )  
 
   vn = paste(p$variabletomodel, "random_auid_nonspatial", sep=".")
-  carstm_map( res=res, vn=vn, at=p$discretization$z, sp.layout=p$coastLayout, col.regions=p$mypalette, main="Substrate nonspatial"  )
+  carstm_map(  res=res, vn=vn, 
+      palette="viridis",
+      coastline=coastline,
+      isobaths=isobaths,
+      main=paste( "Substrate grainsize",  vn )
+    )  
 
   vn = paste(p$variabletomodel, "random_auid_spatial", sep="." )
-  carstm_map( res=res, vn=vn, at=p$discretization$z, sp.layout=p$coastLayout, col.regions=p$mypalette, main="Substrate spatial effects"  )
-
+  carstm_map(  res=res, vn=vn, 
+      palette="viridis",
+      coastline=coastline,
+      isobaths=isobaths,
+      main=paste( "Substrate grainsize",  vn )
+    )  
 
 
 # end
