@@ -50,7 +50,7 @@
 
   plot_crs = p$aegis_proj4string_planar_km
   coastline=aegis.coastline::coastline_db( DS="eastcoast_gadm", project_to=plot_crs )
-  isobaths=aegis.bathymetry::isobath_db( depths=c(50, 100, 200, 400, 800), project_to )
+  isobaths=aegis.bathymetry::isobath_db( depths=c(50, 100, 200, 400, 800), project_to=plot_crs )
 
   # maps of some of the results
   vn = paste(p$variabletomodel, "predicted", sep=".")
