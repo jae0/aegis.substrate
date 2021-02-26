@@ -13,7 +13,8 @@
       p$fraction_todrop = 1/4 # aggressiveness of solution finding ( fraction of counts to drop each iteration)
       p$fraction_cv = 1.0  #sd/mean no.
       p$fraction_good_bad = 0.9
-      p$areal_units_constraint_nmin = 500  # length(p$yrs)
+      p$areal_units_constraint_ntarget = 500  # length(p$yrs)
+      p$areal_units_constraint_nmin = 30  # length(p$yrs)
       p$nAU_min = 100
       # to recreate the underlying data
       # xydata=substrate_db(p=p, DS="areal_units_input", redo=TRUE)
