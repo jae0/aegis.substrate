@@ -263,11 +263,9 @@
       M = rbind( M[, vn], APS )
       APS = NULL
 
-      M$auid = match( M$AUID, region.id )
+      M$space =   M$AUID 
 
-      if (0) {
-        M$zi = discretize_data( M[, pB$variabletomodel], p$discretization[[pB$variabletomodel]] )
-      }
+      M$uid = 1:nrow(M)  # seems to require an iid model for each obs for stability .. use this for iid
 
       save( M, file=fn, compress=TRUE )
       return( M )

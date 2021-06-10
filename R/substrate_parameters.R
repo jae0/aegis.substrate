@@ -82,8 +82,9 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
       if ( !exists("carstm_model_formula", p)  ) {
         p$carstm_model_formula = as.formula( paste(
          p$variabletomodel, ' ~ 1',
+             '+ f( uid, model="iid" )',
              '+ f( inla.group(z, method="quantile", n=9),  model="rw2", scale.model=TRUE, hyper=H$rw2)',
-             '+ f(auid, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, constr=TRUE, hyper=H$bym2)'
+             '+ f( space, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, constr=TRUE, hyper=H$bym2)'
          ) )
       }
       if ( !exists("carstm_model_family", p)  )  p$carstm_model_family = "lognormal"
@@ -239,7 +240,8 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
       stmv_local_modelcall = paste(
         'inla(
           formula = z ~ 1
-            + f(auid, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, constr=TRUE, hyper=H$bym2),
+            + f(uid, model="iid" ),
+            + f( space, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, constr=TRUE, hyper=H$bym2),
           family = "normal",
           data= dat,
           control.compute=list(dic=TRUE, waic=TRUE, cpo=FALSE, config=FALSE),  # config=TRUE if doing posterior simulations
