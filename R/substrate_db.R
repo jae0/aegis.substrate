@@ -197,75 +197,12 @@
 
 
       # levelplot(substrate.grainsize.mean~plon+plat, data=M, aspect="iso")
-      M$AUID = st_points_in_polygons(
-        pts = st_as_sf( M, coords=c("lon","lat"), crs=crs_lonlat ),
-        polys = sppoly[, "AUID"],
-        varname = "AUID"
+
+      M = carstm_prepare_inputdata( p=p, M=M, sppoly=sppoly,
+        lookup = c("bathymetry" ),
+        varstoretain = c( "sa" ),
+        APS_data_offset=1
       )
-
-      M = M[ which(!is.na(M$AUID)),]
-      M$AUID = as.character( M$AUID )  # match each datum to an area
-
-
-     # already has depth .. but in case some are missing data
-      pB = bathymetry_parameters( project_class="core"  )
-      vnB = pB$variabletomodel
-      if ( !(exists(vnB, M ))) {
-        vnB2 = paste(vnB, "mean", sep=".")
-        if ((exists(vnB2, M ))) {
-          names(M)[which(names(M) == vnB2 )] = vnB
-        } else {
-          M[,vnB] = NA
-        }
-      }
-      iM = which(!is.finite( M[, vnB] ))
-      if (length(iM > 0)) {
-        M[iM, vnB] = bathymetry_lookup( LOCS=M[iM, c("lon", "lat")],  lookup_from="core", lookup_to="points" , lookup_from_class="aggregated_data" ) # core=="rawdata"
-      }
-
-      M = M[ is.finite(M[ , vnB]  ) , ]
-
-      # must go after depths have been finalized
-      if (p$carstm_inputs_aggregated) {
-        if ( exists("spatial_domain", p)) {
-          M = M[ geo_subset( spatial_domain=p$spatial_domain, Z=M ) , ] # need to be careful with extrapolation ...  filter depths
-        }
-      }
-
-
-      M$lon = NULL
-      M$lat = NULL
-      M$plon = NULL
-      M$plat = NULL
-      M$tag = "observations"
-      gc()
-
-
-    # ----------
-
-
-      region.id = slot( slot(sppoly, "nb"), "region.id" )
-      APS = st_drop_geometry(sppoly)
-
-      APS$AUID = as.character( APS$AUID )
-      APS$tag ="predictions"
-      APS[, p$variabletomodel] = NA
-
-      APS[, pB$variabletomodel] = bathymetry_lookup(  LOCS=sppoly, 
-        lookup_from = p$carstm_inputdata_model_source$bathymetry,
-        lookup_to = "areal_units", 
-        vnames="z" 
-      )
-
-      avn = c( p$variabletomodel, "z", "tag", "AUID"  )
-      APS = APS[, avn]
-
-      M = rbind( M[, vn], APS )
-      APS = NULL
-
-      M$space =   M$AUID 
-
-      M$uid = 1:nrow(M)  # seems to require an iid model for each obs for stability .. use this for iid
 
       save( M, file=fn, compress=TRUE )
       return( M )
