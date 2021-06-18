@@ -89,27 +89,41 @@
 
       gc()
 
-      bb = as.data.frame( t( simplify2array(
-        tapply( X=M[,p$variabletomodel], INDEX=list(paste(  M$plon, M$plat ) ),
-          FUN = function(w) { c(
-            mean(w, na.rm=TRUE),
-            sd(w, na.rm=TRUE),
-            length( which(is.finite(w)) )
-          ) }, simplify=TRUE )
-      )))
-      M = NULL
-      colnames(bb) = paste( p$variabletomodel, c("mean", "sd", "n"), sep=".")
-      plonplat = matrix( as.numeric( unlist(strsplit( rownames(bb), " ", fixed=TRUE))), ncol=2, byrow=TRUE)
+      setDT(M)
+      M$z = M[[p$variabletomodel]]
 
-      bb$plon = plonplat[,1]
-      bb$plat = plonplat[,2]
-      plonplat = NULL
+      M = M[, .(lon=unique(lon)[1], lat=unique(lat)[1], mean=mean(z, trim=0.05, na.rm=TRUE), sd=sd(z, na.rm=TRUE), n=length(which(is.finite(z))) ), by=list(plon, plat) ]
 
-      ii = which( is.finite( bb[, paste(p$variabletomodel, "mean", sep=".")] ))
-      M = bb[ii  ,]
-      bb =NULL
-      gc()
-      M = planar2lonlat( M, p$aegis_proj4string_planar_km)
+      colnames(M) = c( "lon", "lat", paste( p$variabletomodel, c("mean", "sd", "n"), sep=".") )
+      M = setDF(M)
+
+      if (0) {
+        bb = as.data.frame( t( simplify2array(
+          tapply( X=M[,p$variabletomodel], INDEX=list(paste(  M$plon, M$plat ) ),
+            FUN = function(w) { c(
+              mean(w, na.rm=TRUE),
+              sd(w, na.rm=TRUE),
+              length( which(is.finite(w)) )
+            ) }, simplify=TRUE )
+        )))
+        M = NULL
+        colnames(bb) = paste( p$variabletomodel, c("mean", "sd", "n"), sep=".")
+        plonplat = matrix( as.numeric( unlist(strsplit( rownames(bb), " ", fixed=TRUE))), ncol=2, byrow=TRUE)
+
+        bb$plon = plonplat[,1]
+        bb$plat = plonplat[,2]
+        plonplat = NULL
+
+        ii = which( is.finite( bb[, paste(p$variabletomodel, "mean", sep=".")] ))
+        M = bb[ii  ,]
+        bb =NULL
+        gc()
+        M = planar2lonlat( M, p$aegis_proj4string_planar_km)
+      }
+      
+      attr( M, "proj4string_planar" ) =  p$aegis_proj4string_planar_km
+      attr( M, "proj4string_lonlat" ) =  projection_proj4string("lonlat_wgs84")
+
       save(M, file=fn, compress=TRUE)
 
       return( M )
@@ -168,52 +182,39 @@
         }
       }
 
-      # do this immediately to reduce storage for sppoly (before adding other variables)
+      require(data.table)
 
       if (p$carstm_inputs_prefilter=="aggregated") {
         M = substrate_db ( p=p, DS="aggregated_data" )  # 16 GB in RAM just to store!
         names(M)[which(names(M)==paste(p$variabletomodel, "mean", sep=".") )] = p$variabletomodel
-         
-      } else if (p$carstm_inputs_prefilter =="sampled") {
-        require(data.table)
+        setDT(M)
+
+      } else  {
+
         M = substrate_db( p=p, DS="lonlat.highres" )
+        setDT(M)
+      
         names(M)[which(names(M)=="grainsize" )] = p$variabletomodel
-    
         M = M[ which( !duplicated(M)), ]
-    
-        # thin data a bit ... remove potential duplicates and robustify
-        M = lonlat2planar( M, proj.type=p$aegis_proj4string_planar_km )  # first ensure correct projection
-
-        M$plon = aegis_floor(M$plon / p$inputdata_spatial_discretization_planar_km + 1 ) * p$inputdata_spatial_discretization_planar_km
-        M$plat = aegis_floor(M$plat / p$inputdata_spatial_discretization_planar_km + 1 ) * p$inputdata_spatial_discretization_planar_km
-    
-        M = setDT(M)
-        M = M[,.SD[sample(.N, min(.N, p$carstm_inputs_prefilter_n))], by =list(plon, plat) ]  # compact, might be slightly slower
-        # M = M[ M[, sample(.N, min(.N, p$carstm_inputs_prefilter_n) ), by=list(plon, plat)], .SD[i.V1], on=list(plon, plat), by=.EACHI]  # faster .. just a bit
-        setDF(M)
-
-      } else {
-        M = substrate_db( p=p, DS="lonlat.highres" )
-        names(M)[which(names(M)=="grainsize" )] = p$variabletomodel
+        M = M[ which( M$lon > p$corners$lon[1] & M$lon < p$corners$lon[2]  & M$lat > p$corners$lat[1] & M$lat < p$corners$lat[2] ), ]
+        M = lonlat2planar( M, proj.type=p$aegis_proj4string_planar_km, returntype="DT" )  # first ensure correct projection
 
       }
-
-      attr( M, "proj4string_planar" ) =  p$aegis_proj4string_planar_km
-      attr( M, "proj4string_lonlat" ) =  projection_proj4string("lonlat_wgs84")
+    
+      if (p$carstm_inputs_prefilter =="sampled") {
+        M$plon = aegis_floor(M$plon / p$inputdata_spatial_discretization_planar_km + 1 ) * p$inputdata_spatial_discretization_planar_km
+        M$plat = aegis_floor(M$plat / p$inputdata_spatial_discretization_planar_km + 1 ) * p$inputdata_spatial_discretization_planar_km
+        M = M[,.SD[sample(.N, min(.N, p$carstm_inputs_prefilter_n))], by =list(plon, plat) ]  # compact, might be slightly slower
+        # M = M[ M[, sample(.N, min(.N, p$carstm_inputs_prefilter_n) ), by=list(plon, plat)], .SD[i.V1], on=list(plon, plat), by=.EACHI]  # faster .. just a bit
+       }
 
       # p$quantile_bounds = c(0.0005, 0.9995)
       if (exists("quantile_bounds", p)) {
-        TR = quantile(M[,p$variabletomodel], probs=p$quantile_bounds, na.rm=TRUE ) # this was -1.7, 21.8 in 2015
-        keep = which( M[,p$variabletomodel] >=  TR[1] & M[,p$variabletomodel] <=  TR[2] )
+        TR = quantile(M[[p$variabletomodel]], probs=p$quantile_bounds, na.rm=TRUE ) # this was -1.7, 21.8 in 2015
+        keep = which( M[[p$variabletomodel]] >=  TR[1] & M[[p$variabletomodel]] <=  TR[2] )
         if (length(keep) > 0 ) M = M[ keep, ]
         # this was -1.7, 21.8 in 2015
       }
-
-      M = M[ which(is.finite(M[, p$variabletomodel] )), ]
-
-      # reduce size
-      M = M[ which( M$lon > p$corners$lon[1] & M$lon < p$corners$lon[2]  & M$lat > p$corners$lat[1] & M$lat < p$corners$lat[2] ), ]
-      M = lonlat2planar(M, p$aegis_proj4string_planar_km)  # should not be required but to make sure
 
       # levelplot(substrate.grainsize.mean~plon+plat, data=M, aspect="iso")
 
@@ -222,6 +223,9 @@
         varstoretain = c( "sa" ),
         APS_data_offset=1
       )
+
+      attr( M, "proj4string_planar" ) =  p$aegis_proj4string_planar_km
+      attr( M, "proj4string_lonlat" ) =  projection_proj4string("lonlat_wgs84")
 
       save( M, file=fn, compress=TRUE )
       return( M )
