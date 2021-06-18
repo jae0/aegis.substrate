@@ -92,10 +92,12 @@
       setDT(M)
       M$z = M[[p$variabletomodel]]
 
-      M = M[, .(lon=unique(lon)[1], lat=unique(lat)[1], mean=mean(z, trim=0.05, na.rm=TRUE), sd=sd(z, na.rm=TRUE), n=length(which(is.finite(z))) ), by=list(plon, plat) ]
+      M = M[, .(mean=mean(z, trim=0.05, na.rm=TRUE), sd=sd(z, na.rm=TRUE), n=length(which(is.finite(z))) ), by=list(plon, plat) ]
 
-      colnames(M) = c( "lon", "lat", paste( p$variabletomodel, c("mean", "sd", "n"), sep=".") )
-      M = setDF(M)
+      colnames(M) = c( "plon", "plat", paste( p$variabletomodel, c("mean", "sd", "n"), sep=".") )
+      M = planar2lonlat( M, p$aegis_proj4string_planar_km )
+
+      setDF(M)
 
       if (0) {
         bb = as.data.frame( t( simplify2array(
