@@ -90,8 +90,7 @@
       gc()
 
       M$z = M[[p$variabletomodel]]
-
-      library(data.table)
+ 
       setDT(M)
       M = M[, .(mean=mean(z, trim=0.05, na.rm=TRUE), sd=sd(z, na.rm=TRUE), n=length(which(is.finite(z))) ), by=list(plon, plat) ]
 
