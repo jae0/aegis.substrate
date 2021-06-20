@@ -5,6 +5,11 @@
 ## TODO:: add data collected by snow crab survey and any others for that matter
 require(aegis.substrate)
 
+p = substrate_parameters()
+
+M = substrate_db( p=p, DS="aggregated_data", redo=TRUE )  # will redo if not found .. not used here but used for data matching/lookup in other aegis projects that use bathymetry
+
+
 substrate_db ( DS="substrate.initial.redo" ) # bring in Kostelev's data ... stored as a SpatialGridDataFrame
 substrate_db ( DS="lonlat.highres.redo" ) # in future .. additional data would be added here
 

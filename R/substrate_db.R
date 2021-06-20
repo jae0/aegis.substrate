@@ -73,8 +73,8 @@
       }
 
       M = substrate_db( p=p, DS="lonlat.highres" )
-      M[,p$variabletomodel] = M$grainsize
-
+      setDT(M)
+      
       # p$quantile_bounds = c(0.0005, 0.9995)
       if (exists("quantile_bounds", p)) {
         TR = quantile(M[,p$variabletomodel], probs=p$quantile_bounds, na.rm=TRUE )
@@ -87,12 +87,8 @@
       M$plon = aegis_floor(M$plon / p$inputdata_spatial_discretization_planar_km + 1 ) * p$inputdata_spatial_discretization_planar_km
       M$plat = aegis_floor(M$plat / p$inputdata_spatial_discretization_planar_km + 1 ) * p$inputdata_spatial_discretization_planar_km
 
-      gc()
-
-      M$z = M[[p$variabletomodel]]
- 
       setDT(M)
-      M = M[, .(mean=mean(z, trim=0.05, na.rm=TRUE), sd=sd(z, na.rm=TRUE), n=length(which(is.finite(z))) ), by=list(plon, plat) ]
+      M = M[, .(mean=mean(grainsize, trim=0.05, na.rm=TRUE), sd=sd(grainsize, na.rm=TRUE), n=length(which(is.finite(grainsize))) ), by=list(plon, plat) ]
 
       colnames(M) = c( "plon", "plat", paste( p$variabletomodel, c("mean", "sd", "n"), sep=".") )
       M = planar2lonlat( M, p$aegis_proj4string_planar_km )
@@ -147,7 +143,7 @@
         }
       }
       xydata = substrate_db( p=p, DS="aggregated_data"   )  #
-      names(xydata)[which(names(xydata)=="z.mean" )] = "z"
+      names(xydata)[which(names(xydata)=="substrate.grainsize.mean" )] = "substrate.grainsize"
       xydata = xydata[ geo_subset( spatial_domain=p$spatial_domain, Z=xydata ) , ] # need to be careful with extrapolation ...  filter depths
 
       xydata = xydata[ , c("lon", "lat"  )]
