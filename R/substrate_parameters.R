@@ -35,6 +35,7 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
   p = parameters_add_without_overwriting( p, inputdata_spatial_discretization_planar_km = p$pres/2 )
    #  controls resolution of data prior to modelling (km .. ie 20 linear units smaller than the final discretization pres)
 
+  p$quantile_bounds = c(0.005, 0.995)  # trim off extreme values
 
   # ---------------------
 

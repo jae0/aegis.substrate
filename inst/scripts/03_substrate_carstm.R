@@ -29,7 +29,8 @@
     }
 
 # run model and obtain predictions
-  fit = carstm_model( p=p, M='substrate_db( p=p, DS="carstm_inputs" )' ) 
+  res = carstm_model( p=p, M='substrate_db( p=p, DS="carstm_inputs" )', redo_fit = TRUE ) 
+  # fit = carstm_model( p=p, DS="carstm_modelled_fit" )  # extract currently saved model fit
   
     # extract results
     if (0) {

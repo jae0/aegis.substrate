@@ -206,12 +206,14 @@
         # M = M[ M[, sample(.N, min(.N, p$carstm_inputs_prefilter_n) ), by=list(plon, plat)], .SD[i.V1], on=list(plon, plat), by=.EACHI]  # faster .. just a bit
        }
 
-      # p$quantile_bounds = c(0.0005, 0.9995)
-      if (exists("quantile_bounds", p)) {
-        TR = quantile(M[[p$variabletomodel]], probs=p$quantile_bounds, na.rm=TRUE ) # this was -1.7, 21.8 in 2015
-        keep = which( M[[p$variabletomodel]] >=  TR[1] & M[[p$variabletomodel]] <=  TR[2] )
-        if (length(keep) > 0 ) M = M[ keep, ]
-        # this was -1.7, 21.8 in 2015
+      if (p$carstm_inputs_prefilter != "aggregated") {
+        # aggregated data already have been truncated ... 
+        if (exists("quantile_bounds", p)) {
+          TR = quantile(M[[p$variabletomodel]], probs=p$quantile_bounds, na.rm=TRUE ) # this was -1.7, 21.8 in 2015
+          keep = which( M[[p$variabletomodel]] >=  TR[1] & M[[p$variabletomodel]] <=  TR[2] )
+          if (length(keep) > 0 ) M = M[ keep, ]
+          # this was -1.7, 21.8 in 2015
+        }
       }
 
       # levelplot(substrate.grainsize.mean~plon+plat, data=M, aspect="iso")
