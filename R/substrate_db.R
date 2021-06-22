@@ -215,7 +215,7 @@
       }
 
       # levelplot(substrate.grainsize.mean~plon+plat, data=M, aspect="iso")
-      sppoly$data_offset = drop_units(sppoly$au_sa_km2)
+      sppoly$data_offset = units::drop_units(sppoly$au_sa_km2)
       
       M = carstm_prepare_inputdata( p=p, M=M, sppoly=sppoly,
         lookup = c("bathymetry" ),
