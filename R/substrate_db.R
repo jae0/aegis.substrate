@@ -77,48 +77,26 @@
       
       # p$quantile_bounds = c(0.0005, 0.9995)
       if (exists("quantile_bounds", p)) {
-        TR = quantile(M[,p$variabletomodel], probs=p$quantile_bounds, na.rm=TRUE )
-        keep = which( M[,p$variabletomodel] >=  TR[1] & M[,p$variabletomodel] <=  TR[2] )
-        if (length(keep) > 0 ) M = M[ keep, ]
+        vn = "grainsize"
+        TR = quantile(M[[vn]], probs=p$quantile_bounds, na.rm=TRUE )
+        oo = which( M[[vn]] < TR[1])
+        if (length(oo) > 0) M[[vn]][oo] = TR[1]
+        oo = which( M[[vn]] > TR[2])
+        if (length(oo) > 0) M[[vn]][oo] = TR[2]
       }
 
-      M = lonlat2planar( M, p$aegis_proj4string_planar_km)  # ensure the use of correct projection
+      M = lonlat2planar( M, p$aegis_proj4string_planar_km, returntype="DT" )  # ensure the use of correct projection
 
       M$plon = aegis_floor(M$plon / p$inputdata_spatial_discretization_planar_km + 1 ) * p$inputdata_spatial_discretization_planar_km
       M$plat = aegis_floor(M$plat / p$inputdata_spatial_discretization_planar_km + 1 ) * p$inputdata_spatial_discretization_planar_km
 
-      setDT(M)
       M = M[, .(mean=mean(grainsize, trim=0.05, na.rm=TRUE), sd=sd(grainsize, na.rm=TRUE), n=length(which(is.finite(grainsize))) ), by=list(plon, plat) ]
 
       colnames(M) = c( "plon", "plat", paste( p$variabletomodel, c("mean", "sd", "n"), sep=".") )
       M = planar2lonlat( M, p$aegis_proj4string_planar_km )
 
       setDF(M)
-
-      if (0) {
-        bb = as.data.frame( t( simplify2array(
-          tapply( X=M[,p$variabletomodel], INDEX=list(paste(  M$plon, M$plat ) ),
-            FUN = function(w) { c(
-              mean(w, na.rm=TRUE),
-              sd(w, na.rm=TRUE),
-              length( which(is.finite(w)) )
-            ) }, simplify=TRUE )
-        )))
-        M = NULL
-        colnames(bb) = paste( p$variabletomodel, c("mean", "sd", "n"), sep=".")
-        plonplat = matrix( as.numeric( unlist(strsplit( rownames(bb), " ", fixed=TRUE))), ncol=2, byrow=TRUE)
-
-        bb$plon = plonplat[,1]
-        bb$plat = plonplat[,2]
-        plonplat = NULL
-
-        ii = which( is.finite( bb[, paste(p$variabletomodel, "mean", sep=".")] ))
-        M = bb[ii  ,]
-        bb =NULL
-        gc()
-        M = planar2lonlat( M, p$aegis_proj4string_planar_km)
-      }
-      
+   
       attr( M, "proj4string_planar" ) =  p$aegis_proj4string_planar_km
       attr( M, "proj4string_lonlat" ) =  projection_proj4string("lonlat_wgs84")
 
@@ -179,8 +157,6 @@
           return( M )
         }
       }
-
-      require(data.table)
 
       if (p$carstm_inputs_prefilter=="aggregated") {
         M = substrate_db ( p=p, DS="aggregated_data" )  # 16 GB in RAM just to store!
