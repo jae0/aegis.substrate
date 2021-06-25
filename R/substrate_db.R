@@ -85,7 +85,7 @@
         if (length(oo) > 0) M[[vn]][oo] = TR[2]
       }
 
-      M = lonlat2planar( M, p$aegis_proj4string_planar_km, returntype="DT" )  # ensure the use of correct projection
+      M = lonlat2planar( M, p$aegis_proj4string_planar_km )  # ensure the use of correct projection
 
       M$plon = aegis_floor(M$plon / p$inputdata_spatial_discretization_planar_km + 1 ) * p$inputdata_spatial_discretization_planar_km
       M$plat = aegis_floor(M$plat / p$inputdata_spatial_discretization_planar_km + 1 ) * p$inputdata_spatial_discretization_planar_km
@@ -171,7 +171,7 @@
         names(M)[which(names(M)=="grainsize" )] = p$variabletomodel
         M = M[ which( !duplicated(M)), ]
         M = M[ which( M$lon > p$corners$lon[1] & M$lon < p$corners$lon[2]  & M$lat > p$corners$lat[1] & M$lat < p$corners$lat[2] ), ]
-        M = lonlat2planar( M, proj.type=p$aegis_proj4string_planar_km, returntype="DT" )  # first ensure correct projection
+        M = lonlat2planar( M, proj.type=p$aegis_proj4string_planar_km)  # first ensure correct projection
 
       }
     

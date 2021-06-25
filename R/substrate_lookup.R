@@ -95,7 +95,7 @@ message("need to check::  [match( APS$AUID, as.character( sppoly$AUID ) )] ")
 
     LU = areal_units( p=pB )  #  poly associated with LU
     LU = sf::st_transform( LU, crs=st_crs(pB$aegis_proj4string_planar_km) )
-    bm = match( LU$AUID, LU_summ$AUID )
+    bm = match( LU$AUID, LU_summ$space )
     LU[[vnames]] = LU_summ[,vnames][ bm ]
     LU_summ = NULL
 

@@ -37,6 +37,11 @@
       fit = carstm_model( p=p, M=M ) # alt way of running
       # very large files .. slow 
       fit = carstm_model( p=p, DS="carstm_modelled_fit" )  # extract currently saved model fit
+  
+      fit$summary$dic$dic
+      fit$summary$dic$p.eff
+      fit$dyear
+
       plot(fit)
       plot(fit, plot.prior=TRUE, plot.hyperparameters=TRUE, plot.fixed.effects=FALSE )
     }
@@ -44,11 +49,6 @@
 # extract results and examine
   res = carstm_model( p=p, DS="carstm_modelled_summary"  ) # to load currently saved results
   
-    res$summary$dic$dic
-    res$summary$dic$p.eff
-    res$dyear
-
-
 
   plot_crs = p$aegis_proj4string_planar_km
   coastline=aegis.coastline::coastline_db( DS="eastcoast_gadm", project_to=plot_crs )
