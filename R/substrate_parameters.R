@@ -96,9 +96,8 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
     p = carstm_parameters( p=p )  # fill in anything missing with defaults and do some checks
 
     if ( p$inputdata_spatial_discretization_planar_km >= p$areal_units_resolution_km ) {
-      warning( "p$inputdata_spatial_discretization_planar_km >= p$areal_units_resolution_km " )
+      warning( "substrate p$inputdata_spatial_discretization_planar_km >= p$areal_units_resolution_km " )
     }
-    message ("p$areal_units_resolution_km: ", p$areal_units_resolution_km)
 
     return(p)
   }
