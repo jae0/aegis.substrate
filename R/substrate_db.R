@@ -90,7 +90,7 @@
       M$plon = aegis_floor(M$plon / p$inputdata_spatial_discretization_planar_km + 1 ) * p$inputdata_spatial_discretization_planar_km
       M$plat = aegis_floor(M$plat / p$inputdata_spatial_discretization_planar_km + 1 ) * p$inputdata_spatial_discretization_planar_km
 
-      M = M[, .(mean=mean(grainsize, trim=0.05, na.rm=TRUE), sd=sd(grainsize, na.rm=TRUE), n=length(which(is.finite(grainsize))) ), by=list(plon, plat) ]
+      M = M[, .(mean=mean(grainsize, na.rm=TRUE), sd=sd(grainsize, na.rm=TRUE), n=length(which(is.finite(grainsize))) ), by=list(plon, plat) ]
 
       colnames(M) = c( "plon", "plat", paste( p$variabletomodel, c("mean", "sd", "n"), sep=".") )
       M = planar2lonlat( M, p$aegis_proj4string_planar_km )
