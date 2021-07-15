@@ -28,8 +28,9 @@
   
     }
 
-# run model and obtain predictions
-  res = carstm_model( p=p, M='substrate_db( p=p, DS="carstm_inputs" )', redo_fit = TRUE ) 
+# run model and obtain predictions, don't invert random effects as it is lognormal .. multiplicative .. meaningless to invert them
+  res = carstm_model( p=p, M='substrate_db( p=p, DS="carstm_inputs" )', redo_fit = TRUE,  toinvert=c("fixed_effects", "predictions") ) 
+
   # fit = carstm_model( p=p, DS="carstm_modelled_fit" )  # extract currently saved model fit
   
     # extract results
@@ -48,50 +49,30 @@
 
 # extract results and examine
   res = carstm_model( p=p, DS="carstm_modelled_summary"  ) # to load currently saved results
-  
-
-  plot_crs = p$aegis_proj4string_planar_km
-  coastline=aegis.coastline::coastline_db( DS="eastcoast_gadm", project_to=plot_crs )
-  isobaths=aegis.bathymetry::isobath_db( depths=c(50, 100, 200, 400, 800), project_to=plot_crs )
-
+  areal_units_fn = attributes(sppoly)[["areal_units_fn"]]
+    fn_fit = carstm_filenames(p = p, returntype = "carstm_modelled_fit", 
+        areal_units_fn = areal_units_fn)
+   
   # maps of some of the results
-  vn = paste(p$variabletomodel, "predicted", sep=".")
-  outputdir = file.path( gsub( ".rdata", "", dirname(res$fn_res) ), "figures", vn )
+  outputdir = file.path( gsub( ".rdata", "", carstm_filenames(p, "carstm_modelled_fit") ), "figures" )
   if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
 
-  fn = file.path( outdir, paste("substrate_grain_size", "png", sep=".") )
-  carstm_map(  res=res, vn=vn, 
+  tmout = carstm_map(  res=res, vn="predictions", 
       palette="viridis",
-      coastline=coastline,
-      isobaths=isobaths,
-      main=paste( "Substrate grainsize",  vn ),
-      outfilename=fn
-    )  
+      main="Substrate grainsize", 
+      plot_elements=c( "isobaths", "coastline", "compass", "scale_bar", "legend" ),
+      outfilename= file.path( outputdir, paste("substrate_grain_size_carstm", "png", sep=".") ),
+      tmap_zoom= c((p$lon0+p$lon1)/2 - 0.5, (p$lat0+p$lat1)/2 -0.8, 6.5)
+  )  
+  tmout
 
 
-  vn = paste(p$variabletomodel, "random_sample_iid", sep=".")
-  carstm_map(  res=res, vn=vn, 
+  tmout = carstm_map(  res=res, vn= c( "random", "space", "combined" ), 
       palette="viridis",
-      coastline=coastline,
-      isobaths=isobaths,
-      main=paste( "Substrate grainsize",  vn )
-    )  
-
-  vn = paste(p$variabletomodel, "random_space_nonspatial", sep=".")
-  carstm_map(  res=res, vn=vn, 
-      palette="viridis",
-      coastline=coastline,
-      isobaths=isobaths,
-      main=paste( "Substrate grainsize",  vn )
-    )  
-
-  vn = paste(p$variabletomodel, "random_space_spatial", sep="." )
-  carstm_map(  res=res, vn=vn, 
-      palette="viridis",
-      coastline=coastline,
-      isobaths=isobaths,
-      main=paste( "Substrate grainsize",  vn )
-    )  
-
+      main="Substrate grainsize spatial errors",
+      plot_elements=c( "isobaths", "coastline", "compass", "scale_bar", "legend" ),
+      outfilename= file.path( outputdir, paste("substrate_grain_size_spatialeffect_carstm", "png", sep=".") ),
+      tmap_zoom= c((p$lon0+p$lon1)/2-0.5, (p$lat0+p$lat1)/2 -0.8, 6.5)
+  )  
 
 # end
