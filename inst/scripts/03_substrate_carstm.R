@@ -28,7 +28,8 @@
   
     }
 
-# run model and obtain predictions, don't invert random effects as it is lognormal .. multiplicative .. meaningless to invert them
+# run model and obtain predictions
+# random effects left on log scale  (easier to plot) .. must exponentiate to get the multiplicative factor  
   res = carstm_model( p=p, M='substrate_db( p=p, DS="carstm_inputs" )', redo_fit = TRUE,  toinvert=c("fixed_effects", "predictions") ) 
 
   # fit = carstm_model( p=p, DS="carstm_modelled_fit" )  # extract currently saved model fit
