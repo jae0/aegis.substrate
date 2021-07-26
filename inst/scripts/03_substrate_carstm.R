@@ -6,7 +6,7 @@
 
 
     # adjust based upon RAM requirements and ncores
-    inla.setOption(num.threads= floor( parallel::detectCores() / 3 ) )
+    inla.setOption( num.threads=6:2 )
     inla.setOption(blas.num.threads= 3 )
 
     if (0) {
@@ -30,8 +30,20 @@
 
 # run model and obtain predictions
 # random effects left on log scale  (easier to plot) .. must exponentiate to get the multiplicative factor  
-  res = carstm_model( p=p, M='substrate_db( p=p, DS="carstm_inputs" )', redo_fit = TRUE,  toinvert=c("fixed_effects", "predictions") ) 
+  # res = carstm_model( p=p, M=M, redo_fit = TRUE, verbose=TRUE ) 
+ 
+  
+  res = carstm_model( 
+    p=p, 
+    M='substrate_db( p=p, DS="carstm_inputs" )', 
+    redo_fit = TRUE,  
+    # control.inla = list( strategy='adaptive', int.strategy='eb' ),
+    # control.results  = list(return.marginals.random=TRUE, return.marginals.predictor=TRUE ), 
+      verbose=TRUE   
+  ) 
 
+ 
+ 
   # fit = carstm_model( p=p, DS="carstm_modelled_fit" )  # extract currently saved model fit
   
     # extract results
@@ -60,7 +72,7 @@
 
   tmout = carstm_map(  res=res, vn="predictions", 
       palette="viridis",
-      main="Substrate grainsize", 
+      title="Substrate grainsize", 
       plot_elements=c( "isobaths", "coastline", "compass", "scale_bar", "legend" ),
       outfilename= file.path( outputdir, paste("substrate_grain_size_carstm", "png", sep=".") ),
       tmap_zoom= c((p$lon0+p$lon1)/2 - 0.5, (p$lat0+p$lat1)/2 -0.8, 6.5)
@@ -70,7 +82,7 @@
 
   tmout = carstm_map(  res=res, vn= c( "random", "space", "combined" ), 
       palette="viridis",
-      main="Substrate grainsize spatial errors",
+      title="Substrate grainsize spatial errors",
       plot_elements=c( "isobaths", "coastline", "compass", "scale_bar", "legend" ),
       outfilename= file.path( outputdir, paste("substrate_grain_size_spatialeffect_carstm", "png", sep=".") ),
       tmap_zoom= c((p$lon0+p$lon1)/2-0.5, (p$lat0+p$lat1)/2 -0.8, 6.5)

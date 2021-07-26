@@ -85,7 +85,6 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
       if ( !exists("carstm_model_formula", p)  ) {
         p$carstm_model_formula = as.formula( paste(
          p$variabletomodel, ' ~ 1',
-             '+ f( uid, model="iid" )',
              '+ f( inla.group(z, method="quantile", n=7),  model="rw2", scale.model=TRUE, hyper=H$rw2)',
              '+ f( space, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, constr=TRUE, hyper=H$bym2)'
          ) )

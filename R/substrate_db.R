@@ -194,7 +194,9 @@
 
       # levelplot(substrate.grainsize.mean~plon+plat, data=M, aspect="iso")
       M = carstm_prepare_inputdata( p=p, M=M, sppoly=sppoly,  lookup = c("bathymetry" ) )
-
+      
+      i = dupliacted(M)
+      if (length(i) >0) M = M[-i, ] 
       attr( M, "proj4string_planar" ) =  p$aegis_proj4string_planar_km
       attr( M, "proj4string_lonlat" ) =  projection_proj4string("lonlat_wgs84")
 
