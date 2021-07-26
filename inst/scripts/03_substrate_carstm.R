@@ -29,18 +29,7 @@
     }
 
 # run model and obtain predictions
-# random effects left on log scale  (easier to plot) .. must exponentiate to get the multiplicative factor  
-  # res = carstm_model( p=p, M=M, redo_fit = TRUE, verbose=TRUE ) 
- 
-  
-  res = carstm_model( 
-    p=p, 
-    M='substrate_db( p=p, DS="carstm_inputs" )', 
-    redo_fit = TRUE,  
-    # control.inla = list( strategy='adaptive', int.strategy='eb' ),
-    # control.results  = list(return.marginals.random=TRUE, return.marginals.predictor=TRUE ), 
-      verbose=TRUE   
-  ) 
+  res = carstm_model( p=p, M='substrate_db( p=p, DS="carstm_inputs" )', redo_fit = TRUE,  verbose=TRUE ) 
 
  
  
@@ -62,7 +51,8 @@
 
 # extract results and examine
   res = carstm_model( p=p, DS="carstm_modelled_summary"  ) # to load currently saved results
-  areal_units_fn = attributes(sppoly)[["areal_units_fn"]]
+
+  areal_units_fn = attributes(res$sppoly)[["areal_units_fn"]]
     fn_fit = carstm_filenames(p = p, returntype = "carstm_modelled_fit", 
         areal_units_fn = areal_units_fn)
    
@@ -70,19 +60,20 @@
   outputdir = file.path( gsub( ".rdata", "", carstm_filenames(p, "carstm_modelled_fit") ), "figures" )
   if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
 
+
   tmout = carstm_map(  res=res, vn="predictions", 
       palette="viridis",
-      title="Substrate grainsize", 
+      title="Substrate grainsize (mm)", 
       plot_elements=c( "isobaths", "coastline", "compass", "scale_bar", "legend" ),
       outfilename= file.path( outputdir, paste("substrate_grain_size_carstm", "png", sep=".") ),
       tmap_zoom= c((p$lon0+p$lon1)/2 - 0.5, (p$lat0+p$lat1)/2 -0.8, 6.5)
   )  
   tmout
 
-
+# random effects  ..i.e.,  deviation from lognormal model
   tmout = carstm_map(  res=res, vn= c( "random", "space", "combined" ), 
       palette="viridis",
-      title="Substrate grainsize spatial errors",
+      title="Substrate grainsize spatial errors (mm)",
       plot_elements=c( "isobaths", "coastline", "compass", "scale_bar", "legend" ),
       outfilename= file.path( outputdir, paste("substrate_grain_size_spatialeffect_carstm", "png", sep=".") ),
       tmap_zoom= c((p$lon0+p$lon1)/2-0.5, (p$lat0+p$lat1)/2 -0.8, 6.5)
