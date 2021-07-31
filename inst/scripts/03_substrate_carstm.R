@@ -2,7 +2,7 @@
 # construct basic parameter list defining the main characteristics of the study
 # and some plotting parameters (bounding box, projection, bathymetry layout, coastline)
 
-  p = aegis.substrate::substrate_parameters( project_class="carstm"  )
+  p = aegis.substrate::substrate_parameters( project_class="carstm", areal_units_resolution_km=10  )  #10 km grid gives about 2000 au .. in the right range for optimal solutions that are not too slow, 5 km gives unstable results .. 
 
 
     # adjust based upon RAM requirements and ncores
@@ -78,5 +78,7 @@
       outfilename= file.path( outputdir, paste("substrate_grain_size_spatialeffect_carstm", "png", sep=".") ),
       tmap_zoom= c((p$lon0+p$lon1)/2-0.5, (p$lat0+p$lat1)/2 -0.8, 6.5)
   )  
+
+  tmout
 
 # end
