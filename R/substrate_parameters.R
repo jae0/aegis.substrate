@@ -56,7 +56,7 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
     p = parameters_add_without_overwriting( p,
       areal_units_xydata = "substrate_db(p=p, DS='areal_units_input')",
       areal_units_type = "lattice", # "stmv_fields" to use ageis fields instead of carstm fields ... note variables are not the same
-      areal_units_resolution_km = 10, # default in case not provided ... 25 km dim of lattice ~ 1 hr; 5km = 79hrs; 2km = ?? hrs
+      areal_units_resolution_km = 25, # default in case not provided ... 25 km dim of lattice ~ 1 hr; 5km = 79hrs; 2km = ?? hrs
       areal_units_proj4string_planar_km = p$aegis_proj4string_planar_km,  # coord system to use for areal estimation and gridding for carstm
       # areal_units_proj4string_planar_km = projection_proj4string("omerc_nova_scotia")  # coord system to use for areal estimation and gridding for carstm
       areal_units_constraint_ntarget = 500,  
@@ -91,8 +91,6 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
       }
       if ( !exists("carstm_model_family", p)  )  p$carstm_model_family = "lognormal"
     }
-
-    p = carstm_parameters( p=p )  # fill in anything missing with defaults and do some checks
 
     if ( p$inputdata_spatial_discretization_planar_km >= p$areal_units_resolution_km ) {
       warning( "substrate p$inputdata_spatial_discretization_planar_km >= p$areal_units_resolution_km " )
