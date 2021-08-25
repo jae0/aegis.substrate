@@ -29,7 +29,7 @@
     }
 
 # run model and obtain predictions
-  res = carstm_model( p=p, M='substrate_db( p=p, DS="carstm_inputs" )', redo_fit = TRUE,  verbose=TRUE ) 
+  res = carstm_model( p=p, data='substrate_db( p=p, DS="carstm_inputs" )', redo_fit = TRUE,  verbose=TRUE ) 
 
  
  
@@ -37,7 +37,7 @@
   
     # extract results
     if (0) {
-      fit = carstm_model( p=p, M=M ) # alt way of running
+      fit = carstm_model( p=p, data=M ) # alt way of running
       # very large files .. slow 
       fit = carstm_model( p=p, DS="carstm_modelled_fit" )  # extract currently saved model fit
   
