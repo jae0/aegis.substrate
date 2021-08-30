@@ -6,8 +6,8 @@
 
 
     # adjust based upon RAM requirements and ncores
-    inla.setOption( num.threads=6:2 )
-    inla.setOption(blas.num.threads= 3 )
+    # inla.setOption( num.threads="6:2" )
+    # inla.setOption(blas.num.threads= 3 )
 
     if (0) {
       p$fraction_todrop = 1/4 # aggressiveness of solution finding ( fraction of counts to drop each iteration)
