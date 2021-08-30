@@ -29,10 +29,13 @@
     }
 
 # run model and obtain predictions
-  res = carstm_model( p=p, data='substrate_db( p=p, DS="carstm_inputs" )', redo_fit = TRUE,  verbose=TRUE ) 
-
- 
- 
+  fit = carstm_model( 
+    p=p, 
+    data='substrate_db( p=p, DS="carstm_inputs" )', 
+    num.threads="4:2",
+    redo_fit = TRUE,  
+    verbose=TRUE 
+  ) 
   # fit = carstm_model( p=p, DS="carstm_modelled_fit" )  # extract currently saved model fit
   
     # extract results
@@ -51,11 +54,9 @@
 
 # extract results and examine
   res = carstm_model( p=p, DS="carstm_modelled_summary"  ) # to load currently saved results
+  res$summary
 
-  areal_units_fn = attributes(res$sppoly)[["areal_units_fn"]]
-    fn_fit = carstm_filenames(p = p, returntype = "carstm_modelled_fit", 
-        areal_units_fn = areal_units_fn)
-   
+  
   # maps of some of the results
   outputdir = file.path( gsub( ".rdata", "", carstm_filenames(p, returntype="carstm_modelled_fit") ), "figures" )
   if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
