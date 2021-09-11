@@ -35,6 +35,8 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
   p = parameters_add_without_overwriting( p, inputdata_spatial_discretization_planar_km = p$pres/4 )
    #  controls resolution of data prior to modelling (km .. ie 20 linear units smaller than the final discretization pres)
 
+  p$discretization = discretizations(p=p$discretization)  # key for discretization levels
+
   p$quantile_bounds = c(0.005, 0.995)  # trim off extreme values
 
   # ---------------------
@@ -239,12 +241,11 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
       stmv_local_modelcall = paste(
         'inla(
           formula = z ~ 1
-            + f(uid, model="iid" ),
             + f( space, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, constr=TRUE, hyper=H$bym2),
-          family = "normal",
+          family = "gaussian",
           data= dat,
-          control.compute=list(dic=TRUE, waic=TRUE, cpo=FALSE, config=FALSE),  # config=TRUE if doing posterior simulations
-          control.results=list(return.marginals.random=TRUE, return.marginals.predictor=TRUE ),
+          inla.mode="experimental",
+          control.compute=list(dic=TRUE, waic=TRUE, cpo=FALSE, config=FALSE, return.marginals.predictor=TRUE),  # config=TRUE if doing posterior simulations
           control.predictor=list(compute=FALSE, link=1 ),
           control.fixed=H$fixed,  # priors for fixed effects, generic is ok
           verbose=FALSE
