@@ -91,7 +91,7 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
       if ( !exists("formula", p)  ) {
         p$formula = as.formula( paste(
          p$variabletomodel, ' ~ 1',
-             '+ f( inla.group(z, method="quantile", n=9),  model="rw2", scale.model=TRUE, hyper=H$rw2)',
+             '+ f( inla.group(z, method="quantile", n=11),  model="rw2", scale.model=TRUE, hyper=H$rw2)',
              '+ f( space, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, hyper=H$bym2)'
          ) )
       }
