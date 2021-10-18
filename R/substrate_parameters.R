@@ -82,7 +82,7 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
         # generics using "default" carstm models and stmv solutions for spatial effects
         p$carstm_lookup_parameters = list()
         p$carstm_lookup_parameters = parameters_add_without_overwriting( p$carstm_lookup_parameters,
-          bathymetry = bathymetry_parameters( project_class="stmv", spatial_domain=p$spatial_domain, stmv_model_label="default"  )
+          bathymetry = bathymetry_parameters( project_class="stmv"  )
         )
     }
 
