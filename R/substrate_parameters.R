@@ -98,9 +98,6 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
       if ( !exists("family", p)  )  p$family = "lognormal"
     }
 
-    if ( p$inputdata_spatial_discretization_planar_km >= p$areal_units_resolution_km ) {
-      warning( "substrate p$inputdata_spatial_discretization_planar_km >= p$areal_units_resolution_km " )
-    }
 
     return(p)
   }
@@ -212,10 +209,6 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
 
     p = aegis_parameters( p=p, DS="stmv" )  # get defaults
 
-    if ( p$inputdata_spatial_discretization_planar_km >= p$pres ) {
-      warning( "p$inputdata_spatial_discretization_planar_km >= p$pres " )
-    }
-  #    message ("p$stmv_distance_statsgrid: ", p$stmv_distance_statsgrid)
 
     return(p)
   }
@@ -278,11 +271,6 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
 
     p = aegis_parameters( p=p, DS="stmv" )  # get defaults
 
-
-    if ( p$inputdata_spatial_discretization_planar_km >= p$pres ) {
-      warning( "p$inputdata_spatial_discretization_planar_km >= p$pres " )
-    }
-    message ("p$stmv_distance_statsgrid: ", p$stmv_distance_statsgrid)
     return(p)
 
   }
