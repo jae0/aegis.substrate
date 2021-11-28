@@ -24,6 +24,9 @@
 
 
       # prepare data
+
+      sppoly = areal_units( p=p  )  # this has already been done in aegis.polygons::01 polygons.R .. should nto have to redo
+   
       M = substrate_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=TRUE )  # will redo if not found
   
     }
@@ -32,7 +35,7 @@
   fit = carstm_model( 
     p=p, 
     sppoly=sppoly,
-    data='substrate_db( p=p, DS="carstm_inputs", sppoly=sppoly )', 
+    data=M = substrate_db( p=p, DS="carstm_inputs", sppoly=sppoly), 
     num.threads="4:2",
     redo_fit = TRUE,  
     verbose=TRUE 
