@@ -12,7 +12,7 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
   p$libs = unique( c( p$libs, RLibrary ( "colorspace",  "lubridate", "lattice",
     "parallel",  "sf", "sp", "GADMTools", "INLA" , "data.table" ) ) )
 
-  p$libs = unique( c( p$libs, project.library ( "aegis", "aegis.bathymetry", "aegis.coastline", "aegis.polygons", "aegis.substrate" ) ) )
+  p$libs = unique( c( p$libs, project.library ( "aegis", "aegis.bathymetry", "aegis.coastline", "aegis.polygons", "aegis.substrate", "aegis.survey" ) ) )
 
   p = parameters_add_without_overwriting( p, project_name = project_name )
   p = parameters_add_without_overwriting( p, data_root = project.datadirectory( "aegis", p$project_name ) )
@@ -35,7 +35,7 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
   p = parameters_add_without_overwriting( p, inputdata_spatial_discretization_planar_km = p$pres/4 )
    #  controls resolution of data prior to modelling (km .. ie 20 linear units smaller than the final discretization pres)
 
-  p$discretization = discretizations(p=p$discretization)  # key for discretization levels
+  p$discretization = aegis.survey::discretizations(p=p$discretization)  # key for discretization levels
 
   p$quantile_bounds = c(0.005, 0.995)  # trim off extreme values
 

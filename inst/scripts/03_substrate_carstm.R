@@ -24,14 +24,15 @@
 
 
       # prepare data
-      M = substrate_db( p=p, DS="carstm_inputs", redo=TRUE )  # will redo if not found
+      M = substrate_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=TRUE )  # will redo if not found
   
     }
 
 # run model and obtain predictions
   fit = carstm_model( 
     p=p, 
-    data='substrate_db( p=p, DS="carstm_inputs" )', 
+    sppoly=sppoly,
+    data='substrate_db( p=p, DS="carstm_inputs", sppoly=sppoly )', 
     num.threads="4:2",
     redo_fit = TRUE,  
     verbose=TRUE 
@@ -40,9 +41,9 @@
   
     # extract results
     if (0) {
-      fit = carstm_model( p=p, data=M ) # alt way of running
+      fit = carstm_model( p=p, data=M, sppoly=sppoly ) # alt way of running
       # very large files .. slow 
-      fit = carstm_model( p=p, DS="carstm_modelled_fit" )  # extract currently saved model fit
+      fit = carstm_model( p=p, DS="carstm_modelled_fit", sppoly=sppoly )  # extract currently saved model fit
   
       fit$summary$dic$dic
       fit$summary$dic$p.eff
@@ -53,7 +54,7 @@
     }
 
 # extract results and examine
-  res = carstm_model( p=p, DS="carstm_modelled_summary"  ) # to load currently saved results
+  res = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  ) # to load currently saved results
   res$summary
 
   
@@ -63,6 +64,7 @@
 
 
   tmout = carstm_map(  res=res, vn="predictions", 
+      sppoly=sppoly,
       palette="viridis",
       title="Substrate grainsize (mm)", 
       plot_elements=c( "isobaths", "coastline", "compass", "scale_bar", "legend" ),
@@ -73,6 +75,7 @@
 
 # random effects  ..i.e.,  deviation from lognormal model
   tmout = carstm_map(  res=res, vn= c( "random", "space", "combined" ), 
+      sppoly=sppoly,
       palette="viridis",
       title="Substrate grainsize spatial errors (mm)",
       plot_elements=c( "isobaths", "coastline", "compass", "scale_bar", "legend" ),
