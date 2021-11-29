@@ -194,7 +194,7 @@
 
       # levelplot(substrate.grainsize.mean~plon+plat, data=M, aspect="iso")
       M = carstm_prepare_inputdata( p=p, M=M, sppoly=sppoly,  lookup_parameters = c("bathymetry" ) )
-      
+      # vars_to_retain = c("totno", "totwgt", "pa", "meansize", "data_offset", "gear", "data.source", "id")
       # remove duplicated data .. helps with variance estimation
 #      i = duplicated(M)
 

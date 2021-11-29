@@ -2,7 +2,7 @@
 # construct basic parameter list defining the main characteristics of the study
 # and some plotting parameters (bounding box, projection, bathymetry layout, coastline)
 
-  p = aegis.substrate::substrate_parameters( project_class="carstm", areal_units_resolution_km=10  )  #10 km grid gives about 2000 au .. in the right range for optimal solutions that are not too slow, 5 km gives unstable results .. 
+  p = aegis.substrate::substrate_parameters( project_class="carstm", areal_units_resolution_km=5  )  #10 km grid gives about 2000 au .. in the right range for optimal solutions that are not too slow, 5 km gives stable results .. 
 
 
     # adjust based upon RAM requirements and ncores
@@ -35,7 +35,7 @@
   fit = carstm_model( 
     p=p, 
     sppoly=sppoly,
-    data=M = substrate_db( p=p, DS="carstm_inputs", sppoly=sppoly), 
+    data= substrate_db( p=p, DS="carstm_inputs", sppoly=sppoly), 
     num.threads="4:2",
     redo_fit = TRUE,  
     verbose=TRUE 
