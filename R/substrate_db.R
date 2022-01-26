@@ -109,9 +109,10 @@
    # ------------------------------
 
     if ( DS=="areal_units_input" ) {
-      outdir = carstm_filenames(p, "output_directory")
-      fn = file.path( outdir,  "areal_units_input.rdata" )
-      if ( !file.exists( outdir)) dir.create( outdir, recursive=TRUE, showWarnings=FALSE )
+      
+      outdir = file.path( p$datadir, "areal_units" ) 
+      fn = file.path( outdir, paste( "areal_units_input~", p$carstm_model_label, ".rdata", sep="" )
+      if ( !file.exists(outdir)) dir.create( outdir, recursive=TRUE, showWarnings=FALSE )
 
       xydata = NULL
       if (!redo)  {
