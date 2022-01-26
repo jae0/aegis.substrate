@@ -110,8 +110,8 @@
 
     if ( DS=="areal_units_input" ) {
       
-      outdir = file.path( p$datadir, "areal_units" ) 
-      fn = file.path( outdir, paste( "areal_units_input~", p$carstm_model_label, ".rdata", sep="" ) )
+      outdir = file.path( p$data_root, "modelled", p$carstm_model_label ) 
+      fn = file.path( outdir, "areal_units_input.rdata"  )
       if ( !file.exists(outdir)) dir.create( outdir, recursive=TRUE, showWarnings=FALSE )
 
       xydata = NULL
