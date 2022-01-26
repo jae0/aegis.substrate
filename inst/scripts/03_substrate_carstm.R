@@ -62,30 +62,33 @@
 
   
   # maps of some of the results
-  outputdir = file.path( gsub( ".rdata", "", carstm_filenames(p, returntype="carstm_modelled_fit") ), "figures" )
+  outputdir = file.path(p$data_root, "maps", p$carstm_model_label )
   if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
-
 
   tmout = carstm_map(  res=res, vn="predictions", 
       sppoly=sppoly,
       palette="viridis",
       title="Substrate grainsize (mm)", 
       plot_elements=c( "isobaths", "coastline", "compass", "scale_bar", "legend" ),
-      outfilename= file.path( outputdir, paste("substrate_grain_size_carstm", "png", sep=".") ),
       tmap_zoom= c((p$lon0+p$lon1)/2 - 0.5, (p$lat0+p$lat1)/2 -0.8, 6.5)
   )  
   tmout
 
+  outfilename= file.path( outputdir, paste("substrate_grain_size_carstm", "png", sep=".") )
+  mapview::mapshot( tmap_leaflet(tmout), file=outfilename, vwidth = 1600, vheight = 1200 )
+  
 # random effects  ..i.e.,  deviation from lognormal model
   tmout = carstm_map(  res=res, vn= c( "random", "space", "combined" ), 
       sppoly=sppoly,
       palette="viridis",
       title="Substrate grainsize spatial errors (mm)",
       plot_elements=c( "isobaths", "coastline", "compass", "scale_bar", "legend" ),
-      outfilename= file.path( outputdir, paste("substrate_grain_size_spatialeffect_carstm", "png", sep=".") ),
       tmap_zoom= c((p$lon0+p$lon1)/2-0.5, (p$lat0+p$lat1)/2 -0.8, 6.5)
   )  
-
   tmout
+ 
+  outfilename= file.path( outputdir, paste("substrate_grain_size_spatialeffect_carstm", "png", sep=".") )
+  mapview::mapshot( tmap_leaflet(tmout), file=outfilename, vwidth = 1600, vheight = 1200 )
+  
 
 # end
