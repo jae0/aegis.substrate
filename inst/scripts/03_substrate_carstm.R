@@ -38,7 +38,9 @@
       data= substrate_db( p=p, DS="carstm_inputs", sppoly=sppoly), 
       num.threads="4:2",
       theta = c( 1.710, 3.729, 0.008, 5.591 ), 
-      redo_fit = TRUE,  
+      redo_fit=TRUE, # to start optim from a solution close to the final in 2021 ... 
+      # redo_fit=FALSE, # to start optim from a solution close to the final in 2021 ... 
+      # debug = TRUE,
       verbose=TRUE 
     ) 
     # fit = carstm_model( p=p, DS="carstm_modelled_fit" )  # extract currently saved model fit
