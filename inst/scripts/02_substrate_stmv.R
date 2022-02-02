@@ -1,4 +1,9 @@
 
+NOTE::: This takes about 1 days to run on a fast machine 
+NOTE::: Do not run unless you want to want to update the lookup tables from stmv
+NOTE::: Choose your settings carefully (below) 
+
+
 ## NOTE:: substrate size is really only relevant for SSE/snowcrab domain right now as no
 ##        other data source has been found/identified
 ##        but working at the size of canada.east.highres for compatibility with bathymetry
