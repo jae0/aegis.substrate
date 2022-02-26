@@ -64,34 +64,48 @@
     res$summary
 
     
+    # bbox = c(-71.5, 41, -52.5,  50.5 )
+    additional_features = additional_features_tmap( 
+        p=p0, 
+        isobaths=c( 10, 100, 200, 300, 500, 1000 ), 
+        coastline =  c("canada"), 
+        xlim=c(-80,-40), 
+        ylim=c(38, 60) 
+    )
+
     # maps of some of the results
     outputdir = file.path(p$data_root, "maps", p$carstm_model_label )
     if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
+
+    outfilename= file.path( outputdir, paste("substrate_grain_size_carstm", "png", sep=".") )
 
     tmout = carstm_map(  res=res, vn="predictions", 
         sppoly=sppoly,
         palette="viridis",
         title="Substrate grainsize (mm)", 
-        plot_elements=c( "isobaths",  "compass", "scale_bar", "legend" ),
-        tmap_zoom= c((p$lon0+p$lon1)/2 - 0.5, (p$lat0+p$lat1)/2 -0.8, 6.5)
+        plot_elements=c(  "compass", "scale_bar", "legend" ),
+        additional_features=additional_features,
+        outfilename=outfilename
     )  
     tmout
 
-    outfilename= file.path( outputdir, paste("substrate_grain_size_carstm", "png", sep=".") )
-    mapview::mapshot( tmap_leaflet(tmout), file=outfilename, vwidth = 1600, vheight = 1200 )
-    
-  # random effects  ..i.e.,  deviation from lognormal model
+ 
+
+  # random effects  ..i.e.,  deviation from lognormal model ( pure spatial effect )
+    outfilename= file.path( outputdir, paste("substrate_grain_size_spatialeffect_carstm", "png", sep=".") )
     tmout = carstm_map(  res=res, vn= c( "random", "space", "combined" ), 
         sppoly=sppoly,
         palette="viridis",
         title="Substrate grainsize spatial errors (mm)",
-        plot_elements=c( "isobaths",  "compass", "scale_bar", "legend" ),
-        tmap_zoom= c((p$lon0+p$lon1)/2-0.5, (p$lat0+p$lat1)/2 -0.8, 6.5)
+        plot_elements=c(  "compass", "scale_bar", "legend" ),
+        additional_features=additional_features,
+        outfilename=outfilename
     )  
     tmout
   
-    outfilename= file.path( outputdir, paste("substrate_grain_size_spatialeffect_carstm", "png", sep=".") )
-    mapview::mapshot( tmap_leaflet(tmout), file=outfilename, vwidth = 1600, vheight = 1200 )
-    
+
+
+
+
 
   # end
