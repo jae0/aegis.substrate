@@ -142,9 +142,9 @@
       sppoly = st_transform(sppoly, crs=crs_lonlat )
       areal_units_fn = attributes(sppoly)[["areal_units_fn"]]
 
-      fn = carstm_filenames( p=p, returntype="carstm_inputs", areal_units_fn=areal_units_fn )
+      fn = file.path( p$modeldir, p$carstm_model_label, paste("carstm_inputs", areal_units_fn, sep="_") )
       if (p$carstm_inputs_prefilter =="rawdata") {
-        fn = carstm_filenames( p=p, returntype="carstm_inputs_rawdata", areal_units_fn=areal_units_fn )
+        fn = file.path( p$modeldir, p$carstm_model_label, paste("carstm_inputs_rawdata", areal_units_fn, sep="_") )
       }
 
       # inputs are shared across various secneario using the same polys
