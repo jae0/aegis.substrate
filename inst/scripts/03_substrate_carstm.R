@@ -32,15 +32,16 @@
     }
 
   # run model and obtain predictions
-    fit = carstm_model( 
+    res = carstm_model( 
       p=p, 
       sppoly=areal_units( p=p  ),
       data= substrate_db( p=p, DS="carstm_inputs", sppoly=sppoly), 
-      num.threads="4:2",
-      theta = c( 1.710, 3.729, 0.008, 5.591 ), 
+      nposteriors=500,
       redo_fit=TRUE, # to start optim from a solution close to the final in 2021 ... 
       # redo_fit=FALSE, # to start optim from a solution close to the final in 2021 ... 
       # debug = TRUE,
+      control.mode = list( restart=FALSE, theta= c( 1.710, 3.588, 0.008, 5.662 ) ),  
+      num.threads="4:2",
       verbose=TRUE 
     ) 
     # fit = carstm_model( p=p, DS="carstm_modelled_fit" )  # extract currently saved model fit
@@ -66,7 +67,7 @@
     
     # bbox = c(-71.5, 41, -52.5,  50.5 )
     additional_features = additional_features_tmap( 
-        p=p0, 
+        p=p, 
         isobaths=c( 10, 100, 200, 300, 500, 1000 ), 
         coastline =  c("canada"), 
         xlim=c(-80,-40), 
