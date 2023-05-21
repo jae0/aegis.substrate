@@ -106,6 +106,22 @@
   
 
 
+  predictions_errors_removed = posterior_summary( res$sims$predictions - res$sims$space$iid)
+
+  outfilename= file.path( outputdir, "substrate_denoised_carstm.png")
+
+  sppoly$s_denoised = predictions_errors_removed$mean
+  tmout = carstm_map( vn="s_denoised", 
+    sppoly = sppoly,
+    title="Substrate denoised",
+    palette="-Spectral",
+    plot_elements=c(  "compass", "scale_bar", "legend" ),
+    additional_features=additional_features,
+    outfilename=outfilename
+  )
+  tmout
+
+
 
 
 
