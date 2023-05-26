@@ -27,7 +27,7 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
     variabletomodel = "substrate.grainsize",
     spatial_domain = "canada.east.highres",
     spatial_domain_subareas = c( "canada.east",  "SSE", "SSE.mpa" , "snowcrab"),  # this is for bathymetry_db, not stmv
-    aegis_dimensionality="space"
+    dimensionality="space"
   )
 
   p = spatial_parameters( p=p)  # default (= only supported resolution of 0.2 km discretization)  .. do NOT change
