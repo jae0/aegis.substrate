@@ -198,6 +198,7 @@
 
       # remove duplicated data .. helps with variance estimation
 #      i = duplicated(M)
+      M$space = as.character(M$AUID)
 
 #      if (length(i) >0) M = M[-i, ] 
       attr( M, "proj4string_planar" ) =  p$aegis_proj4string_planar_km
