@@ -36,6 +36,7 @@
       p=p, 
       sppoly=areal_units( p=p  ),
       data= substrate_db( p=p, DS="carstm_inputs", sppoly=sppoly), 
+      space_id = sppoly$AUID,
       nposteriors=1000,
       redo_fit=TRUE, # to start optim from a solution close to the final in 2021 ... 
       # redo_fit=FALSE, # to start optim from a solution close to the final in 2021 ... 

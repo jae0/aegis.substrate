@@ -198,7 +198,7 @@
 
       # remove duplicated data .. helps with variance estimation
 #      i = duplicated(M)
-      M$space = match( M$AUID, sppoly$AUID) 
+      M$space = match( M$AUID, sppoly$AUID)  # for bym/car require index matching nb graph
 
 #      if (length(i) >0) M = M[-i, ] 
       attr( M, "proj4string_planar" ) =  p$aegis_proj4string_planar_km
