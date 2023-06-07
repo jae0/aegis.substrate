@@ -41,7 +41,8 @@
       redo_fit=TRUE, # to start optim from a solution close to the final in 2021 ... 
       # redo_fit=FALSE, # to start optim from a solution close to the final in 2021 ... 
       # debug = TRUE,
-      control.mode = list( restart=FALSE, theta= c( 1.710, 3.588, 0.008, 5.662 ) ),  
+      theta = c( 1.710, 3.588, 0.008, 5.662 ) ,
+      # control.mode = list( restart=FALSE, theta= c( 1.710, 3.588, 0.008, 5.662 ) ),  
       num.threads="4:2",
       verbose=TRUE 
     ) 
