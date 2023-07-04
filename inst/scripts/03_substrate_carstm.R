@@ -19,7 +19,7 @@
       # to recreate the underlying data
       # xydata=substrate_db(p=p, DS="areal_units_input", redo=TRUE)
 
-      sppoly = areal_units( p=p , hull_ratio=0.01, redo=TRUE )  # this has already been done in aegis.polygons::01 polygons.R .. should nto have to redo
+      sppoly = areal_units( p=p, redo=TRUE )  # this has already been done in aegis.polygons::01 polygons.R .. should nto have to redo
       plot( sppoly[ "AUID" ] )
 
 
