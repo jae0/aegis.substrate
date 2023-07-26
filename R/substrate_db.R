@@ -28,6 +28,7 @@
         load( filename )
         return ( substrate )
       }
+      message("FIX ME::: sp, maptools deprecated, use sf/stars")
       proj4.params = "+proj=utm +zone=20 +ellps=GRS80  +datum=NAD83 +units=m" #resolution is 500m X 500m
       substrate = sp::read.asciigrid( rawdata.file, proj4string=CRS( proj4.params ), colname="grainsize" )  ## mm
       save( substrate, file=filename, compress=TRUE )
