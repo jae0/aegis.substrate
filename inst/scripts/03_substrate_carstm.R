@@ -31,12 +31,15 @@
   
     }
 
+
+    p$space_name = sppoly$AUID 
+    p$space_id = 1:nrow(sppoly)  # numst match M$space
+  
   # run model and obtain predictions
     res = carstm_model( 
       p=p, 
       sppoly=areal_units( p=p  ),
       data= substrate_db( p=p, DS="carstm_inputs", sppoly=sppoly), 
-      space_id = sppoly$AUID,
       nposteriors=1000,
       redo_fit=TRUE, # to start optim from a solution close to the final in 2021 ... 
       # redo_fit=FALSE, # to start optim from a solution close to the final in 2021 ... 
@@ -68,10 +71,10 @@
 
     
     # bbox = c(-71.5, 41, -52.5,  50.5 )
-    additional_features = additional_features_tmap( 
+    additional_features = features_to_add( 
         p=p, 
-        isobaths=c( 10, 100, 200, 300, 500, 1000 ), 
-        coastline =  c("canada"), 
+        isobaths=c( 100, 200, 300, 400, 500 ), 
+        coastline =  c("canada", "us"), 
         xlim=c(-80,-40), 
         ylim=c(38, 60) 
     )
@@ -82,29 +85,27 @@
 
     outfilename= file.path( outputdir, paste("substrate_grain_size_carstm", "png", sep=".") )
 
-    tmout = carstm_map(  res=res, vn="predictions", 
+    plt = carstm_map(  res=res, vn="predictions", 
         sppoly=sppoly,
-        palette="viridis",
         title="Substrate grainsize (mm)", 
-        plot_elements=c(  "compass", "scale_bar", "legend" ),
+        colors=rev(RColorBrewer::brewer.pal(5, "RdYlBu")),
         additional_features=additional_features,
         outfilename=outfilename
     )  
-    tmout
+    plt
 
  
 
   # random effects  ..i.e.,  deviation from lognormal model ( pure spatial effect )
     outfilename= file.path( outputdir, paste("substrate_grain_size_spatialeffect_carstm", "png", sep=".") )
-    tmout = carstm_map(  res=res, vn= c( "random", "space", "combined" ), 
+    plt = carstm_map(  res=res, vn= c( "random", "space", "combined" ), 
         sppoly=sppoly,
-        palette="viridis",
         title="Substrate grainsize spatial errors (mm)",
-        plot_elements=c(  "compass", "scale_bar", "legend" ),
+        colors=rev(RColorBrewer::brewer.pal(5, "RdYlBu")),
         additional_features=additional_features,
         outfilename=outfilename
     )  
-    tmout
+    plt
   
  
 
