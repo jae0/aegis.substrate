@@ -240,7 +240,7 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
             + f( space, model="bym2", graph=slot(sppoly, "nb"), scale.model=TRUE, constr=TRUE, hyper=H$bym2),
           family = "gaussian",
           data= dat,
-          inla.mode="experimental",
+          inla.mode="compact",
           control.compute=list(dic=TRUE, waic=TRUE, cpo=FALSE, config=FALSE, return.marginals.predictor=TRUE),  # config=TRUE if doing posterior simulations
           control.predictor=list(compute=FALSE, link=1 ),
           control.fixed=H$fixed,  # priors for fixed effects, generic is ok
