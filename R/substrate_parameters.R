@@ -9,7 +9,7 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
   # create/update library list
 
   p$libs = unique( c( p$libs, RLibrary ( "colorspace",  "lubridate", "lattice",
-    "parallel",  "sf", "GADMTools", "INLA" , "data.table" ) ) )
+    "parallel",  "sf", "INLA" , "data.table" ) ) )
 
   p$libs = unique( c( p$libs, project.library ( "aegis", "aegis.bathymetry", "aegis.coastline", "aegis.polygons", "aegis.substrate", "aegis.survey" ) ) )
 
