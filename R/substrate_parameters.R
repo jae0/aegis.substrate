@@ -62,6 +62,7 @@ substrate_parameters = function( p=list(), project_name="substrate", project_cla
       # areal_units_proj4string_planar_km = projection_proj4string("omerc_nova_scotia")  # coord system to use for areal estimation and gridding for carstm
       areal_units_constraint_ntarget = 500,  
       areal_units_constraint_nmin = 30 ,
+      areal_units_constraint="none",
       areal_units_overlay = "none",
       areal_units_timeperiod = "none",
       tus="none",
