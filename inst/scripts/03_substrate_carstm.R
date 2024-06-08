@@ -107,10 +107,21 @@
   carstm_plot_map( p=p, outputdir=outputdir, additional_features=additional_features, 
     toplot="predictions", colors=rev(RColorBrewer::brewer.pal(5, "RdYlBu"))) 
     
-    
-  # more direct control over map
+    #,
+    #brks=seq(1, 501, 100) )
+
   # random effects  ..i.e.,  deviation from lognormal model ( pure spatial effect )
-    res = carstm_model(  p=p, DS="carstm_randomeffects" )  
+    outfilename= file.path( outputdir, paste("substrate_grain_size_spatialeffect_carstm", "png", sep=".") )
+    plt = carstm_map(  res=res, vn= c( "random", "space", "re" ), 
+        sppoly=sppoly,
+        title="Substrate grainsize spatial errors (mm)",
+        colors=rev(RColorBrewer::brewer.pal(5, "RdYlBu")),
+        additional_features=additional_features,
+        outfilename=outfilename
+    )  
+    plt
+  
+ 
 
     outfilename= file.path( outputdir, paste("substrate_grain_size_spatialeffect_carstm", "png", sep=".") )
     plt = carstm_map(  res=res, vn= c(  "space", "re_total" ), 
