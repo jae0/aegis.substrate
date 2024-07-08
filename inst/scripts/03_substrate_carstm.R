@@ -97,7 +97,7 @@
 
   # random effects  ..i.e.,  deviation from lognormal model ( pure spatial effect )
     outfilename= file.path( outputdir, paste("substrate_grain_size_spatialeffect_carstm", "png", sep=".") )
-    plt = carstm_map(  res=res, vn= c( "random", "space", "combined" ), 
+    plt = carstm_map(  res=res, vn= c( "random", "space", "re_total" ), 
         sppoly=sppoly,
         title="Substrate grainsize spatial errors (mm)",
         colors=rev(RColorBrewer::brewer.pal(5, "RdYlBu")),
