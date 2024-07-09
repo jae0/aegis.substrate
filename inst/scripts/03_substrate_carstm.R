@@ -22,40 +22,43 @@
       sppoly = areal_units( p=p, redo=TRUE )  # this has already been done in aegis.polygons::01 polygons.R .. should nto have to redo
       plot( sppoly[ "AUID" ] )
 
-
       # prepare data
-
       sppoly = areal_units( p=p  )  # this has already been done in aegis.polygons::01 polygons.R .. should nto have to redo
    
       M = substrate_db( p=p, DS="carstm_inputs", sppoly=sppoly, redo=TRUE )  # will redo if not found
-  
+   
     }
 
-
+    sppoly = areal_units( p=p  )  # this has already been done in aegis.polygons::01 polygons.R .. should nto have to redo
+   
     p$space_name = sppoly$AUID 
     p$space_id = 1:nrow(sppoly)  # numst match M$space
   
   # run model and obtain predictions
     res = carstm_model( 
       p=p, 
-      sppoly=areal_units( p=p  ),
-      data= substrate_db( p=p, DS="carstm_inputs", sppoly=sppoly), 
+      sppoly=sppoly,
+      data= substrate_db( p=p, DS="carstm_inputs"), 
       nposteriors=1000,
-      redo_fit=TRUE, # to start optim from a solution close to the final in 2021 ... 
+      # redo_fit=TRUE, # to start optim from a solution close to the final in 2021 ... 
       # redo_fit=FALSE, # to start optim from a solution close to the final in 2021 ... 
       # debug = TRUE,
       theta = c( 1.710, 3.588, 0.008, 5.662 ) ,
+      toget = c("summary", "random_spatial", "predictions"),
+      posterior_simulations_to_retain = c("predictions"),
+      family = "lognormal",
+      control.mode = list( restart=TRUE  ) ,
       # control.mode = list( restart=FALSE, theta= c( 1.710, 3.588, 0.008, 5.662 ) ),  
       num.threads="4:2",
       verbose=TRUE 
     ) 
-    # fit = carstm_model( p=p, DS="carstm_modelled_fit" )  # extract currently saved model fit
+    # fit = carstm_model( p=p, DS="modelled_fit" )  # extract currently saved model fit
     
       # extract results
       if (0) {
         fit = carstm_model( p=p, data=M, sppoly=sppoly ) # alt way of running
         # very large files .. slow 
-        fit = carstm_model( p=p, DS="carstm_modelled_fit", sppoly=sppoly )  # extract currently saved model fit
+        fit = carstm_model( p=p, DS="modelled_fit", sppoly=sppoly )  # extract currently saved model fit
     
         fit$summary$dic$dic
         fit$summary$dic$p.eff
@@ -63,6 +66,18 @@
 
         plot(fit)
         plot(fit, plot.prior=TRUE, plot.hyperparameters=TRUE, plot.fixed.effects=FALSE )
+      
+        # EXAMINE POSTERIORS AND PRIORS
+        all.hypers = INLA:::inla.all.hyper.postprocess(fit$all.hyper)
+        hypers = fit$marginals.hyperpar
+        names(hypers)
+
+        carstm_prior_posterior_compare( hypers=hypers, all.hypers=all.hypers, vn="Precision for space", transf=FALSE )  # no conversion to SD 
+        carstm_prior_posterior_compare( hypers=hypers, all.hypers=all.hypers, vn="Phi for space" )  
+
+        # posterior predictive check
+        carstm_posterior_predictive_check(p=p, M=bathymetry_db( p=p, DS="carstm_inputs" )   )
+
       }
 
   # extract results and examine
@@ -70,43 +85,27 @@
     res$summary
 
     
-    # bbox = c(-71.5, 41, -52.5,  50.5 )
-    additional_features = features_to_add( 
-        p=p, 
-        isobaths=c( 100, 200, 300, 400, 500 ), 
-        xlim=c(-80,-40), 
-        ylim=c(38, 60) 
-    )
+  # bbox = c(-71.5, 41, -52.5,  50.5 )
+  additional_features = features_to_add( 
+      p=p, 
+      isobaths=c( 100, 200, 300, 400, 500  ), 
+      xlim=c(-80,-40), 
+      ylim=c(38, 60) 
+  )
 
-    # maps of some of the results
-    outputdir = file.path(p$data_root, "maps", p$carstm_model_label )
-    if ( !file.exists(outputdir)) dir.create( outputdir, recursive=TRUE, showWarnings=FALSE )
+  # maps of some of the results
+  outputdir = file.path(p$modeldir, p$carstm_model_label, "maps" )
 
-    outfilename= file.path( outputdir, paste("substrate_grain_size_carstm", "png", sep=".") )
+  carstm_plot_map( p=p, outputdir=outputdir, additional_features=additional_features, 
+    toplot="random_spatial", probs=c(0.025, 0.975), 
+    colors=rev(RColorBrewer::brewer.pal(5, "RdYlBu")) ) 
 
-    plt = carstm_map(  res=res, vn="predictions", 
-        sppoly=sppoly,
-        title="Substrate grainsize (mm)", 
-        colors=rev(RColorBrewer::brewer.pal(5, "RdYlBu")),
-        additional_features=additional_features,
-        outfilename=outfilename
-    )  
-    plt
+  carstm_plot_map( p=p, outputdir=outputdir, additional_features=additional_features, 
+    toplot="predictions", colors=rev(RColorBrewer::brewer.pal(5, "RdYlBu"))) 
+    
+    #,
+    #brks=seq(1, 501, 100) )
 
- 
-
-  # random effects  ..i.e.,  deviation from lognormal model ( pure spatial effect )
-    outfilename= file.path( outputdir, paste("substrate_grain_size_spatialeffect_carstm", "png", sep=".") )
-    plt = carstm_map(  res=res, vn= c( "random", "space", "re_total" ), 
-        sppoly=sppoly,
-        title="Substrate grainsize spatial errors (mm)",
-        colors=rev(RColorBrewer::brewer.pal(5, "RdYlBu")),
-        additional_features=additional_features,
-        outfilename=outfilename
-    )  
-    plt
-  
- 
 
 
 
