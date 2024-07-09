@@ -56,8 +56,7 @@
     
       # extract results
       if (0) {
-        fit = carstm_model( p=p, data=M, sppoly=sppoly ) # alt way of running
-        # very large files .. slow 
+    
         fit = carstm_model( p=p, DS="modelled_fit", sppoly=sppoly )  # extract currently saved model fit
     
         fit$summary$dic$dic
@@ -74,9 +73,9 @@
 
         carstm_prior_posterior_compare( hypers=hypers, all.hypers=all.hypers, vn="Precision for space", transf=FALSE )  # no conversion to SD 
         carstm_prior_posterior_compare( hypers=hypers, all.hypers=all.hypers, vn="Phi for space" )  
-
+        carstm_prior_posterior_compare( hypers=hypers, all.hypers=all.hypers, vn="Precision for inla.group(z, method = \"quantile\", n = 11)" )
         # posterior predictive check
-        carstm_posterior_predictive_check(p=p, M=bathymetry_db( p=p, DS="carstm_inputs" )   )
+        carstm_posterior_predictive_check(p=p, M=substrate_db( p=p, DS="carstm_inputs" )   )
 
       }
 
@@ -85,6 +84,12 @@
     res$summary
 
     
+    # oeffdir = file.path(p$data_root, "figures")  # old ... delete files ..todo
+    oeffdir = file.path(p$data_root, p$carstm_model_label, "figures") #new ...
+    fn_root_prefix = p$variabletomodel
+    carstm_plot_marginaleffects(  p=p, outputdir=oeffdir, fn_root_prefix=fn_root_prefix ) 
+
+   
   # bbox = c(-71.5, 41, -52.5,  50.5 )
   additional_features = features_to_add( 
       p=p, 
@@ -110,3 +115,7 @@
 
 
   # end
+
+
+
+    
