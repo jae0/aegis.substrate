@@ -65,23 +65,22 @@
 
         plot(fit)
         plot(fit, plot.prior=TRUE, plot.hyperparameters=TRUE, plot.fixed.effects=FALSE )
-      
-        # EXAMINE POSTERIORS AND PRIORS
-        all.hypers = INLA:::inla.all.hyper.postprocess(fit$all.hyper)
-        hypers = fit$marginals.hyperpar
-        names(hypers)
-
-        carstm_prior_posterior_compare( hypers=hypers, all.hypers=all.hypers, vn="Precision for space", transf=FALSE )  # no conversion to SD 
-        carstm_prior_posterior_compare( hypers=hypers, all.hypers=all.hypers, vn="Phi for space" )  
-        carstm_prior_posterior_compare( hypers=hypers, all.hypers=all.hypers, vn="Precision for inla.group(z, method = \"quantile\", n = 11)" )
-        # posterior predictive check
-        carstm_posterior_predictive_check(p=p, M=substrate_db( p=p, DS="carstm_inputs" )   )
-
+       
       }
+ 
 
-  # extract results and examine
-    res = carstm_model( p=p, DS="carstm_modelled_summary", sppoly=sppoly  ) # to load currently saved results
-    res$summary
+    # posterior predictive check
+    M = speciescomposition_db( p=p, DS='carstm_inputs', sppoly=sppoly  )
+    carstm_posterior_predictive_check(p=p, M=M  )
+
+    # EXAMINE POSTERIORS AND PRIORS
+    res = carstm_model(  p=p, DS="carstm_summary" )  # parameters in p and summary
+
+    names(res$hypers)
+    for (i in 1:length(names(res$hypers)) ){
+      o = carstm_prior_posterior_compare( hypers=res$hypers, all.hypers=res$all.hypers, vn=names(res$hypers)[i] )  
+      dev.new(); print(o)
+    }     
 
     
     # oeffdir = file.path(p$data_root, "figures")  # old ... delete files ..todo
