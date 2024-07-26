@@ -35,12 +35,11 @@
     p$space_id = 1:nrow(sppoly)  # numst match M$space
   
   # run model and obtain predictions
-    res = carstm_model( 
+    carstm_model( 
       p=p, 
       sppoly=sppoly,
       data= substrate_db( p=p, DS="carstm_inputs"), 
-      nposteriors=1000,
-      # redo_fit=TRUE, # to start optim from a solution close to the final in 2021 ... 
+      # nposteriors=1000,
       # redo_fit=FALSE, # to start optim from a solution close to the final in 2021 ... 
       # debug = TRUE,
       theta = c( 1.710, 3.588, 0.008, 5.662 ) ,
@@ -52,6 +51,7 @@
       num.threads="4:2",
       verbose=TRUE 
     ) 
+
     # fit = carstm_model( p=p, DS="modelled_fit" )  # extract currently saved model fit
     
       # extract results
@@ -70,7 +70,7 @@
  
 
     # posterior predictive check
-    M = speciescomposition_db( p=p, DS='carstm_inputs', sppoly=sppoly  )
+    M = substrate_db( p=p, DS='carstm_inputs'  )
     carstm_posterior_predictive_check(p=p, M=M  )
 
     # EXAMINE POSTERIORS AND PRIORS
@@ -107,10 +107,22 @@
   carstm_plot_map( p=p, outputdir=outputdir, additional_features=additional_features, 
     toplot="predictions", colors=rev(RColorBrewer::brewer.pal(5, "RdYlBu"))) 
     
-    #,
-    #brks=seq(1, 501, 100) )
+    
+  # more direct control over map
+  # random effects  ..i.e.,  deviation from lognormal model ( pure spatial effect )
+    res = carstm_model(  p=p, DS="carstm_randomeffects" )  
 
-
+    outfilename= file.path( outputdir, paste("substrate_grain_size_spatialeffect_carstm", "png", sep=".") )
+    plt = carstm_map(  res=res, vn= c(  "space", "re_total" ), 
+        sppoly=sppoly,
+        transformation=log10,
+        title="Substrate grainsize spatial errors (mm)",
+        colors=rev(RColorBrewer::brewer.pal(5, "RdYlBu")),
+        additional_features=additional_features,
+        outfilename=outfilename
+    )  
+    plt
+  
 
 
   # end
