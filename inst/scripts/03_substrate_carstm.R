@@ -69,24 +69,26 @@
       }
  
 
-    # posterior predictive check
-    M = substrate_db( p=p, DS='carstm_inputs'  )
-    carstm_posterior_predictive_check(p=p, M=M  )
+  # posterior predictive check
+  M = substrate_db( p=p, DS='carstm_inputs'  )
+  carstm_posterior_predictive_check(p=p, M=M  )
 
-    # EXAMINE POSTERIORS AND PRIORS
-    res = carstm_model(  p=p, DS="carstm_summary" )  # parameters in p and summary
+  # EXAMINE POSTERIORS AND PRIORS
+  res = carstm_model(  p=p, DS="carstm_summary" )  # parameters in p and summary
 
-    names(res$hypers)
-    for (i in 1:length(names(res$hypers)) ){
-      o = carstm_prior_posterior_compare( hypers=res$hypers, all.hypers=res$all.hypers, vn=names(res$hypers)[i] )  
-      dev.new(); print(o)
-    }     
+  outputdir = file.path(p$modeldir, p$carstm_model_label)
+  
+  res_vars = c( names( res$hypers), names(res$fixed) )
+  for (i in 1:length(res_vars) ) {
+    o = carstm_prior_posterior_compare( res, vn=res_vars[i], outputdir=outputdir )  
+    dev.new(); print(o)
+  }     
 
-    
-    # oeffdir = file.path(p$data_root, "figures")  # old ... delete files ..todo
-    oeffdir = file.path(p$data_root, p$carstm_model_label, "figures") #new ...
-    fn_root_prefix = p$variabletomodel
-    carstm_plot_marginaleffects(  p=p, outputdir=oeffdir, fn_root_prefix=fn_root_prefix ) 
+
+  # oeffdir = file.path(p$data_root, "figures")  # old ... delete files ..todo
+  oeffdir = file.path(p$data_root, p$carstm_model_label, "figures") #new ...
+  fn_root_prefix = p$variabletomodel
+  carstm_plot_marginaleffects(  p=p, outputdir=oeffdir, fn_root_prefix=fn_root_prefix ) 
 
    
   # bbox = c(-71.5, 41, -52.5,  50.5 )
