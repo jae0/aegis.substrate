@@ -22,17 +22,17 @@
       # NAD83 UTM zone 20 (I think)
 
       rawdata.file = file.path( p$datadir, "grainsize.txt" )
-      filename = file.path( p$datadir, "substrate.asciigrid.rdata" )
+      fn = file.path( p$datadir, "substrate.asciigrid.rdz" )
 
       if (DS =="substrate.initial" ) {
-        load( filename )
+        substrate = read_write_fast( fn )
         return ( substrate )
       }
       message("FIX ME::: sp, maptools deprecated, use sf/stars")
       proj4.params = "+proj=utm +zone=20 +ellps=GRS80  +datum=NAD83 +units=m" #resolution is 500m X 500m
       substrate = sp::read.asciigrid( rawdata.file, proj4string=CRS( proj4.params ), colname="grainsize" )  ## mm
-      save( substrate, file=filename, compress=TRUE )
-      return(filename)
+      read_write_fast( substrate, file=fn )
+      return(fn)
     }
 
 
@@ -40,9 +40,9 @@
 
     # lon - lat converted
     if (  DS %in% c("lonlat.highres", "lonlat.highres.redo") ) {
-      filename = file.path( p$datadir, "substrate.lonlat.highres.rdata" )
+      fn = file.path( p$datadir, "substrate.lonlat.highres.rdz" )
       if (DS =="lonlat.highres" ) {
-        load( filename)
+        substrate = read_write_fast( fn)
         return( substrate)
       }
       # initial data stored in planar coords ... convert to lon/lats
@@ -54,8 +54,8 @@
       substrate= planar2lonlat ( substrate, proj4.params )
       substrate= substrate[ ,c("lon", "lat", "grainsize")]
       substrate= lonlat2planar ( substrate, p$aegis_proj4string_planar_km )
-      save( substrate, file=filename, compress=TRUE   )
-      return ( filename )
+      read_write_fast( substrate, file=fn   )
+      return ( fn )
     }
 
 
@@ -65,10 +65,10 @@
 
     if ( DS=="aggregated_data") {
 
-      fn = file.path( p$datadir, paste( "substrate", "aggregated_data", round(p$inputdata_spatial_discretization_planar_km, 6) , "rdata", sep=".") )
+      fn = file.path( p$datadir, paste( "substrate", "aggregated_data", round(p$inputdata_spatial_discretization_planar_km, 6) , "rdz", sep=".") )
       if (!redo)  {
         if (file.exists(fn)) {
-          load( fn)
+          M = read_write_fast( fn)
           return( M )
         }
       }
@@ -101,7 +101,7 @@
       attr( M, "proj4string_planar" ) =  p$aegis_proj4string_planar_km
       attr( M, "proj4string_lonlat" ) =  projection_proj4string("lonlat_wgs84")
 
-      save(M, file=fn, compress=TRUE)
+      read_write_fast(M, file=fn)
 
       return( M )
     }
@@ -112,13 +112,13 @@
     if ( DS=="areal_units_input" ) {
       
       outdir = file.path( p$data_root, "modelled", p$carstm_model_label ) 
-      fn = file.path( outdir, "areal_units_input.rdata"  )
+      fn = file.path( outdir, "areal_units_input.rdz"  )
       if ( !file.exists(outdir)) dir.create( outdir, recursive=TRUE, showWarnings=FALSE )
 
       xydata = NULL
       if (!redo)  {
         if (file.exists(fn)) {
-          load( fn)
+          xydata = read_write_fast( fn)
           return( xydata )
         }
       }
@@ -128,7 +128,7 @@
 
       xydata = xydata[ , c("lon", "lat"  )]
 
-      save(xydata, file=fn, compress=TRUE )
+      read_write_fast(xydata, file=fn )
       return( xydata )
     }
 
@@ -155,7 +155,7 @@
 
       if (!redo)  {
         if (file.exists(fn)) {
-          load( fn)
+          M = read_write_fast( fn)
           return( M )
         }
       }
@@ -205,7 +205,7 @@
       attr( M, "proj4string_planar" ) =  p$aegis_proj4string_planar_km
       attr( M, "proj4string_lonlat" ) =  projection_proj4string("lonlat_wgs84")
 
-      save( M, file=fn, compress=TRUE )
+      read_write_fast( M, file=fn )
       return( M )
     }
 
@@ -252,15 +252,15 @@
 
       outdir = file.path( p$modeldir, p$stmv_model_label, p$project_class, paste(  p$stmv_global_modelengine, p$stmv_local_modelengine, sep="_") )
 
-      fn = file.path( outdir, paste( "substrate", "complete", p$spatial_domain, "rdata", sep=".") )
+      fn = file.path( outdir, paste( "substrate", "complete", p$spatial_domain, "rdz", sep=".") )
 
       if ( DS %in% c("complete") ) {
 
         defaultdir = project.datadirectory( "aegis", "substrate", "modelled" )
-        if (!file.exists(fn)) fn = file.path( defaultdir, paste( "substrate", "complete", p$spatial_domain, "rdata", sep=".") )
+        if (!file.exists(fn)) fn = file.path( defaultdir, paste( "substrate", "complete", p$spatial_domain, "rdz", sep=".") )
 
         S = NULL
-        if ( file.exists ( fn) ) load( fn)
+        if ( file.exists ( fn) ) S = read_write_fast( fn)
         Snames = names(S)
         if (is.null(varnames)) {
           varnames=Snames
@@ -293,7 +293,7 @@
       colnames(SS) = paste("s", colnames(SS), sep=".")
       S = cbind( S, SS )
 
-      save (S, file=fn, compress=TRUE)
+      read_write_fast (S, file=fn)
 
       p0 = p  # the originating parameters
       S0 = S
@@ -332,8 +332,8 @@
         ii = which( S[,p$variabletomodel] > exp(5) )
         if (length(ii) > 0 ) S[,p$variabletomodel][ ii ] = exp(5)
 
-        fn = file.path( outdir, paste( "substrate", "complete", p1$spatial_domain, "rdata", sep=".") )
-        save (S, file=fn, compress=TRUE)
+        fn = file.path( outdir, paste( "substrate", "complete", p1$spatial_domain, "rdz", sep=".") )
+        read_write_fast (S, file=fn)
       }
 
       if(0){
