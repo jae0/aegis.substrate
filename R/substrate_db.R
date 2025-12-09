@@ -124,7 +124,7 @@
       }
       xydata = substrate_db( p=p, DS="aggregated_data"   )  #
       names(xydata)[which(names(xydata)=="substrate.grainsize.mean" )] = "substrate.grainsize"
-      xydata = xydata[ geo_subset( spatial_domain=p$spatial_domain, Z=xydata ) , ] # need to be careful with extrapolation ...  filter depths
+      xydata = xydata[ filter_by_spatial_domain( spatial_domain=p$spatial_domain, Z=xydata ) , ] # need to be careful with extrapolation ...  filter depths
 
       xydata = xydata[ , c("lon", "lat"  )]
 
