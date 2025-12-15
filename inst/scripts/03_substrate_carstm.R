@@ -41,11 +41,7 @@
     }
 
     sppoly = areal_units( p=p  )  # this has already been done in aegis.polygons::01 polygons.R .. should nto have to redo
-   
-    p$space_name = sppoly$AUID 
-    p$space_id = 1:nrow(sppoly)  # numst match M$space
-  
-  # run model and obtain predictions
+    
     carstm_model( 
       p=p, 
       sppoly=sppoly,
