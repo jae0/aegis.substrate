@@ -11,8 +11,8 @@
 
 require(aegis.substrate)
 
-substrate_db ( DS="substrate.initial.redo" ) # bring in Kostelev's data ... stored as a SpatialGridDataFrame
-substrate_db ( DS="lonlat.highres.redo" ) # in future .. additional data would be added here
+substrate_db( DS="substrate.initial.redo" ) # bring in Kostelev's data ... stored as a SpatialGridDataFrame
+substrate_db( DS="lonlat.highres.redo" ) # in future .. additional data would be added here
 
 p = aegis.substrate::substrate_parameters()
 
