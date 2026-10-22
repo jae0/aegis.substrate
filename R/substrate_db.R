@@ -22,7 +22,7 @@
       # NAD83 UTM zone 20 (I think)
 
       rawdata.file = file.path( p$datadir, "grainsize.txt" )
-      fn = file.path( p$datadir, "substrate.asciigrid.rdz" )
+      fn = file.path( p$datadir, "substrate.asciigrid.rds" )
 
       if (DS =="substrate.initial" ) {
         substrate = read_write_fast( fn )
@@ -40,7 +40,7 @@
 
     # lon - lat converted
     if (  DS %in% c("lonlat.highres", "lonlat.highres.redo") ) {
-      fn = file.path( p$datadir, "substrate.lonlat.highres.rdz" )
+      fn = file.path( p$datadir, "substrate.lonlat.highres.rds" )
       if (DS =="lonlat.highres" ) {
         substrate = read_write_fast( fn)
         return( substrate)
@@ -65,7 +65,7 @@
 
     if ( DS=="aggregated_data") {
 
-      fn = file.path( p$datadir, paste( "substrate", "aggregated_data", round(p$inputdata_spatial_discretization_planar_km, 6) , "rdz", sep=".") )
+      fn = file.path( p$datadir, paste( "substrate", "aggregated_data", round(p$inputdata_spatial_discretization_planar_km, 6) , "rds", sep=".") )
       if (!redo)  {
         if (file.exists(fn)) {
           M = read_write_fast( fn)
@@ -112,7 +112,7 @@
     if ( DS=="areal_units_input" ) {
       
       outdir = file.path( p$data_root, "modelled", p$carstm_model_label ) 
-      fn = file.path( outdir, "areal_units_input.rdz"  )
+      fn = file.path( outdir, "areal_units_input.rds"  )
       if ( !file.exists(outdir)) dir.create( outdir, recursive=TRUE, showWarnings=FALSE )
 
       xydata = NULL
@@ -252,12 +252,12 @@
 
       outdir = file.path( p$modeldir, p$stmv_model_label, p$project_class, paste(  p$stmv_global_modelengine, p$stmv_local_modelengine, sep="_") )
 
-      fn = file.path( outdir, paste( "substrate", "complete", p$spatial_domain, "rdz", sep=".") )
+      fn = file.path( outdir, paste( "substrate", "complete", p$spatial_domain, "rds", sep=".") )
 
       if ( DS %in% c("complete") ) {
 
         defaultdir = project.datadirectory( "aegis", "substrate", "modelled" )
-        if (!file.exists(fn)) fn = file.path( defaultdir, paste( "substrate", "complete", p$spatial_domain, "rdz", sep=".") )
+        if (!file.exists(fn)) fn = file.path( defaultdir, paste( "substrate", "complete", p$spatial_domain, "rds", sep=".") )
 
         S = NULL
         if ( file.exists ( fn) ) S = read_write_fast( fn)
@@ -332,7 +332,7 @@
         ii = which( S[,p$variabletomodel] > exp(5) )
         if (length(ii) > 0 ) S[,p$variabletomodel][ ii ] = exp(5)
 
-        fn = file.path( outdir, paste( "substrate", "complete", p1$spatial_domain, "rdz", sep=".") )
+        fn = file.path( outdir, paste( "substrate", "complete", p1$spatial_domain, "rds", sep=".") )
         read_write_fast (S, file=fn)
       }
 
